@@ -280,7 +280,8 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
               return (
                 <div className="grid grid-cols-5 gap-2">
                   {availableIcons.map((iconFileName: string) => {
-                    const isSelected = icon === iconFileName;
+                    // Normalitzem la comparació (ignorem extensió)
+                    const isSelected = icon && icon.split('.')[0] === iconFileName.split('.')[0];
                     return (
                       <button
                         key={iconFileName}

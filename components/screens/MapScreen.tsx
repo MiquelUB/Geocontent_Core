@@ -32,15 +32,28 @@ const typeToIconName: Record<string, string> = {
 };
 
 function getPoiIconSrc(poi: any) {
-  const biome = BIOME_MAP[poi.category] || 'Montanya';
-  if (poi.icon) return `/icons/${biome}/${poi.icon}`;
+  // Ens assegurem que el bioma estigui normalitzat (lowercase)
+  const category = (poi.category || 'mountain').toLowerCase();
+  const biome = BIOME_MAP[category] || BIOME_MAP['mountain']; // Fallback a Montanya si no trobem el bioma
 
-  const mappedName = typeToIconName[poi.type] || 'punt_interest';
+  // Si el POI ja té una icona definida a la base de dades
+  if (poi.icon) {
+    // Netegem el nom de l'icona (només el nom del fitxer sense extensió) i forcem .webp
+    const baseName = poi.icon.split('.')[0];
+    return `/icons/${biome}/${baseName}.webp`;
+  }
+
+  // Si no té icona, provem de mapar segons el 'type'
+  const type = (poi.type || '').toUpperCase();
+  const mappedName = typeToIconName[type] || 'punt_interest';
+
+  // Verifiquem si el fitxer existeix al mapping
   const availableFiles = (iconsMapping as any)[biome] || [];
-  const finalIcon = availableFiles.find((f: string) => f.startsWith(mappedName)) || availableFiles[0];
+  const finalIcon = availableFiles.find((f: string) =>
+    f.toLowerCase().startsWith(mappedName.toLowerCase())
+  ) || 'punt_interest.webp';
 
-  if (finalIcon) return `/icons/${biome}/${finalIcon}`;
-  return null;
+  return `/icons/${biome}/${finalIcon}`;
 }
 
 interface MapScreenProps {
@@ -263,6 +276,17 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, userLocation, e
                       src={iconSrc}
                       className="w-10 h-10 drop-shadow-md object-contain"
                       alt={poi.title}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector('.fallback-lucide')) {
+                          const icon = document.createElement('div');
+                          icon.className = 'fallback-lucide w-8 h-8 text-primary flex items-center justify-center';
+                          icon.innerHTML = '📍';
+                          parent.appendChild(icon);
+                        }
+                      }}
                     />
                   ) : (
                     <Navigation

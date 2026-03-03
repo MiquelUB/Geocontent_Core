@@ -1226,7 +1226,7 @@ export async function getPassportData(userId: string) {
         .filter((f: string) => /\.(png|jpg|jpeg|webp)$/i.test(f))
         .sort(); // Alphabetical for determinism
     } catch {
-      availableStampImages = ['bolet.png']; // Safe fallback
+      availableStampImages = ['bolet.webp']; // Safe fallback
     }
 
     // 3. Fetch all routes with POIs and this user's unlocks
@@ -1299,8 +1299,8 @@ export async function getPassportData(userId: string) {
 
       // Deterministic image selection: hash route.id to an index
       const hashCode = route.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const imgIndex = hashCode % (routeStampImages.length || 1);
-      const stampImage = routeStampImages[imgIndex] || routeStampImages[0] || 'bolet.png';
+      const imgIndex = routeStampImages.length > 0 ? hashCode % routeStampImages.length : 0;
+      const stampImage = routeStampImages[imgIndex] || routeStampImages[0] || 'bolet.webp';
       const stampUrl = `/stamps/${routeBiomePath}/${stampImage}`;
 
       return {
