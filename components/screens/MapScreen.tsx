@@ -20,26 +20,26 @@ const BIOME_MAP: Record<string, string> = {
 };
 
 const typeToIconName: Record<string, string> = {
-  'RELIGIOS': 'Casa',
+  'RELIGIOS': 'Esglesia',
   'CIVIL': 'Casa',
   'DEFENSIU': 'Castell',
   'LLEGENDA': 'Castell',
   'AIGUA': 'Aigua',
   'MIRADOR': 'Vistes',
-  'NATURA': 'Vistes',
+  'NATURA': 'Arbre',
   'GUERRA_CIVIL': 'Civil_war',
-  'PERSONA_ILLUSTRE': 'Casa',
+  'PERSONA_ILLUSTRE': 'Personatje',
 };
 
 function getPoiIconSrc(poi: any) {
   const biome = BIOME_MAP[poi.category] || 'Montanya';
-  if (poi.icon) return `/poi-icons/${biome}/${poi.icon}`;
+  if (poi.icon) return `/icons/${biome}/${poi.icon}`;
 
-  const mappedName = typeToIconName[poi.type] || 'Casa';
+  const mappedName = typeToIconName[poi.type] || 'punt_interest';
   const availableFiles = (iconsMapping as any)[biome] || [];
   const finalIcon = availableFiles.find((f: string) => f.startsWith(mappedName)) || availableFiles[0];
 
-  if (finalIcon) return `/poi-icons/${biome}/${finalIcon}`;
+  if (finalIcon) return `/icons/${biome}/${finalIcon}`;
   return null;
 }
 

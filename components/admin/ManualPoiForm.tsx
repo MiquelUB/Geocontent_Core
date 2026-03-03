@@ -293,7 +293,7 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
                         title={iconFileName}
                       >
                         <img
-                          src={`/poi-icons/${biomeFolder}/${iconFileName}`}
+                          src={`/icons/${biomeFolder}/${iconFileName}`}
                           alt={iconFileName}
                           className="w-full h-auto aspect-square object-contain"
                         />

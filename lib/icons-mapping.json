@@ -1,37 +1,57 @@
 {
   "Blossom": [
-    "Aigua.jpg",
-    "Casa.png",
-    "Castell.jpg",
-    "Civil_war.jpg",
-    "Vistes.png"
+    "Aigua.webp",
+    "Arbre.webp",
+    "Casa.webp",
+    "Castell.webp",
+    "Civil_war.webp",
+    "Esglesia.webp",
+    "Personatje.webp",
+    "Vistes.webp",
+    "punt_interest.webp"
   ],
   "City": [
-    "Aigua.jpg",
-    "Casa.png",
-    "Castell.jpg",
-    "Civil_war.jpg",
-    "Vistes.png"
+    "Aigua.webp",
+    "Arbre.webp",
+    "Casa.webp",
+    "Castell.webp",
+    "Civil_war.webp",
+    "Esglesia.webp",
+    "Personatje.webp",
+    "Vistes.webp",
+    "punt_interest.webp"
   ],
   "Interior": [
-    "Aigua.jpg",
-    "Casa.jpg",
-    "Castell.jpg",
-    "Civil_war.jpg",
-    "Vistes.png"
+    "Aigua.webp",
+    "Arbre.webp",
+    "Casa.webp",
+    "Castell.webp",
+    "Civil_war.webp",
+    "Esglesia.webp",
+    "Personatje.webp",
+    "Vistes.webp",
+    "punt_interest.webp"
   ],
   "Mar": [
-    "Aigua.jpg",
-    "Casa.jpg",
-    "Castell.jpg",
-    "Civil_war.jpg",
-    "Vistes.png"
+    "Aigua.webp",
+    "Arbre.webp",
+    "Casa.webp",
+    "Castell.webp",
+    "Civil_war.webp",
+    "Esglesia.webp",
+    "Personatje.webp",
+    "Vistes.webp",
+    "punt_interest.webp"
   ],
   "Montanya": [
-    "Aigua.jpg",
-    "Casa.jpg",
-    "Castell.jpg",
-    "Civil_war.jpg",
-    "Vistes.png"
+    "Aigua.webp",
+    "Arbre.webp",
+    "Casa.webp",
+    "Castell.webp",
+    "Civil_war.webp",
+    "Esglesia.webp",
+    "Personatje.webp",
+    "Vistes.webp",
+    "punt_interest.webp"
   ]
 }
