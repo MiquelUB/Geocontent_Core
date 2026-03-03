@@ -9,6 +9,7 @@ import { Video, X, CheckCircle, Loader2, Zap, Tv2 } from 'lucide-react';
 interface VideoUploaderProps {
   poiId: string;
   existingVideos?: string[];
+  theme?: any;
 }
 
 type UploadState =
@@ -68,7 +69,13 @@ function directUpload(
   });
 }
 
-export default function VideoUploader({ poiId, existingVideos = [] }: VideoUploaderProps) {
+export default function VideoUploader({ poiId, existingVideos = [], theme }: VideoUploaderProps) {
+  const activeTheme = theme || {
+    mainText: "text-emerald-600",
+    primary: "bg-emerald-600",
+    bg: "bg-emerald-50",
+    hover: "hover:bg-emerald-700",
+  };
   const [videos, setVideos] = useState<string[]>(existingVideos);
   const [state, setState] = useState<UploadState>({ phase: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +138,7 @@ export default function VideoUploader({ poiId, existingVideos = [] }: VideoUploa
       {/* Header */}
       <div className="flex items-center justify-between">
         <Label className="text-stone-600 font-medium flex items-center gap-2">
-          <Video className="w-4 h-4 text-terracotta-500" />
+          <Video className={`w-4 h-4 ${activeTheme.mainText}`} />
           Vídeos del Punt (Màxim 3)
         </Label>
         <span className="text-xs text-stone-400">{videos.length}/3</span>
@@ -160,12 +167,11 @@ export default function VideoUploader({ poiId, existingVideos = [] }: VideoUploa
 
         {videos.length < 3 && (
           <label
-            className={`aspect-video cursor-pointer border-2 border-dashed border-stone-200 rounded-md flex flex-col items-center justify-center gap-2 hover:bg-stone-50 hover:border-terracotta-300 transition-all ${
-              isBusy ? 'opacity-50 pointer-events-none' : ''
-            }`}
+            className={`aspect-video cursor-pointer border-2 border-dashed border-stone-200 rounded-md flex flex-col items-center justify-center gap-2 hover:bg-stone-50 hover:border-${activeTheme.primary.split('-')[1]}-300 transition-all ${isBusy ? 'opacity-50 pointer-events-none' : ''
+              }`}
           >
             {isBusy ? (
-              <Loader2 className="w-5 h-5 text-terracotta-500 animate-spin" />
+              <Loader2 className={`w-5 h-5 ${activeTheme.mainText} animate-spin`} />
             ) : (
               <>
                 <Video className="w-5 h-5 text-stone-400" />

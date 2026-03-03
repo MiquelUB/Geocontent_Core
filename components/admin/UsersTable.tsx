@@ -24,7 +24,14 @@ interface Visit {
   rating: number | null;
 }
 
-export function UsersTable({ profiles }: { profiles: any[] }) {
+export function UsersTable({ profiles, theme }: { profiles: any[], theme?: any }) {
+  const activeTheme = theme || {
+    text: "text-[#2D4636]",
+    mainText: "text-[#2D4636]/80",
+    bg: "bg-[#2D4636]/10",
+    primary: "bg-[#2D4636]",
+    hover: "hover:bg-[#1E2F24]",
+  };
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [isLoadingVisits, setIsLoadingVisits] = useState(false);
@@ -58,11 +65,11 @@ export function UsersTable({ profiles }: { profiles: any[] }) {
         console.error("Error fetching visits:", error);
       } else {
         setVisits(data.map((v: any) => ({
-            id: v.id,
-            poi: v.poi,
-            entryTime: v.entry_time,
-            durationSeconds: v.duration_seconds,
-            rating: v.rating
+          id: v.id,
+          poi: v.poi,
+          entryTime: v.entry_time,
+          durationSeconds: v.duration_seconds,
+          rating: v.rating
         })));
       }
     } catch (e) {
@@ -93,10 +100,10 @@ export function UsersTable({ profiles }: { profiles: any[] }) {
                 <TableRow key={profile.id} className="hover:bg-stone-50/50 cursor-pointer" onClick={() => handleUserClick(profile)}>
                   <TableCell className="font-medium text-stone-800">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-terracotta-100 flex items-center justify-center text-terracotta-700 font-bold text-xs">
-                            {profile.username?.[0]?.toUpperCase() || 'U'}
-                        </div>
-                        {profile.username || 'Anònim'}
+                      <div className={`w-8 h-8 rounded-full ${activeTheme.bg} flex items-center justify-center ${activeTheme.text} font-bold text-xs`}>
+                        {profile.username?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      {profile.username || 'Anònim'}
                     </div>
                   </TableCell>
                   <TableCell className="text-stone-600">{profile.email || '-'}</TableCell>
@@ -106,8 +113,8 @@ export function UsersTable({ profiles }: { profiles: any[] }) {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="text-terracotta-600 hover:text-terracotta-700 hover:bg-terracotta-50">
-                        Veure Detalls
+                    <Button variant="ghost" size="sm" className={`${activeTheme.mainText} ${activeTheme.hover} ${activeTheme.bg}`}>
+                      Veure Detalls
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -128,43 +135,43 @@ export function UsersTable({ profiles }: { profiles: any[] }) {
         <DialogContent className="sm:max-w-[600px] bg-white border-stone-200">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl text-stone-800">
-                Activitat de {selectedUser?.username || 'Usuari'}
+              Activitat de {selectedUser?.username || 'Usuari'}
             </DialogTitle>
             <DialogDescription className="text-stone-500">
-                Historial de visites als Punts d'Interès.
+              Historial de visites als Punts d'Interès.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="max-h-[60vh] overflow-y-auto pr-2">
             {isLoadingVisits ? (
-                <div className="py-8 text-center text-stone-400">Carregant historial...</div>
+              <div className="py-8 text-center text-stone-400">Carregant historial...</div>
             ) : visits.length > 0 ? (
-                <div className="space-y-4">
-                    {visits.map((visit) => (
-                        <div key={visit.id} className="flex items-start justify-between p-4 rounded-lg bg-stone-50 border border-stone-100">
-                            <div>
-                                <h4 className="font-medium text-stone-800">{visit.poi?.title || 'POI Desconegut'}</h4>
-                                <p className="text-xs text-stone-500 mt-1">
-                                    {new Date(visit.entryTime).toLocaleString()}
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-sm font-medium text-terracotta-600">
-                                    {visit.durationSeconds ? `${Math.floor(visit.durationSeconds / 60)} min` : 'En curs'}
-                                </div>
-                                {visit.rating && (
-                                    <div className="text-xs text-amber-500 mt-1">
-                                        {'★'.repeat(visit.rating)}
-                                    </div>
-                                )}
-                            </div>
+              <div className="space-y-4">
+                {visits.map((visit) => (
+                  <div key={visit.id} className="flex items-start justify-between p-4 rounded-lg bg-stone-50 border border-stone-100">
+                    <div>
+                      <h4 className="font-medium text-stone-800">{visit.poi?.title || 'POI Desconegut'}</h4>
+                      <p className="text-xs text-stone-500 mt-1">
+                        {new Date(visit.entryTime).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-sm font-medium ${activeTheme.mainText}`}>
+                        {visit.durationSeconds ? `${Math.floor(visit.durationSeconds / 60)} min` : 'En curs'}
+                      </div>
+                      {visit.rating && (
+                        <div className="text-xs text-amber-500 mt-1">
+                          {'★'.repeat(visit.rating)}
                         </div>
-                    ))}
-                </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-                <div className="py-8 text-center text-stone-400 border-2 border-dashed border-stone-100 rounded-lg">
-                    Aquest usuari encara no ha visitat cap ruta.
-                </div>
+              <div className="py-8 text-center text-stone-400 border-2 border-dashed border-stone-100 rounded-lg">
+                Aquest usuari encara no ha visitat cap ruta.
+              </div>
             )}
           </div>
         </DialogContent>

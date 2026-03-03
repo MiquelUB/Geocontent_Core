@@ -10,6 +10,7 @@ import { recordVisit } from "@/lib/actions";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { downloadTerritorialPackage, isRouteCached, SyncProgress } from "@/lib/services/sync-service";
 import { CheckCircle2, Download, Loader2, AlertCircle } from "lucide-react";
+import PoiQuiz from "../quiz/PoiQuiz";
 
 import { calculateDistance } from "@/lib/location";
 
@@ -35,6 +36,8 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
     categoryLabel: legend?.categoryLabel || legend?.category || "Desconegut",
     coordinates: { lat, lng },
     videoUrls: legend?.videoUrls || (legend?.video_url ? [legend.video_url] : []),
+    manualQuiz: legend?.manualQuiz,
+    userUnlocks: legend?.userUnlocks || []
   };
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,8 +82,22 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
   };
 
   const distanceMeters = getNumericDistance(distanceStr);
-  const UNLOCK_DISTANCE = 25; // meters
-  const isUnlocked = distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE;
+  const UNLOCK_DISTANCE = 30; // metres
+
+  // Convert Supabase URLs to go through local proxy (fixes CORS in dev)
+  function proxifyUrl(url: string): string {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/')) {
+      return `/api/img-proxy?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  }
+  const isAlreadyVisited = safeLegend.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
+  const isRoute = safeLegend.pois && safeLegend.pois.length > 0;
+
+  // ALWAYS UNLOCK FOR DEVELOPMENT DEBUGGING
+  const isDev = process.env.NODE_ENV === 'development';
+  const isUnlocked = isDev || isRoute || isAlreadyVisited || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
 
   // Record visit when unlocked
   useEffect(() => {
@@ -159,19 +176,22 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
   return (
     <div className="screen bg-background min-h-screen">
       {/* Editorial Hero Image with Parallax */}
-      <div className="relative h-[60vh] w-full overflow-hidden">
+      <div className="relative h-[60vh] min-h-[400px] w-full overflow-hidden bg-stone-950">
         <motion.div
           style={{ y }}
           className="absolute inset-0 w-full h-full"
         >
           <ImageSlider
-            images={safeLegend.carouselImages?.length > 0
-              ? safeLegend.carouselImages
-              : (safeLegend.images || [safeLegend.header16x9 || safeLegend.image])}
+            images={
+              (safeLegend.carouselImages?.length > 0
+                ? safeLegend.carouselImages
+                : (safeLegend.images?.length > 0 ? safeLegend.images : [safeLegend.header16x9 || safeLegend.image])
+              ).map(proxifyUrl)
+            }
             isRecapture={safeLegend.is_recapture}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background pointer-events-none"></div>
         </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-background pointer-events-none z-20"></div>
 
         {/* Navigation Bar */}
         <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-10">
@@ -239,7 +259,8 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
                   ? calculateDistance(userLocation.latitude, userLocation.longitude, poi.latitude, poi.longitude)
                   : null;
                 const poiDistMeters = getNumericDistance(poiDistStr);
-                const poiUnlocked = poiDistMeters !== null && poiDistMeters <= UNLOCK_DISTANCE;
+                const poiVisited = poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
+                const poiUnlocked = isDev || poiVisited || (poiDistMeters !== null && poiDistMeters <= UNLOCK_DISTANCE);
                 const distLabel = poiDistStr;
 
                 return (
@@ -320,17 +341,19 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
 
         {/* Contenid Principal */}
 
-        <div className="relative group overflow-hidden rounded-3xl">
-          <div className={`prose prose-lg prose-stone max-w-none leading-relaxed font-serif transition-all duration-1000 ${isUnlocked ? 'text-foreground/90' : 'text-stone-300 blur-[8px] select-none scale-[0.98]'}`}>
+        <div className="relative group overflow-hidden rounded-3xl min-h-[200px]">
+          <div className={`prose prose-lg prose-stone max-w-none leading-relaxed font-serif transition-all duration-1000 z-10 relative ${isUnlocked ? 'text-foreground/90' : 'text-stone-300 blur-[8px] select-none scale-[0.98]'}`}>
             {isUnlocked ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
+                className="z-10 relative"
               >
                 <p className="first-letter:text-5xl first-letter:font-serif first-letter:font-bold first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-[-8px]">
                   {safeLegend.textContent || safeLegend.description}
                 </p>
+                <div className="clear-both"></div>
               </motion.div>
             ) : (
               <div className="space-y-4 pt-4">
@@ -343,7 +366,7 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
           </div>
 
           {!isUnlocked && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/40 backdrop-blur-[2px] rounded-3xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/40 backdrop-blur-[2px] rounded-3xl z-20">
               <motion.div
                 animate={{ y: [0, -5, 0] }}
                 transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
@@ -512,6 +535,16 @@ export function LegendDetailScreen({ legend, onNavigate, userLocation, currentUs
               })}
             </div>
           </div>
+        )}
+
+        {/* Quiz Section */}
+        {isUnlocked && safeLegend.manualQuiz && (
+          <PoiQuiz
+            poiId={safeLegend.id}
+            userId={currentUser?.id}
+            quiz={safeLegend.manualQuiz}
+            isAlreadyCompleted={safeLegend.userUnlocks.some((u: any) => u.userId === currentUser?.id && u.progress >= 1.0)}
+          />
         )}
 
         {/* Map Button */}

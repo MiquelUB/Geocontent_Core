@@ -170,8 +170,8 @@ export default function Home() {
 
 
   return (
-    <div className="mobile-app bg-background text-foreground h-screen w-full overflow-hidden flex flex-col">
-      <main className="flex-1 relative overflow-auto scrollbar-hide">
+    <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
+      <main className={`flex-1 relative ${currentScreen === 'legend-detail' ? 'overflow-y-auto' : 'overflow-auto'} scrollbar-hide`}>
         {renderScreen()}
       </main>
 

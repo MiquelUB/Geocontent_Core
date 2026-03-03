@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, X, Plus, Music, Film, ImageIcon, History, MapPin, FolderIcon, Upload, Link2, Trash2 } from "lucide-react";
+import { Loader2, X, Plus, Music, Film, ImageIcon, History, MapPin, FolderIcon, Upload, Link2, Trash2, MapIcon } from "lucide-react";
+import iconsMapping from '@/lib/icons-mapping.json';
+import { getAdminTheme } from "@/lib/adminTheme";
+
+const BIOME_MAP: Record<string, string> = {
+  mountain: 'Montanya',
+  coast: 'Mar',
+  city: 'City',
+  interior: 'Interior',
+  bloom: 'Blossom',
+};
 
 interface ManualPoiFormProps {
   poi?: any;
@@ -14,6 +24,7 @@ interface ManualPoiFormProps {
   isLoading?: boolean;
   routes?: any[];
   defaultRouteId?: string;
+  municipalityTheme?: string;
 }
 
 interface VideoSlot {
@@ -25,20 +36,27 @@ interface VideoSlot {
 const MAX_VIDEO_SLOTS = 3;
 const MAX_VIDEO_SIZE_MB = 15;
 
-export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes = [], defaultRouteId }: ManualPoiFormProps) {
+export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes = [], defaultRouteId, municipalityTheme }: ManualPoiFormProps) {
+  const activeTheme = getAdminTheme(municipalityTheme);
   const [title, setTitle] = useState(poi?.title || '');
   const [description, setDescription] = useState(poi?.description || '');
   const [routeId, setRouteId] = useState(poi?.routeId || defaultRouteId || '');
   const [textContent, setTextContent] = useState(poi?.textContent || '');
   const [latitude, setLatitude] = useState(poi?.latitude?.toString() || '');
   const [longitude, setLongitude] = useState(poi?.longitude?.toString() || '');
-  
+  const [icon, setIcon] = useState(poi?.icon || '');
+  const [poiType, setPoiType] = useState(poi?.type || 'CIVIL');
+  const [manualQuiz, setManualQuiz] = useState<any>(poi?.manualQuiz || null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+
   const [appThumbnail, setAppThumbnail] = useState(poi?.appThumbnail || '');
   const [header16x9, setHeader16x9] = useState(poi?.header16x9 || '');
   const [audioUrl, setAudioUrl] = useState(poi?.audioUrl || '');
-  
+
   const [carouselImages, setCarouselImages] = useState<string[]>(poi?.carouselImages || []);
+  const [carouselFiles, setCarouselFiles] = useState<(File | null)[]>(poi?.carouselImages?.map(() => null) || []);
   const [newCarouselUrl, setNewCarouselUrl] = useState('');
+  const [newCarouselFile, setNewCarouselFile] = useState<File | null>(null);
 
   // File states for images/audio
   const [appThumbnailFile, setAppThumbnailFile] = useState<File | null>(null);
@@ -80,14 +98,28 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
   };
 
   const handleAddCarouselImage = () => {
-    if (newCarouselUrl && carouselImages.length < 4) {
+    if (carouselImages.length >= 4) return;
+
+    if (newCarouselFile) {
+      const blobUrl = URL.createObjectURL(newCarouselFile);
+      setCarouselImages([...carouselImages, blobUrl]);
+      setCarouselFiles([...carouselFiles, newCarouselFile]);
+      setNewCarouselFile(null);
+      setNewCarouselUrl('');
+    } else if (newCarouselUrl) {
       setCarouselImages([...carouselImages, newCarouselUrl]);
+      setCarouselFiles([...carouselFiles, null]);
       setNewCarouselUrl('');
     }
   };
 
   const handleRemoveCarouselImage = (index: number) => {
+    const url = carouselImages[index];
+    if (url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
     setCarouselImages(carouselImages.filter((_, i) => i !== index));
+    setCarouselFiles(carouselFiles.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,12 +134,13 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     formData.append('text_content', textContent);
     formData.append('latitude', latitude);
     formData.append('longitude', longitude);
+    formData.append('icon', icon);
     if (routeId) formData.append('route_id', routeId);
-    
+
     if (appThumbnailFile) formData.append('app_thumbnail_file', appThumbnailFile);
     if (headerFile) formData.append('header_file', headerFile);
     if (audioFile) formData.append('audio_file', audioFile);
-    
+
     formData.append('app_thumbnail', appThumbnail);
     formData.append('header_16x9', header16x9);
     formData.append('audio_url', audioUrl);
@@ -124,13 +157,28 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     });
     formData.append('video_urls', JSON.stringify(videoUrls));
     formData.append('video_slot_count', videoSlots.length.toString());
-    formData.append('carousel_images', JSON.stringify(carouselImages));
+
+    // Carousel: files and existing URLs
+    const finalCarouselUrls: string[] = [];
+    carouselImages.forEach((url, idx) => {
+      const file = carouselFiles[idx];
+      if (file) {
+        formData.append(`carousel_file_${idx}`, file);
+      } else if (!url.startsWith('blob:')) {
+        finalCarouselUrls.push(url);
+      }
+    });
+    formData.append('carousel_images', JSON.stringify(finalCarouselUrls));
+    formData.append('carousel_file_count', carouselImages.length.toString());
+    formData.append('type', poiType);
+    if (manualQuiz) formData.append('manual_quiz', JSON.stringify(manualQuiz));
 
     // Verify total size before sending to prevent server rejection/timeout
     let totalSize = 0;
-    const filesToUpload = [appThumbnailFile, headerFile, audioFile, ...videoSlots.map(s => s.file)];
+    const allCarouselFiles = carouselFiles.filter(f => f !== null) as File[];
+    const filesToUpload = [appThumbnailFile, headerFile, audioFile, ...videoSlots.map(s => s.file), ...allCarouselFiles];
     filesToUpload.forEach(f => { if (f) totalSize += f.size; });
-    
+
     // Limits: next.config.js bodySizeLimit is 100mb. We cap at 95mb for safety.
     if (totalSize > 95 * 1024 * 1024) {
       alert(`La mida total dels fitxers (${(totalSize / 1024 / 1024).toFixed(1)}MB) és massa gran. El límit és de 95MB per evitar errors de connexió.`);
@@ -158,14 +206,13 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
               <FolderIcon className="w-4 h-4 text-stone-400" />
               Assignar a Carpeta (Ruta) <span className="text-red-500">*</span>
             </Label>
-            <select 
-              id="routeId" 
-              value={routeId} 
+            <select
+              id="routeId"
+              value={routeId}
               onChange={(e) => setRouteId(e.target.value)}
               required
-              className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                !routeId ? 'border-red-300 bg-red-50/30' : 'border-input'
-              }`}
+              className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${!routeId ? 'border-red-300 bg-red-50/30' : 'border-input'
+                }`}
             >
               <option value="" disabled>— Selecciona una ruta obligatòriament —</option>
               {routes.map((r: any) => (
@@ -183,6 +230,21 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
             <Label htmlFor="desc">Descripció Breu (Pàgina principal)</Label>
             <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[80px]" />
           </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="poiType">Categoria del Punt</Label>
+            <select
+              id="poiType"
+              value={poiType}
+              onChange={(e) => setPoiType(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {[
+                'RELIGIOS', 'DEFENSIU', 'CIVIL', 'NATURA', 'AIGUA',
+                'MIRADOR', 'LLEGENDA', 'PERSONA_ILLUSTRE', 'GUERRA_CIVIL'
+              ].map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+            </select>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="textContent" className="flex items-center gap-2">
               <History className="w-4 h-4 text-stone-400" />
@@ -199,6 +261,124 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
               <Label htmlFor="lng">Longitud</Label>
               <Input id="lng" type="number" step="0.000001" value={longitude} onChange={(e) => setLongitude(e.target.value)} required />
             </div>
+          </div>
+
+          <div className="grid gap-2 p-4 rounded-xl border border-stone-100 bg-stone-50/30">
+            <Label className="flex items-center gap-2 mb-2">
+              <MapIcon className="w-4 h-4 text-stone-400" />
+              Icona del Punt (Segons Bioma)
+            </Label>
+
+            {!municipalityTheme ? (
+              <p className="text-xs text-stone-400 italic">Carregant icons globals...</p>
+            ) : (() => {
+              const biomeFolder = BIOME_MAP[municipalityTheme] || 'Montanya';
+              const availableIcons = (iconsMapping as any)[biomeFolder] || [];
+
+              if (availableIcons.length === 0) return <p className="text-xs text-stone-400">No hi ha icons per aquest bioma.</p>;
+
+              return (
+                <div className="grid grid-cols-5 gap-2">
+                  {availableIcons.map((iconFileName: string) => {
+                    const isSelected = icon === iconFileName;
+                    return (
+                      <button
+                        key={iconFileName}
+                        type="button"
+                        onClick={() => setIcon(iconFileName)}
+                        className={`group relative p-1 rounded-lg border-2 transition-all ${isSelected
+                          ? `border-${activeTheme.primary.split('-')[1]}-500 ${activeTheme.bg} shadow-md ring-2 ${activeTheme.ring}`
+                          : 'border-transparent bg-white hover:border-stone-200 shadow-sm'
+                          }`}
+                        title={iconFileName}
+                      >
+                        <img
+                          src={`/poi-icons/${biomeFolder}/${iconFileName}`}
+                          alt={iconFileName}
+                          className="w-full h-auto aspect-square object-contain"
+                        />
+                        {isSelected && (
+                          <div className={`absolute -top-1.5 -right-1.5 ${activeTheme.primary} text-white rounded-full p-0.5 shadow-sm border border-white`}>
+                            <Plus className="w-2 h-2 rotate-45" />
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              );
+            })()}
+            {icon && (
+              <p className="text-[10px] text-stone-500 mt-2 font-medium bg-white px-2 py-1 rounded inline-block border border-stone-100">
+                Seleccionat: <span className={activeTheme.text}>{icon}</span>
+                <button type="button" onClick={() => setIcon('')} className="ml-2 text-red-400 hover:text-red-500">Eliminar</button>
+              </p>
+            )}
+          </div>
+
+          {/* AI Quiz Section */}
+          <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Plus className="w-4 h-4 text-primary" />
+                Quiz del Punt (IA)
+              </Label>
+              {manualQuiz && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setManualQuiz(null)}
+                  className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" /> Eliminar
+                </Button>
+              )}
+            </div>
+
+            {manualQuiz ? (
+              <div className="bg-white/80 dark:bg-black/20 p-3 rounded-lg border border-primary/10 text-xs space-y-1">
+                <p className="font-bold text-primary">{manualQuiz.pregunta}</p>
+                <ul className="list-disc list-inside text-stone-600 dark:text-stone-400">
+                  {manualQuiz.opcions.map((o: string, idx: number) => (
+                    <li key={idx} className={idx === manualQuiz.correcta ? "text-green-600 font-bold" : ""}>
+                      {o} {idx === manualQuiz.correcta && "✓"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-[10px] text-stone-500 italic">No hi ha quiz generat per aquest punt.</p>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!textContent || isGeneratingQuiz}
+              onClick={async () => {
+                setIsGeneratingQuiz(true);
+                try {
+                  const res = await fetch('/api/ai/generate-quiz', {
+                    method: 'POST',
+                    body: JSON.stringify({ title, content: textContent, type: poiType })
+                  });
+                  const data = await res.json();
+                  if (data.quiz) setManualQuiz(data.quiz);
+                } catch (e) {
+                  console.error("Error generant quiz:", e);
+                } finally {
+                  setIsGeneratingQuiz(false);
+                }
+              }}
+              className="w-full h-8 text-xs border-primary/30 text-primary hover:bg-primary/10"
+            >
+              {isGeneratingQuiz ? (
+                <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Generant...</>
+              ) : (
+                <><Music className="w-3 h-3 mr-2" /> {manualQuiz ? "Regenerar Quiz amb IA" : "Generar Quiz amb IA"}</>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -386,26 +566,57 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
         </div>
       </div>
 
-      {/* Carousel Section */}
       <div className="space-y-4 pt-4 border-t border-stone-100">
-        <Label>Carrusel d&apos;Imatges (Màxim 4)</Label>
-        <div className="flex gap-2">
-          <Input 
-            value={newCarouselUrl} 
-            onChange={(e) => setNewCarouselUrl(e.target.value)} 
-            placeholder="URL imatge carrusel" 
-            disabled={carouselImages.length >= 4}
-          />
-          <Button type="button" onClick={handleAddCarouselImage} disabled={!newCarouselUrl || carouselImages.length >= 4} variant="outline">
-            <Plus className="w-4 h-4" />
-          </Button>
+        <Label className="flex items-center gap-2">
+          <ImageIcon className="w-4 h-4 text-stone-400" />
+          Carrusel d&apos;Imatges (Màxim 4)
+        </Label>
+        <div className="flex flex-col gap-3 p-4 rounded-xl border border-stone-200 bg-stone-50/30">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-stone-500 uppercase">Pujar Arxiu</span>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setNewCarouselFile(e.target.files?.[0] || null)}
+                className="h-9 text-xs cursor-pointer"
+                disabled={carouselImages.length >= 4}
+              />
+            </div>
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-stone-500 uppercase">O URL Directa</span>
+              <div className="flex gap-2">
+                <Input
+                  value={newCarouselUrl}
+                  onChange={(e) => setNewCarouselUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="h-9 text-xs"
+                  disabled={carouselImages.length >= 4}
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddCarouselImage}
+                  disabled={(!newCarouselUrl && !newCarouselFile) || carouselImages.length >= 4}
+                  className="h-9 w-9 p-0"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          {newCarouselFile && (
+            <div className="flex items-center gap-2 text-[10px] text-emerald-600 font-medium animate-in fade-in slide-in-from-top-1">
+              <Upload className="w-3 h-3" />
+              <span>Preparat per afegir: {newCarouselFile.name} ({(newCarouselFile.size / 1024).toFixed(1)}KB)</span>
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-4 gap-4">
           {carouselImages.map((url, idx) => (
             <div key={idx} className="relative aspect-square bg-stone-100 rounded-md overflow-hidden group">
               <img src={url} alt={`Carousel ${idx}`} className="w-full h-full object-cover" />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => handleRemoveCarouselImage(idx)}
                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
@@ -422,7 +633,7 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
       </div>
 
       <div className="pt-6 flex gap-4">
-        <Button type="submit" disabled={isLoading} className="flex-1 bg-terracotta-600 hover:bg-terracotta-700 text-white">
+        <Button type="submit" disabled={isLoading} className={`flex-1 ${activeTheme.primary} ${activeTheme.hover} text-white`}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -434,7 +645,7 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel·lar</Button>
       </div>
-    </form>
+    </form >
   );
 }
 

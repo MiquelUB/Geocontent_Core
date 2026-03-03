@@ -1,60 +1,57 @@
-import { useState } from "react";
+'use client';
+
+import { useState, useEffect } from "react";
 import { PassportStamp } from "./PassportStamp";
-import { QuizModal } from "./QuizModal";
 
-const MOCK_STAMPS = [
-  { id: "1", name: "Pic del Vent", date: "12/10/23", unlocked: true },
-  { id: "2", name: "Riu Blau", date: "05/11/23", unlocked: true },
-  { id: "3", name: "Bosc Antic", date: "22/11/23", unlocked: true },
-  { id: "4", name: "Sant Climent", date: "Per descobrir", unlocked: false },
-  { id: "5", name: "Estany Negre", date: "Per descobrir", unlocked: false },
-  { id: "6", name: "Vall Fosca", date: "Per descobrir", unlocked: false },
-];
+interface PassportGridProps {
+  initialStamps?: any[];
+}
 
-export function PassportGrid() {
-  const [stamps, setStamps] = useState(MOCK_STAMPS);
-  const [selectedStamp, setSelectedStamp] = useState<typeof MOCK_STAMPS[0] | null>(null);
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
+export function PassportGrid({ initialStamps = [] }: PassportGridProps) {
+  const [stamps, setStamps] = useState<any[]>(initialStamps);
 
-  const handleStampClick = (stamp: typeof MOCK_STAMPS[0]) => {
-    if (!stamp.unlocked) {
-      setSelectedStamp(stamp);
-      setIsQuizOpen(true);
+  useEffect(() => {
+    // Refresh stamps list when parent re-loads data
+    setStamps(initialStamps);
+  }, [initialStamps]);
+
+  const handleStampClick = (stamp: any) => {
+    // Future: open a stamp detail modal or the route detail screen
+    if (!stamp.isCompleted) {
+      console.log('[Passport] Stamp clicked — incomplete route:', stamp.name);
     }
   };
 
-  const handleQuizSuccess = () => {
-    if (selectedStamp) {
-      setStamps(prev => prev.map(s => 
-        s.id === selectedStamp.id 
-          ? { ...s, unlocked: true, date: new Date().toLocaleDateString('es-ES') } 
-          : s
-      ));
-    }
-  };
+  // Fill empty slots to always show at least 3 cells
+  const minSlots = Math.max(stamps.length, 3);
+  const emptyCount = minSlots - stamps.length;
 
   return (
-    <>
-      <div className="grid grid-cols-3 gap-4">
-        {stamps.map((stamp, index) => (
-          <PassportStamp
-            key={stamp.id}
-            {...stamp}
-            isUnlocked={stamp.unlocked}
-            onClick={() => handleStampClick(stamp)}
-            index={index}
-          />
-        ))}
-      </div>
-
-      {selectedStamp && (
-        <QuizModal
-          isOpen={isQuizOpen}
-          onClose={() => setIsQuizOpen(false)}
-          onSuccess={handleQuizSuccess}
-          legendName={selectedStamp.name}
+    <div className="grid grid-cols-3 gap-3">
+      {stamps.map((stamp, index) => (
+        <PassportStamp
+          key={stamp.id}
+          id={stamp.id}
+          name={stamp.name}
+          date={stamp.date}
+          stampUrl={stamp.stampUrl}
+          totalPois={stamp.totalPois ?? 1}
+          visitedPois={stamp.visitedPois ?? 0}
+          quizDonePois={stamp.quizDonePois ?? 0}
+          poisProgress={stamp.poisProgress ?? []}
+          isCompleted={stamp.isCompleted ?? false}
+          onClick={() => handleStampClick(stamp)}
+          index={index}
         />
-      )}
-    </>
+      ))}
+
+      {/* Empty placeholder slots */}
+      {Array.from({ length: emptyCount }).map((_, i) => (
+        <div
+          key={`empty-${i}`}
+          className="aspect-square rounded-xl border-2 border-dashed border-primary/[0.07] bg-primary/[0.015]"
+        />
+      ))}
+    </div>
   );
 }

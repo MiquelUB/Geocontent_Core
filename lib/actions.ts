@@ -11,6 +11,7 @@ import { z } from 'zod';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
+import { generatePoiQuiz, generateFinalRouteQuiz } from './services/openrouter';
 
 const GENERIC_ERROR_MESSAGE = "S'ha produït un error al processar la sol·licitud";
 
@@ -42,12 +43,17 @@ const CreatePoiSchema = z.object({
   longitude: z.coerce.number(),
   route_id: z.string().uuid("La ID de ruta és obligatòria"),
   text_content: z.string().optional(),
+  type: z.string().optional(),
+  manual_quiz: z.string().optional().transform(val => {
+    try { return val ? JSON.parse(val) : null } catch { return null }
+  }),
   video_urls: z.string().optional().transform(val => {
     try { return val ? JSON.parse(val) : [] } catch { return [] }
   }),
   carousel_images: z.string().optional().transform(val => {
     try { return val ? JSON.parse(val) : [] } catch { return [] }
-  })
+  }),
+  icon: z.string().optional()
 });
 
 export async function getOrCreateMunicipalityByName(name: string): Promise<string> {
@@ -69,6 +75,15 @@ export async function getDefaultMunicipalityId(): Promise<string | null> {
     return municipality?.id ?? null;
   } catch {
     return null;
+  }
+}
+
+export async function getDefaultMunicipalityTheme(): Promise<string> {
+  try {
+    const municipality = await prisma.municipality.findFirst({ select: { themeId: true } });
+    return (municipality as any)?.themeId || 'mountain';
+  } catch {
+    return 'mountain';
   }
 }
 
@@ -115,100 +130,56 @@ export async function uploadFile(file: File, bucket: string = 'geocontent') {
 
 export async function getLegends() {
   noStore();
-  logToFile('getLegends called (RAW SQL)');
-
   try {
-    // 1. Fetch routes via Raw SQL to bypass themeId issues
-    // Only show routes that have at least one POI (subquery or join)
-    const routes = await prisma.$queryRaw<any[]>`
-      SELECT 
-        r.id, 
-        r.name as "route_name", 
-        r.slug, 
-        r.description, 
-        r.theme_id, 
-        r.thumbnail_1x1,
-        m.name as "municipality_name"
-      FROM routes r
-      LEFT JOIN municipalities m ON r.municipality_id = m.id
-      WHERE EXISTS (SELECT 1 FROM route_pois rp WHERE rp.route_id = r.id)
-      ORDER BY r.name ASC
-    `;
+    const routes = await prisma.route.findMany({
+      where: {
+        routePois: { some: {} }
+      },
+      include: {
+        municipality: { select: { name: true } },
+        routePois: {
+          include: {
+            poi: {
+              include: { userUnlocks: true }
+            }
+          },
+          orderBy: { orderIndex: 'asc' }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
 
-    // 2. Fetch associated POIs for mapping
-    const mapped = await Promise.all(routes.map(async (r, idx) => {
-      if (idx === 0) {
-        logToFile(`DEBUG ROUTE 0: ${JSON.stringify(r, null, 2)}`);
-      }
-      const routePois = await prisma.routePoi.findMany({
-        where: { routeId: r.id },
-        include: { poi: true },
-        orderBy: { orderIndex: 'asc' }
-      });
-
-      // Manual mapping to camelCase for mapRoute compatibility
-      const routeWithAssoc = {
-        ...r,
-        name: r.route_name,
-        title: r.route_name,
-        themeId: r.theme_id,
-        municipality: { name: r.municipality_name },
-        routePois
-      };
-
-      return mapRoute(routeWithAssoc);
-    }));
-
+    const mapped = routes.map(r => mapRoute(r));
+    console.log("[DEBUG getLegends] First route title:", mapped[0]?.title);
+    console.log("[DEBUG getLegends] First POI textContent:", mapped[0]?.pois[0]?.textContent);
     return mapped;
   } catch (err: any) {
-    logToFile(`getLegends FAILED: ${err.message}`);
-    console.error(" [RAW Error in getLegends]:", err);
+    console.error(" [Error in getLegends]:", err);
     return [];
   }
 }
 
 export async function getAdminLegends() {
   noStore();
-  logToFile('getAdminLegends called (RAW SQL)');
-
   try {
-    const routes = await prisma.$queryRaw<any[]>`
-      SELECT 
-        r.id, 
-        r.name as "route_name", 
-        r.slug, 
-        r.description, 
-        r.theme_id, 
-        r.thumbnail_1x1,
-        m.name as "municipality_name"
-      FROM routes r
-      LEFT JOIN municipalities m ON r.municipality_id = m.id
-      ORDER BY r.name ASC
-    `;
+    const routes = await prisma.route.findMany({
+      include: {
+        municipality: { select: { name: true } },
+        routePois: {
+          include: {
+            poi: {
+              include: { userUnlocks: true }
+            }
+          },
+          orderBy: { orderIndex: 'asc' }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
 
-    const mapped = await Promise.all(routes.map(async (r) => {
-      const routePois = await prisma.routePoi.findMany({
-        where: { routeId: r.id },
-        include: { poi: true },
-        orderBy: { orderIndex: 'asc' }
-      });
-
-      const routeWithAssoc = {
-        ...r,
-        name: r.route_name,
-        title: r.route_name,
-        themeId: r.theme_id,
-        municipality: { name: r.municipality_name },
-        routePois
-      };
-
-      return mapRoute(routeWithAssoc);
-    }));
-
-    return mapped;
+    return routes.map(r => mapRoute(r));
   } catch (err: any) {
-    logToFile(`getAdminLegends FAILED: ${err.message}`);
-    console.error(" [RAW Error in getAdminLegends]:", err);
+    console.error(" [Error in getAdminLegends]:", err);
     return [];
   }
 }
@@ -223,6 +194,20 @@ function mapRoute(route: any) {
     longitude: rp.poi.longitude,
     image_url: rp.poi.appThumbnail || rp.poi.images?.[0] || '',
     orderIndex: rp.orderIndex ?? 0,
+    icon: rp.poi.icon || null,
+    // NOUS CAMPS PER DETALL COMPLERT
+    textContent: rp.poi.textContent || '',
+    audioUrl: rp.poi.audioUrl || '',
+    videoUrls: rp.poi.videoUrls || [],
+    carouselImages: rp.poi.carouselImages || [],
+    header16x9: rp.poi.header16x9 || '',
+    is_recapture: rp.poi.isRecapture || false,
+    appThumbnail: rp.poi.appThumbnail || '',
+    images: rp.poi.images || [],
+    videoMetadata: rp.poi.videoMetadata || {},
+    manualQuiz: rp.poi.manualQuiz,
+    type: rp.poi.type,
+    userUnlocks: rp.poi.userUnlocks || [],
   })) ?? [];
 
   const muniName = (route.municipality?.name || route.municipality_name || '').replace(/^Ajuntament de /i, '');
@@ -240,11 +225,20 @@ function mapRoute(route: any) {
     hero_image_url: route.thumbnail1x1 || firstPoi?.header16x9 || '',
     audio_url: firstPoi?.audioUrl || '',
     video_url: firstPoi?.videoUrls?.[0] || '',
+    icon: firstPoi?.icon || null,
     is_active: true,
     poiCount: pois.length,
     pois,
     thumbnail1x1: route.thumbnail1x1 || '',
     downloadRequired: route.downloadRequired || false,
+    // Camps pel detall de la ruta (si s'usa com a POI únic)
+    textContent: firstPoi?.textContent || '',
+    videoUrls: firstPoi?.videoUrls || [],
+    carouselImages: firstPoi?.carouselImages || [],
+    header16x9: firstPoi?.header16x9 || '',
+    images: firstPoi?.images || [],
+    manualQuiz: firstPoi?.manualQuiz,
+    userUnlocks: firstPoi?.userUnlocks || [],
   };
 }
 
@@ -409,7 +403,7 @@ export async function createRoute(formData: FormData) {
 export async function createPoi(formData: FormData) {
   try {
     const validated = CreatePoiSchema.parse(Object.fromEntries(formData.entries()));
-    const { title, description, latitude, longitude, route_id, text_content, video_urls, carousel_images } = validated;
+    const { title, description, latitude, longitude, route_id, text_content, video_urls, carousel_images, icon } = validated;
 
     const appThumbFile = formData.get('app_thumbnail_file') as File || null
     const headerFile = formData.get('header_file') as File || null
@@ -433,6 +427,24 @@ export async function createPoi(formData: FormData) {
       ...uploadedVideoUrls,
       ...(video_urls as string[]).filter(u => u && u.startsWith('http') && !uploadedVideoUrls.includes(u))
     ]
+
+    // Carousel file uploads
+    const carouselFileCount = parseInt(formData.get('carousel_file_count') as string || '0', 10)
+    const carouselUrlsFromForm = carousel_images as string[]
+    const finalCarouselImages: string[] = []
+
+    let urlIdx = 0
+    for (let i = 0; i < carouselFileCount; i++) {
+      const file = formData.get(`carousel_file_${i}`) as File | null
+      if (file && file.size > 0) {
+        finalCarouselImages.push(await uploadFile(file))
+      } else {
+        if (carouselUrlsFromForm[urlIdx]) {
+          finalCarouselImages.push(carouselUrlsFromForm[urlIdx])
+          urlIdx++
+        }
+      }
+    }
 
     let municipalityId = await getDefaultMunicipalityId();
 
@@ -461,9 +473,12 @@ export async function createPoi(formData: FormData) {
           audioUrl,
           videoUrls: finalVideoUrls,
           textContent: text_content,
+          type: validated.type ? (validated.type as any) : null,
+          manualQuiz: validated.manual_quiz,
           appThumbnail,
           header16x9,
-          carouselImages: carousel_images as string[]
+          icon,
+          carouselImages: finalCarouselImages
         }
       });
 
@@ -518,9 +533,32 @@ export async function updatePoi(id: string, formData: FormData) {
   ];
 
   const textContent = formData.get('text_content') as string || '';
-  const carouselImages = JSON.parse(formData.get('carousel_images') as string || '[]');
+  const icon = formData.get('icon') as string || null;
+
+  // Carousel: handle files and existing URLs preserving order
+  const carouselFileCount = parseInt(formData.get('carousel_file_count') as string || '0', 10);
+  const carouselUrlsFromForm: string[] = JSON.parse(formData.get('carousel_images') as string || '[]');
+  const finalCarouselImages: string[] = [];
+
+  let urlIdx = 0;
+  for (let i = 0; i < carouselFileCount; i++) {
+    const file = formData.get(`carousel_file_${i}`) as File | null;
+    if (file && file.size > 0) {
+      finalCarouselImages.push(await uploadFile(file));
+    } else {
+      if (carouselUrlsFromForm[urlIdx]) {
+        finalCarouselImages.push(carouselUrlsFromForm[urlIdx]);
+        urlIdx++;
+      }
+    }
+  }
 
   try {
+    const type = formData.get('type') as string;
+    const manualQuizStr = formData.get('manual_quiz') as string;
+    let manualQuiz = null;
+    try { if (manualQuizStr) manualQuiz = JSON.parse(manualQuizStr); } catch (e) { }
+
     await prisma.poi.update({
       where: { id },
       data: {
@@ -533,7 +571,10 @@ export async function updatePoi(id: string, formData: FormData) {
         textContent,
         appThumbnail,
         header16x9,
-        carouselImages,
+        icon,
+        type: type ? (type as any) : null,
+        manualQuiz,
+        carouselImages: finalCarouselImages,
         images: appThumbnail ? [appThumbnail] : undefined,
       }
     });
@@ -834,12 +875,99 @@ export async function loginOrRegister(name: string, email: string) {
 
 export async function getUserProfile(userId: string) {
   noStore();
-  const { data } = await supabaseAdmin
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .single();
-  return data;
+
+  if (!profile) return null;
+
+  const { count } = await supabaseAdmin
+    .from('visited_legends')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  return {
+    ...profile,
+    visitedCount: count || 0,
+    username: profile.display_name || profile.name || "Explorador",
+    xp: profile.xp || 0
+  };
+}
+
+/**
+ * AI Quiz Generation Action
+ */
+export async function generateQuizForPoiAction(id: string) {
+  try {
+    const poi = await prisma.poi.findUnique({
+      where: { id },
+      select: { title: true, textContent: true, type: true }
+    });
+
+    if (!poi || !poi.textContent) {
+      return { success: false, error: "No hi ha contingut per generar el quiz." };
+    }
+
+    const quiz = await generatePoiQuiz(poi.title, poi.textContent, (poi.type as any) || 'CIVIL');
+
+    if (!quiz) return { success: false, error: "Error generant el quiz AI." };
+
+    await prisma.poi.update({
+      where: { id },
+      data: { manualQuiz: quiz }
+    });
+
+    revalidatePath('/admin');
+    return { success: true, quiz };
+  } catch (err) {
+    console.error(err);
+    return { success: false, error: GENERIC_ERROR_MESSAGE };
+  }
+}
+
+export async function closeRouteAndGenerateFinalQuiz(routeId: string) {
+  try {
+    const route = await prisma.route.findUnique({
+      where: { id: routeId },
+      include: {
+        routePois: {
+          include: { poi: true },
+          orderBy: { orderIndex: 'asc' }
+        }
+      }
+    });
+
+    if (!route) return { success: false, error: "Ruta no trobada." };
+
+    const poisData = route.routePois.map(rp => ({
+      title: rp.poi.title,
+      content: rp.poi.textContent || rp.poi.description || ''
+    }));
+
+    if (poisData.length === 0) {
+      return { success: false, error: "La ruta no té punts per analitzar." };
+    }
+
+    const finalQuiz = await generateFinalRouteQuiz(route.name || route.slug, poisData);
+
+    if (!finalQuiz) return { success: false, error: "Error generant el Repte Final." };
+
+    await prisma.route.update({
+      where: { id: routeId },
+      data: {
+        status: 'CLOSED',
+        finalQuiz: finalQuiz
+      }
+    });
+
+    revalidatePath('/admin');
+    return { success: true, finalQuiz };
+  } catch (err) {
+    console.error(err);
+    return { success: false, error: GENERIC_ERROR_MESSAGE };
+  }
 }
 
 export async function updateProfileAvatar(userId: string, avatarUrl: string) {
@@ -859,46 +987,51 @@ export async function updateProfileAvatar(userId: string, avatarUrl: string) {
 }
 
 
-export async function recordVisit(userId: string, legendId: string) {
-  const supabase = createClient(await cookies());
-  const { data: existing } = await supabase
-    .from('visited_legends')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('legend_id', legendId)
-    .single();
+export async function recordVisit(userId: string, poiId: string) {
+  try {
+    const poi = await prisma.poi.findUnique({ where: { id: poiId } });
+    if (!poi) return { success: false, error: "POI not found" };
 
-  if (existing) return { success: true, message: 'Already visited' };
+    const existing = await prisma.userUnlock.findUnique({
+      where: { userId_poiId: { userId, poiId } }
+    });
 
-  const { error: visitError } = await supabase
-    .from('visited_legends')
-    .insert({ user_id: userId, legend_id: legendId });
+    if (existing) return { success: true, message: 'Already visited' };
 
-  if (visitError) {
-    console.error('Visit error:', visitError);
+    await prisma.userUnlock.create({
+      data: {
+        userId,
+        poiId,
+        unlockedAt: new Date(),
+        earnedXp: 50,
+        progress: 0.2
+      }
+    });
+
+    const profile = await prisma.profile.findUnique({
+      where: { id: userId },
+      select: { xp: true, level: true }
+    });
+
+    if (profile) {
+      const newXp = (profile.xp || 0) + 50;
+      let newLevel = profile.level || 1;
+      if (newXp >= 1000) newLevel = 4;
+      else if (newXp >= 500) newLevel = 3;
+      else if (newXp >= 200) newLevel = 2;
+      else newLevel = 1;
+
+      await prisma.profile.update({
+        where: { id: userId },
+        data: { xp: newXp, level: newLevel }
+      });
+      return { success: true, newXp, newLevel, leveledUp: newLevel > (profile.level || 1) };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('[recordVisit error]', err);
     return { success: false, error: GENERIC_ERROR_MESSAGE };
   }
-
-  const { data: profile } = await supabase.from('profiles').select('xp, level').eq('id', userId).single();
-
-  if (profile) {
-    const newXp = (profile.xp || 0) + 50;
-    let newLevel = profile.level || 1;
-
-    if (newXp >= 1000) newLevel = 4;
-    else if (newXp >= 500) newLevel = 3;
-    else if (newXp >= 200) newLevel = 2;
-    else newLevel = 1;
-
-    await supabase
-      .from('profiles')
-      .update({ xp: newXp, level: newLevel })
-      .eq('id', userId);
-
-    return { success: true, newXp, newLevel, leveledUp: newLevel > (profile.level || 1) };
-  }
-
-  return { success: true };
 }
 
 export async function getVisitedLegends(userId: string) {
@@ -1059,3 +1192,170 @@ export const getAppBranding = cache(async () => {
     return null;
   }
 });
+
+/**
+ * Passport Logic Actions
+ */
+
+export async function getPassportData(userId: string) {
+  noStore();
+  if (!userId) return [];
+
+  try {
+    // 1. Get the municipality's configured biome/theme
+    const municipality = await prisma.municipality.findFirst({
+      select: { themeId: true }
+    });
+    const municipalityBiome = (municipality as any)?.themeId || 'mountain';
+
+    // Biome theme → stamp folder mapping
+    const biomePathMap: Record<string, string> = {
+      mountain: 'Montanya',
+      coast: 'Mar',
+      city: 'City',
+      interior: 'Interior',
+      bloom: 'Blossom',
+    };
+    const globalBiomePath = biomePathMap[municipalityBiome] || 'Montanya';
+
+    // 2. List real stamp images for this biome from filesystem (server-side safe)
+    const stampsDir = path.join(process.cwd(), 'public', 'stamps', globalBiomePath);
+    let availableStampImages: string[] = [];
+    try {
+      availableStampImages = fs.readdirSync(stampsDir)
+        .filter((f: string) => /\.(png|jpg|jpeg|webp)$/i.test(f))
+        .sort(); // Alphabetical for determinism
+    } catch {
+      availableStampImages = ['bolet.png']; // Safe fallback
+    }
+
+    // 3. Fetch all routes with POIs and this user's unlocks
+    const routes = await prisma.route.findMany({
+      where: { routePois: { some: {} } },
+      include: {
+        routePois: {
+          include: {
+            poi: {
+              include: {
+                userUnlocks: {
+                  where: { userId },
+                  select: { progress: true, unlockedAt: true, earnedXp: true }
+                }
+              }
+            }
+          },
+          orderBy: { orderIndex: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    return routes.map((route, routeIdx) => {
+      const orderedPois = route.routePois.map(rp => {
+        const unlock = rp.poi.userUnlocks[0] || null;
+        return {
+          id: rp.poi.id,
+          title: rp.poi.title,
+          isVisited: unlock !== null,
+          isQuizDone: unlock !== null && (unlock.progress ?? 0) >= 1.0,
+          progress: unlock?.progress ?? 0,
+          unlockedAt: unlock?.unlockedAt ?? null,
+          hasQuiz: !!rp.poi.manualQuiz,
+        };
+      });
+
+      const totalPois = orderedPois.length;
+      const visitedPois = orderedPois.filter(p => p.isVisited).length;
+      const quizDonePois = orderedPois.filter(p => p.isQuizDone).length;
+      // Stamp considered complete when ALL quizzes are done
+      const isCompleted = totalPois > 0 && quizDonePois === totalPois;
+
+      // Latest activity date for the stamp label
+      const unlockDates = orderedPois
+        .filter(p => p.unlockedAt)
+        .map(p => new Date(p.unlockedAt!).getTime());
+      const latestDate = unlockDates.length > 0
+        ? new Date(Math.max(...unlockDates)).toLocaleDateString('ca-ES', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        })
+        : null;
+
+      // Biome path per route (uses route's own themeId, falling back to municipality biome)
+      const routeTheme = route.themeId?.toLowerCase() || municipalityBiome;
+      const routeBiomePath = biomePathMap[routeTheme] || globalBiomePath;
+
+      // List images for this route's specific biome, or reuse the global list
+      let routeStampImages = availableStampImages;
+      if (routeBiomePath !== globalBiomePath) {
+        const routeStampsDir = path.join(process.cwd(), 'public', 'stamps', routeBiomePath);
+        try {
+          routeStampImages = fs.readdirSync(routeStampsDir)
+            .filter((f: string) => /\.(png|jpg|jpeg|webp)$/i.test(f))
+            .sort();
+        } catch {
+          routeStampImages = availableStampImages;
+        }
+      }
+
+      // Deterministic image selection: hash route.id to an index
+      const hashCode = route.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      const imgIndex = hashCode % (routeStampImages.length || 1);
+      const stampImage = routeStampImages[imgIndex] || routeStampImages[0] || 'bolet.png';
+      const stampUrl = `/stamps/${routeBiomePath}/${stampImage}`;
+
+      return {
+        id: route.id,
+        name: route.name || route.slug || 'Ruta',
+        biome: routeTheme,
+        biomePath: routeBiomePath,
+        stampUrl,
+        totalPois: Math.max(totalPois, 1),
+        visitedPois,
+        quizDonePois,
+        poisProgress: orderedPois,
+        isCompleted,
+        date: latestDate,
+      };
+    });
+  } catch (err) {
+    console.error('[getPassportData error]', err);
+    return [];
+  }
+}
+
+/**
+ * Quiz Completion Action
+ */
+export async function completePoiQuizAction(poiId: string, userId: string) {
+  try {
+    const poi = await prisma.poi.findUnique({ where: { id: poiId } });
+    if (!poi) return { success: false, error: "POI no trobat." };
+
+    // Update or create unlock with progress = 1.0
+    await prisma.userUnlock.upsert({
+      where: { userId_poiId: { userId, poiId } },
+      create: {
+        userId,
+        poiId,
+        unlockedAt: new Date(),
+        earnedXp: 100,
+        progress: 1.0
+      },
+      update: {
+        progress: 1.0
+      }
+    });
+
+    // Give some XP
+    await prisma.profile.update({
+      where: { id: userId },
+      data: { xp: { increment: 100 } }
+    });
+
+    revalidatePath('/profile');
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { success: false, error: GENERIC_ERROR_MESSAGE };
+  }
+}

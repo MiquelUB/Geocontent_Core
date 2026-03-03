@@ -13,6 +13,7 @@ import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from 
 import { deleteLegend, createLegend, updateLegend, getAdminLegends, addVideoToPoi, createRoute, createPoi, updatePoi } from "@/lib/actions";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
+import { getAdminTheme } from "@/lib/adminTheme";
 import VideoUploader from "./VideoUploader";
 import ManualPoiForm from "./ManualPoiForm";
 import { updateRoute } from "@/lib/actions";
@@ -41,7 +42,8 @@ interface Poi {
   videoUrls: string[];
 }
 
-export default function AdminDashboard({ legends: initialLegends, profiles, reports, municipalityId }: { legends: any[], profiles: any[], reports?: any[], municipalityId?: string }) {
+export default function AdminDashboard({ legends: initialLegends, profiles, reports, municipalityId, municipalityTheme }: { legends: any[], profiles: any[], reports?: any[], municipalityId?: string, municipalityTheme?: string }) {
+  const adminTheme = getAdminTheme(municipalityTheme);
   const [activeTab, setActiveTab] = useState('rutes');
   const [isLoading, setIsLoading] = useState(false);
   const [legends, setLegends] = useState<Legend[]>(initialLegends as any[]);
@@ -75,7 +77,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
   const [routeDescription, setRouteDescription] = useState('');
   const [routeLocation, setRouteLocation] = useState('');
   const [routeThumbnail, setRouteThumbnail] = useState('');
-  const [routeCategory, setRouteCategory] = useState('mountain');
+  const [routeCategory, setRouteCategory] = useState(municipalityTheme || 'mountain');
   const [routeDownloadRequired, setRouteDownloadRequired] = useState(false);
   const [editingRoute, setEditingRoute] = useState<any>(null);
   const [managingRoute, setManagingRoute] = useState<{ id: string; name: string } | null>(null);
@@ -103,7 +105,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
     setRouteDescription('');
     setRouteLocation('');
     setRouteThumbnail('');
-    setRouteCategory('mountain');
+    setRouteCategory(municipalityTheme || 'mountain');
     setRouteDownloadRequired(false);
     setRouteThumbFile(null);
   };
@@ -186,25 +188,25 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
         <nav className="flex space-x-2 bg-stone-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('rutes')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'rutes' ? 'bg-white text-terracotta-600 shadow-sm ring-1 ring-stone-200' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
+            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'rutes' ? `bg-white ${adminTheme.mainText} shadow-sm ring-1 ring-stone-200` : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
           >
             Creació de Rutes
           </button>
           <button
             onClick={() => setActiveTab('usuaris')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'usuaris' ? 'bg-white text-terracotta-600 shadow-sm ring-1 ring-stone-200' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
+            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'usuaris' ? `bg-white ${adminTheme.mainText} shadow-sm ring-1 ring-stone-200` : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
           >
             Gestió d'Usuaris
           </button>
           <button
             onClick={() => setActiveTab('executiu')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'executiu' ? 'bg-white text-terracotta-600 shadow-sm ring-1 ring-stone-200' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
+            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'executiu' ? `bg-white ${adminTheme.mainText} shadow-sm ring-1 ring-stone-200` : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
           >
             Informe Executiu
           </button>
           <button
             onClick={() => setActiveTab('config')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'config' ? 'bg-white text-terracotta-600 shadow-sm ring-1 ring-stone-200' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
+            className={`px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium ${activeTab === 'config' ? `bg-white ${adminTheme.mainText} shadow-sm ring-1 ring-stone-200` : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'}`}
           >
             Configuració
           </button>
@@ -226,7 +228,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                   <p className="text-sm text-stone-500">Puja documents per extraure informació de referència.</p>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <AiRouteGenerator />
+                  <AiRouteGenerator theme={adminTheme} />
                 </CardContent>
               </Card>
 
@@ -274,21 +276,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                           <Input id="routeThumb" value={routeThumbnail} onChange={(e) => setRouteThumbnail(e.target.value)} placeholder="URL imatge" className="h-8 text-xs" />
                         </div>
                       </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="routeCategory">Pell / Estil Visual</Label>
-                        <select
-                          id="routeCategory"
-                          value={routeCategory}
-                          onChange={(e) => setRouteCategory(e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-stone-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-950 shadow-sm"
-                        >
-                          <option value="mountain">🏔️ Muntanya (Verd)</option>
-                          <option value="coast">🌊 Costa (Blau)</option>
-                          <option value="city">🏛️ Ciutat (Gris)</option>
-                          <option value="interior">🌾 Interior (Marró)</option>
-                          <option value="bloom">🌸 Floració (Rosa)</option>
-                        </select>
-                      </div>
+                      {/* Eliminat: Pell / Estil Visual (ara és global) */}
                       <div className="flex items-center gap-2 py-2">
                         <input
                           type="checkbox"
@@ -301,7 +289,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                           ⚠️ Baixada Recomanada (Manca Cobertura)
                         </Label>
                       </div>
-                      <Button onClick={handleSaveRoute} disabled={isLoading} size="sm" className="w-fit bg-stone-800 hover:bg-stone-900 text-white">
+                      <Button onClick={handleSaveRoute} disabled={isLoading} size="sm" className={`w-fit ${adminTheme.primary} ${adminTheme.hover} text-white`}>
                         {editingRoute ? 'Actualitzar Ruta' : 'Crear Ruta'}
                       </Button>
                     </div>
@@ -311,11 +299,11 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                     <h3 className="text-sm font-bold text-stone-700 uppercase tracking-wider">
                       {editingPoi ? (
                         <span className="flex items-center gap-2">
-                          ✏️ Editant: <span className="text-terracotta-600 normal-case font-normal">{editingPoi.title}</span>
+                          ✏️ Editant: <span className={`${adminTheme.mainText} normal-case font-normal`}>{editingPoi.title}</span>
                         </span>
                       ) : 'Editor de Punts'}
                       {!editingPoi && managingRoute && (
-                        <span className="ml-2 text-[10px] font-normal text-terracotta-600 normal-case">
+                        <span className={`ml-2 text-[10px] font-normal ${adminTheme.mainText} normal-case`}>
                           → assignant a "{managingRoute.name}"
                         </span>
                       )}
@@ -328,12 +316,13 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                       isLoading={isLoading}
                       routes={legends}
                       defaultRouteId={managingRoute?.id ?? (editingLegend?.id ?? undefined)}
+                      municipalityTheme={municipalityTheme}
                     />
 
                     {editingLegend && (
                       <div className="pt-6 border-t border-stone-100">
                         <Label className="mb-4 block text-stone-800 font-bold">Consola de Vídeo HLS (Extra)</Label>
-                        <VideoUploader poiId={editingLegend.id} />
+                        <VideoUploader poiId={editingLegend.id} theme={adminTheme} />
                       </div>
                     )}
                   </div>
@@ -347,6 +336,7 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                 routeId={managingRoute.id}
                 routeName={managingRoute.name}
                 onClose={() => setManagingRoute(null)}
+                theme={adminTheme}
                 onEditPoi={(poi) => {
                   setEditingPoi(poi);
                   setEditingLegend(null);
@@ -365,7 +355,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                     <thead className="bg-stone-50 text-stone-700">
                       <tr className="text-left border-b border-stone-200">
                         <th className="p-4 font-medium font-serif">Títol</th>
-                        <th className="p-4 font-medium font-serif">Categoria</th>
                         <th className="p-4 font-medium font-serif text-right">Accions</th>
                       </tr>
                     </thead>
@@ -373,12 +362,11 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                       {legends?.map((legend: any) => (
                         <tr key={legend.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
                           <td className="p-4 font-medium text-stone-800">{legend.title}</td>
-                          <td className="p-4 text-stone-600">{legend.category}</td>
                           <td className="p-4 text-right space-x-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-terracotta-600 hover:text-terracotta-700 hover:bg-terracotta-50"
+                              className={`${adminTheme.mainText} ${adminTheme.hover} ${adminTheme.bg}`}
                               onClick={() => {
                                 setEditingLegend(legend);
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -390,8 +378,8 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                               variant="ghost"
                               size="sm"
                               className={`${managingRoute?.id === legend.id
-                                  ? 'text-terracotta-700 bg-terracotta-50'
-                                  : 'text-stone-500 hover:text-terracotta-700 hover:bg-terracotta-50'
+                                ? `${adminTheme.text} ${adminTheme.bg}`
+                                : `text-stone-500 hover:${adminTheme.mainText} hover:${adminTheme.bg}`
                                 }`}
                               onClick={() => {
                                 const next = managingRoute?.id === legend.id
@@ -430,12 +418,11 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
 
 
         {activeTab === 'usuaris' && (
-          <UsersTable profiles={profiles} />
+          <UsersTable profiles={profiles} theme={adminTheme} />
         )}
 
         {activeTab === 'executiu' && (
-          // Assuming first municipality is the target for now, or pass prop
-          <ExecutiveReport municipalityId={municipalityId || ''} />
+          <ExecutiveReport municipalityId={municipalityId || ''} theme={adminTheme} />
         )}
 
         {activeTab === 'config' && (

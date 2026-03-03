@@ -515,6 +515,8 @@ model Poi {
   longitude                  Float?
   audioUrl                   String?      @map("audio_url")
   videoType                  VideoType?   @map("video_type")
+  type                       PoiType?
+  manualQuiz                 Json?        @map("manual_quiz")
   quizQuestion               String?      @map("quiz_question")
   quizOptions                Json?        @map("quiz_options")
   quizCorrectIndex           Int?         @map("quiz_correct_index")
@@ -534,6 +536,7 @@ model Poi {
   carouselImages             String[]     @default([]) @map("carousel_images")
   header16x9                 String?      @map("header_16x9")
   textContent                String?      @map("text_content")
+  icon                       String?
   poiVisits                  PoiVisits[]
   routePois                  RoutePoi[]
   userUnlocks                UserUnlock[]
@@ -599,6 +602,8 @@ model Route {
   descriptionTranslations  Json              @default("{}") @map("description_translations")
   themeId                  ThemeId           @default(mountain) @map("theme_id")
   availabilityType         RouteAvailability @default(permanent) @map("availability_type")
+  status                   RouteStatus       @default(DRAFT)
+  finalQuiz                Json?             @map("final_quiz")
   startDate                DateTime?         @map("start_date") @db.Timestamptz(6)
   endDate                  DateTime?         @map("end_date") @db.Timestamptz(6)
   isPremium                Boolean           @default(false) @map("is_premium")
@@ -647,6 +652,7 @@ model UserUnlock {
   poiId       String   @map("poi_id") @db.Uuid
   unlockedAt  DateTime @default(now()) @map("unlocked_at") @db.Timestamptz(6)
   earnedXp    Int      @map("earned_xp")
+  progress    Float    @default(0.0)
   poi         Poi      @relation(fields: [poiId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_unlocks_poi_fk")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_unlocks_user_fk")
 
@@ -758,6 +764,36 @@ enum RouteAvailability {
   permanent
   temporal
   event
+
+  @@schema("public")
+}
+
+enum PoiType {
+  RELIGIOS
+  DEFENSIU
+  CIVIL
+  NATURA
+  AIGUA
+  MIRADOR
+  LLEGENDA
+  PERSONA_ILLUSTRE
+  GUERRA_CIVIL
+
+  @@schema("public")
+}
+
+enum BiomeType {
+  MUNTANYA
+  MAR
+  INTERIOR
+  BLOSSOM
+
+  @@schema("public")
+}
+
+enum RouteStatus {
+  DRAFT
+  CLOSED
 
   @@schema("public")
 }

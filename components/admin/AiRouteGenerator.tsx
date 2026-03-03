@@ -7,7 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileText, UploadCloud, AlertCircle, Download } from "lucide-react";
 
-export default function AiRouteGenerator() {
+export default function AiRouteGenerator({ theme }: { theme?: any }) {
+  const activeTheme = theme || {
+    text: "text-[#2D4636]",
+    mainText: "text-[#2D4636]/80",
+    bg: "bg-[#2D4636]/10",
+    bgSoft: "bg-[#2D4636]/5",
+    border: "border-[#2D4636]/20",
+    ring: "ring-[#2D4636]/20",
+    primary: "bg-[#2D4636]",
+    hover: "hover:bg-[#1E2F24]",
+    fileBg: "file:bg-[#2D4636]/10",
+    fileText: "file:text-[#2D4636]",
+    fileHover: "hover:file:bg-[#2D4636]/20"
+  };
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -42,35 +55,35 @@ export default function AiRouteGenerator() {
       console.log("Sending request to /api/ai/generate-route...");
       const response = await fetch('/api/ai/generate-route', {
         method: 'POST',
-        body: formData, 
+        body: formData,
       });
 
       console.log("Response status:", response.status);
 
       // 1. BLINDATGE: Comprovem el tipus de contingut ABANS de fer .json()
       const contentType = response.headers.get("content-type");
-      
+
       // Si el servidor falla (400, 500)
       if (!response.ok) {
         if (contentType && contentType.includes("application/json")) {
-           // Si el backend ha controlat l'error i retorna JSON
-           const errData = await response.json();
-           throw new Error(errData.error || 'Error al servidor generant la ruta');
+          // Si el backend ha controlat l'error i retorna JSON
+          const errData = await response.json();
+          throw new Error(errData.error || 'Error al servidor generant la ruta');
         } else {
-           // HARD CRASH: El backend ha mort i Next.js escup HTML
-           const errText = await response.text();
-           console.error("HTML Fatal Error:", errText.substring(0, 500) + "..."); // Imprimeix un tros de l'HTML per depurar
-           throw new Error(`Col·lapse del Servidor (HTTP ${response.status}). El backend no ha retornat JSON. Revisa el terminal de Node/Next.js.`);
+          // HARD CRASH: El backend ha mort i Next.js escup HTML
+          const errText = await response.text();
+          console.error("HTML Fatal Error:", errText.substring(0, 500) + "..."); // Imprimeix un tros de l'HTML per depurar
+          throw new Error(`Col·lapse del Servidor (HTTP ${response.status}). El backend no ha retornat JSON. Revisa el terminal de Node/Next.js.`);
         }
       }
 
       // 2. Si l'status és OK (200), ja podem parsejar tranquils
-      const data = await response.json(); 
+      const data = await response.json();
       console.log("Response data:", data);
 
-      setResult(data.data); 
+      setResult(data.data);
       console.log("Set result to:", data.data);
-      
+
     } catch (err: any) {
       console.error("Error in handleGenerate:", err);
       setError(err.message);
@@ -197,7 +210,7 @@ export default function AiRouteGenerator() {
       {/* Targeta de Pujada de Fitxers */}
       <Card className="border-stone-200 bg-white">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 font-serif text-terracotta-700">
+          <CardTitle className={`flex items-center gap-2 font-serif ${activeTheme.text}`}>
             <FileText className="h-5 w-5" />
             Analista de Documents
           </CardTitle>
@@ -209,18 +222,18 @@ export default function AiRouteGenerator() {
           <div className="border-2 border-dashed border-stone-300 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-stone-50">
             <UploadCloud className="h-10 w-10 text-stone-400 mb-2" />
             <p className="text-sm text-stone-600 mb-4">Arrossega o selecciona un fitxer (Només PDF o TXT)</p>
-            <input 
-              type="file" 
-              accept=".pdf, .txt" 
+            <input
+              type="file"
+              accept=".pdf, .txt"
               onChange={handleFileChange}
-              className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-terracotta-50 file:text-terracotta-700 hover:file:bg-terracotta-100"
+              className={`block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold ${activeTheme.fileBg} ${activeTheme.fileText} ${activeTheme.fileHover}`}
             />
           </div>
-          
-          <Button 
-            onClick={handleGenerate} 
+
+          <Button
+            onClick={handleGenerate}
             disabled={isLoading || !file}
-            className="w-full bg-terracotta-600 hover:bg-terracotta-700 text-white"
+            className={`w-full ${activeTheme.primary} ${activeTheme.hover} text-white`}
           >
             {isLoading ? (
               <>
@@ -247,31 +260,31 @@ export default function AiRouteGenerator() {
         <Card className="border-stone-200 bg-stone-50 shadow-inner animate-in fade-in slide-in-from-bottom-4 duration-700">
           <CardHeader className="flex flex-row items-start justify-between">
             <div className="flex-1">
-                <Badge className="mb-2 bg-stone-800 text-stone-100 hover:bg-stone-700">🔍 Dossier d'Investigació</Badge>
-                <CardTitle className="font-serif text-2xl text-stone-900">{result.territory?.name || "Territori Analitzat"}</CardTitle>
-                <p className="text-sm text-stone-600 mt-2 max-w-2xl border-l-2 border-stone-200 pl-4 py-1 italic">
-                  {result.territory?.context}
-                </p>
-                {result.territory?.suggested_themes && (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {result.territory.suggested_themes.map((theme: string, i: number) => (
-                      <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-terracotta-700 bg-terracotta-50 px-2 py-0.5 rounded border border-terracotta-100">
-                        #{theme}
-                      </span>
-                    ))}
-                  </div>
-                )}
+              <Badge className="mb-2 bg-stone-800 text-stone-100 hover:bg-stone-700">🔍 Dossier d'Investigació</Badge>
+              <CardTitle className="font-serif text-2xl text-stone-900">{result.territory?.name || "Territori Analitzat"}</CardTitle>
+              <p className="text-sm text-stone-600 mt-2 max-w-2xl border-l-2 border-stone-200 pl-4 py-1 italic">
+                {result.territory?.context}
+              </p>
+              {result.territory?.suggested_themes && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {result.territory.suggested_themes.map((theme: string, i: number) => (
+                    <span key={i} className={`text-[10px] font-bold uppercase tracking-wider ${activeTheme.text} ${activeTheme.bg} px-2 py-0.5 rounded border ${activeTheme.border}`}>
+                      #{theme}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleDownloadTxt}
-                className="ml-4 border-stone-300 text-stone-500 hover:bg-stone-100"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadTxt}
+              className="ml-4 border-stone-300 text-stone-500 hover:bg-stone-100"
             >
-                <Download className="h-4 w-4 mr-1" />
-                Descarregar .txt
+              <Download className="h-4 w-4 mr-1" />
+              Descarregar .txt
             </Button>
-            
+
           </CardHeader>
           <CardContent className="space-y-8">
             {/* Secció de Personatges */}
@@ -308,7 +321,7 @@ export default function AiRouteGenerator() {
                         {poi.category?.replace('_', ' ')}
                       </Badge>
                     </div>
-                    
+
                     <div className="p-4">
                       <div className="flex flex-wrap gap-4 mb-4 text-[10px] text-stone-500">
                         {poi.historical_period && <span>⏳ {poi.historical_period}</span>}
@@ -333,7 +346,7 @@ export default function AiRouteGenerator() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <h6 className="text-[10px] font-bold uppercase text-terracotta-600">✨ Fets Singulars</h6>
+                          <h6 className={`text-[10px] font-bold uppercase ${activeTheme.text}`}>✨ Fets Singulars</h6>
                           <ul className="text-xs text-stone-600 list-disc list-inside space-y-1">
                             {poi.unique_facts?.map((fact: string, i: number) => (
                               <li key={i}>{fact}</li>
@@ -350,7 +363,7 @@ export default function AiRouteGenerator() {
                         <div className="mt-4 pt-3 border-t border-stone-100 flex items-start gap-2">
                           <AlertCircle className="h-3 w-3 text-orange-400 mt-0.5" />
                           <div className="text-[10px] text-stone-400">
-                            <span className="font-bold uppercase mr-2">Gaps d'informació:</span> 
+                            <span className="font-bold uppercase mr-2">Gaps d'informació:</span>
                             {poi.raw_data_gaps.map((g: any) => typeof g === 'string' ? g : g.reason || g.id || JSON.stringify(g)).join(', ')}
                           </div>
                         </div>
@@ -365,9 +378,9 @@ export default function AiRouteGenerator() {
             {result.route_building_notes && (
               <div className="mt-8 space-y-6">
                 <h4 className="text-sm font-bold text-stone-800 uppercase flex items-center gap-2 border-b border-stone-200 pb-2">
-                   📝 Estratègia de Ruta per al Gestor
+                  📝 Estratègia de Ruta per al Gestor
                 </h4>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Top POIs */}
                   {result.route_building_notes.top_pois && (
@@ -385,14 +398,14 @@ export default function AiRouteGenerator() {
 
                   {/* Combinacions Suggerides */}
                   {result.route_building_notes.suggested_combinations && (
-                    <div className="bg-terracotta-50/50 p-4 rounded-lg border border-terracotta-100">
-                      <h5 className="text-[11px] font-bold text-terracotta-800 uppercase mb-3">🔗 Rutes Temàtiques</h5>
+                    <div className={`${activeTheme.bgSoft} p-4 rounded-lg border ${activeTheme.border}`}>
+                      <h5 className={`text-[11px] font-bold ${activeTheme.text} uppercase mb-3`}>🔗 Rutes Temàtiques</h5>
                       <div className="space-y-3">
                         {result.route_building_notes.suggested_combinations.map((comb: any, i: number) => (
-                          <div key={i} className="bg-white p-2 rounded border border-terracotta-100">
-                            <div className="font-bold text-[10px] text-terracotta-700 uppercase mb-1">{comb.theme}</div>
+                          <div key={i} className={`bg-white p-2 rounded border ${activeTheme.border}`}>
+                            <div className={`font-bold text-[10px] ${activeTheme.text} uppercase mb-1`}>{comb.theme}</div>
                             <div className="text-[9px] text-stone-400 mb-1 flex flex-wrap gap-1">
-                                {comb.poi_ids?.map((id: string) => <span key={id} className="bg-stone-50 px-1 rounded">#{id}</span>)}
+                              {comb.poi_ids?.map((id: string) => <span key={id} className="bg-stone-50 px-1 rounded">#{id}</span>)}
                             </div>
                             <p className="text-[10px] text-stone-600 italic">"{comb.rationale}"</p>
                           </div>

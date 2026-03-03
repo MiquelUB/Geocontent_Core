@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MapPin, Trash2, RefreshCw, Pencil } from 'lucide-react';
-import { getRouteWithPois, addPoiToRoute, removePoiFromRoute } from '@/lib/actions';
+import { getRouteWithPois, addPoiToRoute, removePoiFromRoute, closeRouteAndGenerateFinalQuiz } from '@/lib/actions';
+import { CheckCircle2, Trophy, Loader2, MapPin, Trash2, RefreshCw, Pencil } from 'lucide-react';
 
 interface Poi {
   id: string;
@@ -26,18 +26,31 @@ interface RoutePoiManagerProps {
   routeName: string;
   onClose: () => void;
   onEditPoi?: (poi: Poi) => void;
+  theme?: any;
 }
 
-export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi }: RoutePoiManagerProps) {
+export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi, theme }: RoutePoiManagerProps) {
+  const activeTheme = theme || {
+    text: "text-[#2D4636]",
+    mainText: "text-[#2D4636]/80",
+    bg: "bg-[#2D4636]/10",
+    primary: "bg-[#2D4636]",
+    hover: "hover:bg-[#1E2F24]",
+  };
   const [pois, setPois] = useState<Poi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState<string | null>(null); // poiId being processed
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [routeStatus, setRouteStatus] = useState<string>('DRAFT');
+  const [finalQuiz, setFinalQuiz] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const route = await getRouteWithPois(routeId);
       setPois(route?.pois ?? []);
+      setRouteStatus((route as any)?.status || 'DRAFT');
+      setFinalQuiz((route as any)?.finalQuiz || null);
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +84,23 @@ export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi
     setIsSaving(null);
   }
 
+  async function handleFinalize() {
+    if (!confirm('Vols tancar la ruta i generar el Repte Final amb IA? Això analitzarà tots els punts.')) return;
+    setIsFinalizing(true);
+    try {
+      const res = await closeRouteAndGenerateFinalQuiz(routeId);
+      if (res.success) {
+        setRouteStatus('CLOSED');
+        setFinalQuiz(res.finalQuiz);
+        alert('Ruta segellada i Repte Final generat amb èxit!');
+      } else {
+        alert('Error: ' + res.error);
+      }
+    } finally {
+      setIsFinalizing(false);
+    }
+  }
+
 
   return (
     <div className="bg-stone-50 border border-stone-200 rounded-xl shadow-inner p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-300">
@@ -79,7 +109,7 @@ export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi
         <div>
           <h3 className="font-serif text-lg font-bold text-stone-900">Punts de la Ruta</h3>
           <p className="text-xs text-stone-500 mt-0.5">
-            <span className="font-medium text-terracotta-600">"{routeName}"</span>
+            <span className={`font-medium ${activeTheme.mainText}`}>"{routeName}"</span>
             {' '}— {pois.length} punt{pois.length !== 1 ? 's' : ''} assignat{pois.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -92,6 +122,59 @@ export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi
           </Button>
         </div>
       </div>
+
+      {/* Route Status Banner */}
+      {routeStatus === 'CLOSED' ? (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Trophy className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="text-xs font-bold text-green-800 uppercase tracking-widest">Ruta Segellada</p>
+              <p className="text-[10px] text-green-600">Aquesta ruta ja és visible per als usuaris i té un Repte Final.</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">ACTIVA</Badge>
+        </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-amber-600" />
+            <div>
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Ruta en esborrany</p>
+              <p className="text-[10px] text-amber-600">Afegeix punts i prem "Finalitzar" per publicar-la.</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            disabled={pois.length === 0 || isFinalizing}
+            onClick={handleFinalize}
+            className={`${activeTheme.primary} ${activeTheme.hover} text-white text-xs h-8 px-4`}
+          >
+            {isFinalizing ? (
+              <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Generant...</>
+            ) : (
+              'Finalitzar i Segellar'
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Final Quiz Preview if exists */}
+      {finalQuiz && (
+        <div className="bg-stone-100 border border-stone-200 rounded-lg p-3 space-y-2">
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-2">
+            <Trophy className="w-3 h-3" /> Repte Final (Generat per IA)
+          </p>
+          <p className="text-xs font-bold text-stone-800">{finalQuiz.pregunta}</p>
+          <div className="grid grid-cols-2 gap-1 mt-1">
+            {finalQuiz.opcions.map((o: string, idx: number) => (
+              <div key={idx} className={`text-[10px] p-2 rounded border ${idx === finalQuiz.correcta ? 'border-green-200 bg-green-50 text-green-700' : 'border-stone-200 bg-white text-stone-500'}`}>
+                {o}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12 text-stone-400">
@@ -146,7 +229,7 @@ export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         disabled={isSaving === poi.id}
-                        className="text-stone-400 hover:text-terracotta-600 hover:bg-terracotta-50 flex-shrink-0 p-1.5 h-auto"
+                        className={`text-stone-400 hover:${activeTheme.mainText} hover:${activeTheme.bg} flex-shrink-0 p-1.5 h-auto`}
                         title="Editar punt"
                       >
                         <Pencil className="w-3.5 h-3.5" />

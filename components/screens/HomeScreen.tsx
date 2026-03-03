@@ -35,23 +35,16 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
 
       if (legendsData) {
         const mapped = legendsData.map((l: any) => ({
-          id: l.id,
-          title: l.title,
+          ...l,
           location: l.location_name || "Lugar",
-          latitude: l.latitude,
-          longitude: l.longitude,
           distance: calculateDistance(
             currentLoc.latitude,
             currentLoc.longitude,
             l.latitude,
             l.longitude
           ),
-          category: l.category,
           image: l.image_url,
           hero: l.hero_image_url,
-          audio: l.audio_url,
-          video: l.video_url,
-          description: l.description,
           rating: l.rating || 4.5,
           coordinates: { lat: l.latitude, lng: l.longitude }
         }));

@@ -1,0 +1,37 @@
+{
+  "Blossom": [
+    "Aigua.jpg",
+    "Casa.png",
+    "Castell.jpg",
+    "Civil_war.jpg",
+    "Vistes.png"
+  ],
+  "City": [
+    "Aigua.jpg",
+    "Casa.png",
+    "Castell.jpg",
+    "Civil_war.jpg",
+    "Vistes.png"
+  ],
+  "Interior": [
+    "Aigua.jpg",
+    "Casa.jpg",
+    "Castell.jpg",
+    "Civil_war.jpg",
+    "Vistes.png"
+  ],
+  "Mar": [
+    "Aigua.jpg",
+    "Casa.jpg",
+    "Castell.jpg",
+    "Civil_war.jpg",
+    "Vistes.png"
+  ],
+  "Montanya": [
+    "Aigua.jpg",
+    "Casa.jpg",
+    "Castell.jpg",
+    "Civil_war.jpg",
+    "Vistes.png"
+  ]
+}

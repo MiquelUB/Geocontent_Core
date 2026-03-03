@@ -34,20 +34,13 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
             if (!propBrand) setBrand(brandData);
             if (data) {
                 const mapped = data.map((l: any) => ({
-                    id: l.id,
-                    title: l.title,
-                    description: l.description,
+                    ...l,
                     location: l.location_name || '',
-                    latitude: l.latitude,
-                    longitude: l.longitude,
                     coordinates: { lat: l.latitude, lng: l.longitude },
-                    category: l.category || '',
                     image: l.image_url,
                     hero: l.hero_image_url,
-                    // Deterministic values — no Math.random()
                     difficulty: getDifficulty(l.poiCount ?? 0),
                     poiCount: l.poiCount ?? (l.pois?.length ?? 0),
-                    pois: l.pois || [],
                 }));
                 console.log("Mapped routes for library:", mapped[0]); // Debug coords
                 setLegends(mapped);

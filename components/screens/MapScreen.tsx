@@ -9,6 +9,39 @@ import { Marker, Popup } from "react-map-gl/maplibre";
 
 import { getLegends } from "@/lib/actions";
 import { PxxConfig } from "@/projects/active/config";
+import iconsMapping from '@/lib/icons-mapping.json';
+
+const BIOME_MAP: Record<string, string> = {
+  mountain: 'Montanya',
+  coast: 'Mar',
+  city: 'City',
+  interior: 'Interior',
+  bloom: 'Blossom',
+};
+
+const typeToIconName: Record<string, string> = {
+  'RELIGIOS': 'Casa',
+  'CIVIL': 'Casa',
+  'DEFENSIU': 'Castell',
+  'LLEGENDA': 'Castell',
+  'AIGUA': 'Aigua',
+  'MIRADOR': 'Vistes',
+  'NATURA': 'Vistes',
+  'GUERRA_CIVIL': 'Civil_war',
+  'PERSONA_ILLUSTRE': 'Casa',
+};
+
+function getPoiIconSrc(poi: any) {
+  const biome = BIOME_MAP[poi.category] || 'Montanya';
+  if (poi.icon) return `/poi-icons/${biome}/${poi.icon}`;
+
+  const mappedName = typeToIconName[poi.type] || 'Casa';
+  const availableFiles = (iconsMapping as any)[biome] || [];
+  const finalIcon = availableFiles.find((f: string) => f.startsWith(mappedName)) || availableFiles[0];
+
+  if (finalIcon) return `/poi-icons/${biome}/${finalIcon}`;
+  return null;
+}
 
 interface MapScreenProps {
   onNavigate: (screen: string, data?: any) => void;
@@ -38,19 +71,14 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, userLocation, e
       const data = await getLegends();
       if (data) {
         const mapped = data.map((l: any) => ({
-          id: l.id,
-          title: l.title,
+          ...l,
           location: l.location_name || "",
-          category: l.category || "",
-          latitude: l.latitude,
-          longitude: l.longitude,
           coordinates: { lat: l.latitude, lng: l.longitude },
           image: l.image_url,
           hero: l.hero_image_url,
           audio: l.audio_url,
           video: l.video_url,
-          description: l.description,
-          color: "#3E4E3F" // Standard color instead of hardcoded categories
+          color: "#3E4E3F",
         }));
         setLegends(mapped);
 
@@ -87,6 +115,20 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, userLocation, e
   const filteredLegends = activeCategory === "totes"
     ? legends
     : legends.filter(legend => legend.location === activeCategory);
+
+  // Generem una llista plana de tots els POIs de les rutes filtrades per mostrar al mapa
+  const allMapPoints = filteredLegends.flatMap(legend =>
+    legend.pois.map((poi: any) => ({
+      ...poi,
+      // Normalitzem pel popup i detall
+      routeId: legend.id,
+      routeName: legend.title,
+      category: legend.category, // El bioma de la ruta
+      location: legend.location,
+      image: poi.image_url || legend.image,
+      coordinates: { lat: poi.latitude, lng: poi.longitude }
+    }))
+  );
 
   return (
     <div className="screen-full bg-background flex flex-col h-full">
@@ -199,25 +241,35 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, userLocation, e
           userLocation={userLocation}
         >
 
-          {filteredLegends.map((legend, index) => (
+          {allMapPoints.map((poi, index) => (
             <Marker
-              key={legend.id}
-              longitude={legend.coordinates.lng}
-              latitude={legend.coordinates.lat}
+              key={`${poi.id}-${index}`}
+              longitude={poi.longitude}
+              latitude={poi.latitude}
               anchor="bottom"
             >
               <div
                 className="relative cursor-pointer hover:scale-110 transition-transform"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("Marker CLICKED:", legend.title);
-                  setSelectedLegend(legend);
+                  console.log("POI CLICKED:", poi.title);
+                  setSelectedLegend(poi);
                 }}
               >
-                {/* Debug: {legend.coordinates.lat},{legend.coordinates.lng} */}
-                <Navigation
-                  className="w-8 h-8 text-primary drop-shadow-md"
-                />
+                {(() => {
+                  const iconSrc = getPoiIconSrc(poi);
+                  return iconSrc ? (
+                    <img
+                      src={iconSrc}
+                      className="w-10 h-10 drop-shadow-md object-contain"
+                      alt={poi.title}
+                    />
+                  ) : (
+                    <Navigation
+                      className="w-8 h-8 text-primary drop-shadow-md"
+                    />
+                  );
+                })()}
               </div>
             </Marker>
           ))}
