@@ -1,0 +1,77 @@
+version: "2"
+type: backend
+tech_stack:
+  - TypeScript
+  - Next.js (App Router)
+  - Prisma (PostgreSQL)
+  - Supabase
+  - Zod
+features:
+  - name: Admin Municipality Settings
+    description: Update municipality configurations such as plan tiers and passwords.
+    files:
+      - app/api/admin/municipality/route.ts
+      - lib/actions.ts
+    endpoints:
+      - method: POST
+        path: /api/admin/municipality
+        description: Save municipality global settings, themes, and limits
+        auth_required: false
+        request_schema:
+          body:
+            id: string
+            name: string
+            logoUrl: string
+            themeId: string
+            adminMasterPassword: string
+            planTier: string
+            extraRoutesCount: number
+        response_schema:
+          "200": "{ success: true }"
+          "500": "{ success: false, error: string }"
+    depends_on:
+      - Prisma
+  - name: Analytics and Executive Reports
+    description: Fetch dashboard stats and generate PDF executive reports
+    files:
+      - app/api/analytics/executive-report/route.ts
+      - lib/analytics.ts
+      - lib/services/reportProcessor.ts
+      - lib/actions/reports.ts
+    endpoints:
+      - method: GET
+        path: /api/analytics/executive-report
+        description: Fetch analytical data including user metrics, completions, and heatmap telemetry
+        auth_required: false
+        response_schema:
+          "200": "{ success: true, data: object }"
+          "400": "{ success: false, error: string }"
+          "500": "{ success: false, error: string }"
+    depends_on:
+      - Prisma
+  - name: AI Content Generation
+    description: Generate POI Quizzes, Final Route Quizzes, and full routes from PDFs using OpenRouter
+    files:
+      - app/api/ai/generate-quiz/route.ts
+      - app/api/ai/generate-route/route.ts
+      - app/api/ai/generate-route-quiz/route.ts
+      - lib/services/openrouter.ts
+    endpoints:
+      - method: POST
+        path: /api/ai/generate-quiz
+        description: Generate a 3-option quiz for a single POI
+        auth_required: false
+      - method: POST
+        path: /api/ai/generate-route
+        description: Generate a full route breakdown parsing a provided PDF file
+        auth_required: false
+      - method: POST
+        path: /api/ai/generate-route-quiz
+        description: Generate the final transversal challenge quiz for a route
+        auth_required: false
+    depends_on:
+      - OpenRouter (OpenAI SDK)
+known_limitations:
+  - issue: AI routes might timeout if parsing large PDFs due to Vercel's 60s boundary
+    location: app/api/ai/generate-route/route.ts
+    impact: Potential 504 Gateway Timeout or 500 error when processing very long PDFs

@@ -19,6 +19,8 @@ import ManualPoiForm from "./ManualPoiForm";
 import { updateRoute } from "@/lib/actions";
 import RoutePoiManager from "./RoutePoiManager";
 import MunicipalityManager from "./MunicipalityManager";
+import AdminSecurityGate from "./AdminSecurityGate";
+import { verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
 
 interface Legend {
   id: string;
@@ -56,6 +58,8 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
   const [audioUrl, setAudioUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [editingLegend, setEditingLegend] = useState<Legend | null>(null);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [isSuperUnlocked, setIsSuperUnlocked] = useState(false);
 
   // Form State
   // Note: Original code used a Dialog. Now we want it in the right column (Split Screen).
@@ -72,7 +76,13 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
 
   const router = useRouter();
 
-  // Route Form State
+  // Load unlock states from session
+  useEffect(() => {
+    const adminPass = sessionStorage.getItem('admin_master_unlocked');
+    const superPass = sessionStorage.getItem('super_master_unlocked');
+    if (adminPass) setIsAdminUnlocked(true);
+    if (superPass) setIsSuperUnlocked(true);
+  }, []);
   const [routeTitle, setRouteTitle] = useState('');
   const [routeDescription, setRouteDescription] = useState('');
   const [routeLocation, setRouteLocation] = useState('');
@@ -180,6 +190,22 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (!isAdminUnlocked) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center p-6">
+        <AdminSecurityGate
+          title="Accés al Panell de Control"
+          description={`Introduïu la contrasenya mestra del consistori per gestionar els continguts.`}
+          onSuccess={() => {
+            setIsAdminUnlocked(true);
+            sessionStorage.setItem('admin_master_unlocked', 'true');
+          }}
+          verifyFn={async (pass) => verifyAdminPassword(municipalityId || '', pass)}
+        />
+      </div>
+    );
   }
 
   return (
@@ -535,15 +561,27 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
 
         {activeTab === 'config' && (
           <div className="max-w-2xl mx-auto space-y-8">
-            <Card className="border-stone-200 shadow-sm bg-white">
-              <CardHeader>
-                <CardTitle className="font-serif text-xl text-stone-800">Paràmetres del Municipi/Territori</CardTitle>
-                <p className="text-sm text-stone-500">Aquesta configuració afecta a com es mostren les localitzacions a l'app.</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <MunicipalityManager municipalityId={municipalityId} />
-              </CardContent>
-            </Card>
+            {isSuperUnlocked ? (
+              <Card className="border-stone-200 shadow-sm bg-white">
+                <CardHeader>
+                  <CardTitle className="font-serif text-xl text-stone-800">Paràmetres del Municipi/Territori</CardTitle>
+                  <p className="text-sm text-stone-500">Aquesta configuració afecta a com es mostren les localitzacions a l'app.</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <MunicipalityManager municipalityId={municipalityId} />
+                </CardContent>
+              </Card>
+            ) : (
+              <AdminSecurityGate
+                title="Àrea de Cincidència (Configuració)"
+                description="Accés exclusiu per a l'administrador del sistema per configurar paràmetres crítics."
+                onSuccess={() => {
+                  setIsSuperUnlocked(true);
+                  sessionStorage.setItem('super_master_unlocked', 'true');
+                }}
+                verifyFn={async (pass) => verifySuperAdminPassword(pass)}
+              />
+            )}
           </div>
         )}
       </main>

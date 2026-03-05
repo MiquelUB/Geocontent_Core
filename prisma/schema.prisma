@@ -460,8 +460,10 @@ model Municipality {
   logoUrl          String?  @map("logo_url")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  planTier         String   @default("basic") @map("plan_tier")
-  themeId          String?  @default("mountain") @map("theme_id")
+  planTier           String   @default("basic") @map("plan_tier")
+  themeId           String?  @default("mountain") @map("theme_id")
+  adminMasterPassword String?  @map("admin_master_password")
+  extraRoutesCount   Int      @default(0) @map("extra_routes_count")
   reports          Report[]
   routes           Route[]
   users            User[]

@@ -12,6 +12,7 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { generatePoiQuiz, generateFinalRouteQuiz } from './services/openrouter';
+import { checkPlanLimits, canAddPoiToRoute } from './planLimits';
 
 const GENERIC_ERROR_MESSAGE = "S'ha produït un error al processar la sol·licitud";
 
@@ -393,6 +394,14 @@ export async function createRoute(formData: FormData) {
   }
 
   try {
+    const limits = await checkPlanLimits(municipalityId);
+    if (!limits.isWithinRouteLimit) {
+      return {
+        success: false,
+        error: `HAS ASSOLIT EL LÍMIT DEL TEU PLA (${limits.planName}: ${limits.maxRoutes} rutes). Contacta amb suport per un add-on de ruta (+500€/any) o puja de pla.`
+      };
+    }
+
     const id = uuidv4();
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') + '-' + id.split('-')[0];
 
@@ -504,6 +513,11 @@ export async function createPoi(formData: FormData) {
       });
 
       if (route_id) {
+        const canAdd = await canAddPoiToRoute(route_id);
+        if (!canAdd) {
+          throw new Error("S'ha assolit el límit de POIs per aquesta ruta segons el teu pla.");
+        }
+
         const existingCount = await tx.routePoi.count({ where: { routeId: route_id } });
         await tx.routePoi.create({
           data: {
@@ -817,84 +831,74 @@ export async function getOrphanPois() {
 
 export async function loginOrRegister(name: string, email: string) {
   try {
+    // 1. Send Magic Link via Supabase Auth
+    // We use the client-side cookieStore if called from server, but better to use supabaseAdmin for sending OTP
+    // to existing users or creating new ones.
+
+    // Note: To use magic links effectively with custom names, we should check if user exists first.
     const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
 
-    if (listError) {
-      console.error('Error listing users:', listError);
-      return { success: false, error: GENERIC_ERROR_MESSAGE };
+    const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!existingUser) {
+      // Create user first so we can attach the name metadata
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        email_confirm: true, // We confirm it so they can login, but we'll send the link now
+        user_metadata: { username: name }
+      });
     }
 
-    const existingAuthUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    // Now send the Magic Link (OTP)
+    // In a real 'use server' action, we use the server client to sign in
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
 
-    if (existingAuthUser) {
-      const { data: existingProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .eq('id', existingAuthUser.id)
-        .single();
-
-      if (existingProfile) {
-        const fullProfile = await getUserProfile(existingAuthUser.id);
-        return { success: true, user: fullProfile };
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+        data: { username: name }
       }
-
-      const { data: newProfile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .upsert({
-          id: existingAuthUser.id,
-          username: name,
-          role: 'user',
-          xp: 0,
-          level: 1
-        })
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        return { success: false, error: GENERIC_ERROR_MESSAGE };
-      }
-      const fullProfile = await getUserProfile(existingAuthUser.id);
-      return { success: true, user: fullProfile };
-    }
-
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: 'ChangeMe123!' + Math.random(),
-      email_confirm: true,
-      user_metadata: { username: name }
     });
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      return { success: false, error: GENERIC_ERROR_MESSAGE };
-    }
+    if (otpError) throw otpError;
 
-    if (!authUser.user) return { success: false, error: GENERIC_ERROR_MESSAGE };
-
-    const { data: finalProfile, error: finalProfileError } = await supabaseAdmin
-      .from('profiles')
-      .upsert({
-        id: authUser.user.id,
-        username: name,
-        role: 'user',
-        xp: 0,
-        level: 1
-      })
-      .select()
-      .single();
-
-    if (finalProfileError) {
-      console.error('Final profile error:', finalProfileError);
-      return { success: false, error: GENERIC_ERROR_MESSAGE };
-    }
-
-    const fullProfile = await getUserProfile(authUser.user.id);
-    return { success: true, user: fullProfile };
+    return { success: true, message: "S'ha enviat un enllaç màgic al teu correu." };
   } catch (err: any) {
     console.error('[loginOrRegister error]', err);
-    return { success: false, error: GENERIC_ERROR_MESSAGE };
+    return { success: false, error: "Error enviant l'enllaç de verificació" };
   }
+}
+
+export async function verifyAdminPassword(municipalityId: string, password: string) {
+  try {
+    // Superadmin bypass
+    const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'antigravity_master_2026';
+    if (password === superPassword) {
+      return { success: true };
+    }
+
+    const muni = await prisma.municipality.findUnique({
+      where: { id: municipalityId },
+      select: { adminMasterPassword: true } as any
+    }) as any;
+
+    if (!muni || !muni.adminMasterPassword) {
+      return { success: false, error: "Contrasenya no configurada pel municipi" };
+    }
+
+    return { success: muni.adminMasterPassword === password };
+  } catch (err) {
+    return { success: false, error: "Error de verificació" };
+  }
+}
+
+export async function verifySuperAdminPassword(password: string) {
+  // Super Admin password for Miquel
+  const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'antigravity_master_2026';
+  return { success: password === superPassword };
 }
 
 export async function getUserProfile(userId: string) {
@@ -1302,8 +1306,8 @@ export async function getMunicipalities() {
   }
 }
 
-export async function updateMunicipality(id: string, name: string, logoUrl?: string, themeId?: string) {
-  logToFile(`updateMunicipality called (v2): ${id}, ${name}, ${themeId}`);
+export async function updateMunicipality(id: string, name: string, logoUrl?: string, themeId?: string, adminMasterPassword?: string, planTier?: string, extraRoutesCount?: number) {
+  logToFile(`updateMunicipality called (v2): ${id}, ${name}, ${themeId}, ${planTier}, extra: ${extraRoutesCount}`);
 
   if (!id) return { success: false, error: "ID missing" };
 
@@ -1322,6 +1326,9 @@ export async function updateMunicipality(id: string, name: string, logoUrl?: str
         name = ${name}, 
         logo_url = ${logoUrl || null}, 
         theme_id = ${themeId || 'mountain'},
+        admin_master_password = ${adminMasterPassword || null},
+        plan_tier = ${planTier || 'roure'},
+        extra_routes_count = ${extraRoutesCount || 0},
         updated_at = NOW()
       WHERE id = ${id}
     `;
