@@ -35,10 +35,13 @@ export const createClient = (cookieStore: any) => {
   )
 }
 
+const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+
 // Admin client for specialized tasks (bypassing RLS)
 export const supabaseAdmin = createSupabaseClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  adminUrl,
+  adminKey,
   {
     auth: {
       autoRefreshToken: false,

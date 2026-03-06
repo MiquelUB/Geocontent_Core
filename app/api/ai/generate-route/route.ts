@@ -6,7 +6,7 @@ const pdfParse = require('pdf-parse');
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY || "sk-placeholder",
   defaultHeaders: {
     "HTTP-Referer": process.env.SITE_URL || "https://projectexinoxano.com",
     "X-Title": "PXX Dashboard",
@@ -22,29 +22,29 @@ export async function POST(req: Request) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-        return NextResponse.json({ success: false, error: "No s'ha pujat cap document." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No s'ha pujat cap document." }, { status: 400 });
     }
 
     // 2. BLINDATGE DE SEGURETAT (Directiva: Només PDF/TXT)
     if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
-        return NextResponse.json(
-          { success: false, error: "Format no suportat. Només s'accepten documents de text (.txt) i PDF (.pdf). Les imatges i vídeos estan bloquejats." }, 
-          { status: 415 }
-        );
+      return NextResponse.json(
+        { success: false, error: "Format no suportat. Només s'accepten documents de text (.txt) i PDF (.pdf). Les imatges i vídeos estan bloquejats." },
+        { status: 415 }
+      );
     }
 
     // Extracció del text del fitxer 
     let contextText = '';
-    
+
     if (file.type === 'application/pdf') {
-        // Conversió a Buffer per a pdf-parse
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const pdfData = await pdfParse(buffer);
-        contextText = pdfData.text;
+      // Conversió a Buffer per a pdf-parse
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const pdfData = await pdfParse(buffer);
+      contextText = pdfData.text;
     } else {
-        // Text pla
-        contextText = await file.text();
+      // Text pla
+      contextText = await file.text();
     }
 
     // Neteja bàsica per estalviar tokens i soroll
@@ -152,7 +152,7 @@ export async function POST(req: Request) {
     });
 
     const rawContent = completion.choices[0].message.content || "{}";
-    
+
     // Neteja per seguretat per si l'LLM afegeix markdown trencant el JSON
     const cleanJson = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
     const sanitizedData = JSON.parse(cleanJson);
@@ -163,7 +163,7 @@ export async function POST(req: Request) {
     console.error("AI Route Fatal Error:", error);
     // GARANTIZAMOS QUE EL ERROR SEA JSON Y NO HTML
     return new Response(
-      JSON.stringify({ success: false, error: "Error interno procesando el documento: " + (error.message || "Fallo desconocido") }), 
+      JSON.stringify({ success: false, error: "Error interno procesando el documento: " + (error.message || "Fallo desconocido") }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
