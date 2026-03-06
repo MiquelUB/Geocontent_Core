@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { PxxConfig } from "@/projects/active/config";
 
@@ -8,14 +8,18 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onComplete, brand }: SplashScreenProps) {
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete; // always up-to-date without re-triggering effect
+
   useEffect(() => {
     const splashDuration = process.env.NODE_ENV === 'development' ? 800 : 3000;
     const timer = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
     }, splashDuration);
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []); // ← runs only ONCE on mount
+
 
   return (
     <div className="h-full flex flex-col items-center justify-center bg-primary relative overflow-hidden">

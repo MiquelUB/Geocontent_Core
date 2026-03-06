@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LegendsScreen } from "../components/screens/LegendsScreen";
 import { LegendDetailScreen } from "../components/screens/LegendDetailScreen";
@@ -108,7 +108,7 @@ export default function Home() {
     setCurrentScreen(screen);
   };
 
-  const handleSplashComplete = () => {
+  const handleSplashComplete = useCallback(() => {
     // If data is still loading, wait (splash will retry via its own loop)
     if (!isLoaded && !errorType) {
       console.log("Splash finished but brand not ready. Waiting...");
@@ -120,9 +120,9 @@ export default function Home() {
     } else if (currentUser || process.env.NEXT_PUBLIC_AUDIT_MODE === 'true') {
       setCurrentScreen("home");
     } else {
-      setCurrentScreen("login"); // Require login if no user
+      setCurrentScreen("login");
     }
-  };
+  }, [isLoaded, errorType, currentUser]);
 
   const handleLoginSuccess = (user: any) => {
     setCurrentUser(user);
