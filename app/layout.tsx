@@ -22,7 +22,12 @@ const newsreader = Newsreader({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const brand = await getAppBranding();
+  let brand = null;
+  try {
+    brand = await getAppBranding();
+  } catch (e) {
+    // Graceful fallback during build-time static generation
+  }
   const appName = brand?.name || PxxConfig.appName;
 
   return {
@@ -114,7 +119,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const brand = await getAppBranding();
+  let brand = null;
+  try {
+    brand = await getAppBranding();
+  } catch (e) {
+    // Graceful fallback during build-time static generation
+  }
 
   const themeId = (brand as any)?.themeId || 'mountain';
   const theme = (PxxConfig.chameleonThemes as any)[themeId] || PxxConfig.chameleonThemes.mountain;
