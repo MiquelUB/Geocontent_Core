@@ -2,6 +2,7 @@
  * PXX — Prisma Client Singleton
  * Prevents multiple instances in development (hot reload)
  * Updated for Prisma 7 + Driver Adapter (Supabase/PostgreSQL)
+ * Uses a Proxy for fully lazy initialization — safe during Next.js static build.
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -13,16 +14,16 @@ const globalForPrisma = globalThis as unknown as {
   pool: Pool | undefined;
 };
 
-const getPrismaClient = () => {
-  if (globalForPrisma.prisma) return globalForPrisma.prisma;
-
+function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL || "";
   let finalConnectionString = connectionString;
 
   if (process.env.NODE_ENV === "development" && connectionString.includes('pooler.supabase.com')) {
     if (connectionString.includes(':5432')) {
       const newUrl = connectionString.replace(':5432', ':6543');
-      finalConnectionString = newUrl.includes('?') ? (newUrl.includes('pgbouncer=true') ? newUrl : `${newUrl}&pgbouncer=true`) : `${newUrl}?pgbouncer=true`;
+      finalConnectionString = newUrl.includes('?')
+        ? (newUrl.includes('pgbouncer=true') ? newUrl : `${newUrl}&pgbouncer=true`)
+        : `${newUrl}?pgbouncer=true`;
       console.log(" [Prisma] Dev: Switched to Transaction Pooling (6543)");
     }
   }
@@ -39,18 +40,22 @@ const getPrismaClient = () => {
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-  }
-
   return client;
-};
-
-export const prisma = getPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-  // Pool is only used if adapter is used, but we keep it for now if we revert
 }
+
+// Lazy singleton — NOT instantiated at import time. Safe for Next.js static build.
+function getPrisma(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
+}
+
+// Proxy that defers all access to the real client until first use
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getPrisma() as any)[prop];
+  },
+});
 
 export default prisma;
