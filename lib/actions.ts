@@ -870,25 +870,33 @@ export async function loginOrRegister(name: string, email: string) {
 
     // Now send the Magic Link (OTP)
     // In a real 'use server' action, we use the server client to sign in
-    const cookieStore = cookies();
+    const cookieStore = await cookies(); // Next.js 15: cookies() is async
     const supabase = createClient(cookieStore);
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
 
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
         data: { username: name }
       }
     });
 
-    if (otpError) throw otpError;
+    if (otpError) {
+      console.error('[loginOrRegister OTP error]', otpError);
+      throw otpError;
+    }
 
     return { success: true, message: "S'ha enviat un enllaç màgic al teu correu." };
   } catch (err: any) {
-    console.error('[loginOrRegister error]', err);
-    return { success: false, error: "Error enviant l'enllaç de verificació" };
+    console.error('[loginOrRegister error]', err?.message || err);
+    return { success: false, error: `Error enviant l'enllaç de verificació: ${err?.message || 'Error desconegut'}` };
   }
 }
+
 
 export async function verifyAdminPassword(municipalityId: string, password: string) {
   try {
