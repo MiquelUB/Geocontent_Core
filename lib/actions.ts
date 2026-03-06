@@ -849,33 +849,13 @@ export async function getOrphanPois() {
 
 export async function loginOrRegister(name: string, email: string) {
   try {
-    // 1. Send Magic Link via Supabase Auth
-    // We use the client-side cookieStore if called from server, but better to use supabaseAdmin for sending OTP
-    // to existing users or creating new ones.
-
-    // Note: To use magic links effectively with custom names, we should check if user exists first.
-    const { data: { users }, error: listError } = await getSupabaseAdmin().auth.admin.listUsers();
-    if (listError) throw listError;
-
-    const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-
-    if (!existingUser) {
-      // Create user first so we can attach the name metadata
-      await getSupabaseAdmin().auth.admin.createUser({
-        email,
-        email_confirm: true, // We confirm it so they can login, but we'll send the link now
-        user_metadata: { username: name }
-      });
-    }
-
-    // Now send the Magic Link (OTP)
-    // In a real 'use server' action, we use the server client to sign in
+    // Supabase creates the user automatically on first magic link sign-in.
+    // No need to call listUsers/createUser — that requires service_role key.
     const cookieStore = await cookies(); // Next.js 15: cookies() is async
     const supabase = createClient(cookieStore);
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
