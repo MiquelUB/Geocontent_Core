@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, supabaseAdmin } from '@/lib/database/supabase/server'
+import { createClient, getSupabaseAdmin } from '@/lib/database/supabase/server'
 import { cookies } from 'next/headers'
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
 import { cache } from 'react';
@@ -119,7 +119,7 @@ export async function uploadFile(file: File, bucket: string = 'geocontent') {
 
     // Use admin client for storage uploads to ensure success in admin context
     // RLS for storage is not triggered for admin client
-    const { data, error } = await supabaseAdmin.storage
+    const { data, error } = await getSupabaseAdmin().storage
       .from(bucket)
       .upload(fileName, buffer, {
         contentType,
@@ -131,7 +131,7 @@ export async function uploadFile(file: File, bucket: string = 'geocontent') {
       throw error;
     }
 
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = getSupabaseAdmin().storage
       .from(bucket)
       .getPublicUrl(data.path);
 
@@ -854,14 +854,14 @@ export async function loginOrRegister(name: string, email: string) {
     // to existing users or creating new ones.
 
     // Note: To use magic links effectively with custom names, we should check if user exists first.
-    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users }, error: listError } = await getSupabaseAdmin().auth.admin.listUsers();
     if (listError) throw listError;
 
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
     if (!existingUser) {
       // Create user first so we can attach the name metadata
-      await supabaseAdmin.auth.admin.createUser({
+      await getSupabaseAdmin().auth.admin.createUser({
         email,
         email_confirm: true, // We confirm it so they can login, but we'll send the link now
         user_metadata: { username: name }
@@ -926,7 +926,7 @@ export async function verifySuperAdminPassword(password: string) {
 export async function getUserProfile(userId: string) {
   noStore();
   try {
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -935,7 +935,7 @@ export async function getUserProfile(userId: string) {
     if (!profile) return null;
 
     // Count unlocks instead of visited_legends (which might not exist or be different)
-    const { count } = await supabaseAdmin
+    const { count } = await getSupabaseAdmin()
       .from('user_unlocks')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId);
@@ -1028,7 +1028,7 @@ export async function closeRouteAndGenerateFinalQuiz(routeId: string) {
 }
 
 export async function updateProfileAvatar(userId: string, avatarUrl: string) {
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('profiles')
     .update({ avatar_url: avatarUrl })
     .eq('id', userId);

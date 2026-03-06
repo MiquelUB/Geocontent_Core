@@ -7,19 +7,23 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const fallbackUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const fallbackKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+export const getSupabaseAdmin = () => {
+  const fallbackUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const fallbackKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
 
-export const supabaseAdmin = createClient(
-  fallbackUrl,
-  fallbackKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+  return createClient(
+    fallbackUrl,
+    fallbackKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+};
+
+
 
 /**
  * Helper: Get Supabase client for public (anon) access

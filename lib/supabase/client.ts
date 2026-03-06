@@ -3,7 +3,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
+// No top-level instantiation to avoid build errors.
+// Use createClient() where needed.
 
 export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)

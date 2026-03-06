@@ -52,5 +52,3 @@ export const getSupabaseAdmin = () => {
   )
 }
 
-// Keep the export for compatibility if possible, or update consumers
-export const supabaseAdmin = getSupabaseAdmin();
