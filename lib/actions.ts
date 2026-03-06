@@ -913,17 +913,39 @@ export async function verifySuperAdminPassword(password: string) {
 
 export async function getUserProfile(userId: string) {
   noStore();
+  if (!userId) return null;
   try {
-    const { data: profile } = await getSupabaseAdmin()
+    // Use admin client to fetch profile (bypasses RLS)
+    const supabaseAdmin = getSupabaseAdmin();
+    let { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
+    // Auto-create profile if user exists in Auth but not in profiles table (new magic link user)
+    if (!profile) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (authUser?.user) {
+        const email = authUser.user.email || '';
+        const username = authUser.user.user_metadata?.username
+          || email.split('@')[0]
+          || 'Explorador';
+
+        const { data: newProfile } = await supabaseAdmin
+          .from('profiles')
+          .insert({ id: userId, username, email })
+          .select()
+          .single();
+
+        profile = newProfile;
+      }
+    }
+
     if (!profile) return null;
 
-    // Count unlocks instead of visited_legends (which might not exist or be different)
-    const { count } = await getSupabaseAdmin()
+    // Count unlocks
+    const { count } = await supabaseAdmin
       .from('user_unlocks')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId);
