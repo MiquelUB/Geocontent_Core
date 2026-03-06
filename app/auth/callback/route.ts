@@ -26,7 +26,15 @@ export async function GET(request: Request) {
       }
     )
 
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (session?.user) {
+      // Redirect to home with user info so the SPA can initialize the session
+      const redirectUrl = new URL('/', requestUrl.origin)
+      redirectUrl.searchParams.set('auth_success', '1')
+      redirectUrl.searchParams.set('uid', session.user.id)
+      return NextResponse.redirect(redirectUrl)
+    }
   }
 
   // Redirect to home page after authentication

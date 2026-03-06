@@ -41,51 +41,63 @@ export default function Home() {
 
   // Simulació de càrrega inicial i comprovacions
   useEffect(() => {
-    // Aquí es farien les comprovacions reals de xarxa, GPS, etc.
     const checkStatus = async () => {
       try {
-        // Simular un retard de xarxa o càrrega
-        // await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Simular check de connexió
         const isOnline = navigator.onLine;
         if (!isOnline) {
           setErrorType("no-connection");
           return;
         }
 
-        // Check for persisted user session with VALIDATION
-        const savedUserSting = localStorage.getItem("core_user");
-        if (savedUserSting) {
+        // Check if returning from magic link auth callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const authSuccess = urlParams.get('auth_success');
+        const uid = urlParams.get('uid');
+
+        if (authSuccess === '1' && uid) {
+          console.log("Auth callback detected, loading profile for:", uid);
           try {
-            // Dynamic import to ensuring we call the server action from client safely
             const { getUserProfile } = await import("@/lib/actions");
-
-            const savedUser = JSON.parse(savedUserSting);
-
-            if (savedUser?.id) {
-              console.log("Validating session for:", savedUser.id);
-              const profile = await getUserProfile(savedUser.id);
-
-              if (profile) {
-                console.log("Session valid.");
-                setCurrentUser(profile);
+            const profile = await getUserProfile(uid);
+            if (profile) {
+              setCurrentUser(profile);
+              localStorage.setItem("core_user", JSON.stringify(profile));
+              console.log("Magic link login successful:", profile);
+            }
+          } catch (err) {
+            console.error("Error loading profile after magic link:", err);
+          }
+          // Clean URL params
+          window.history.replaceState({}, '', '/');
+        } else {
+          // Check for persisted user session with VALIDATION
+          const savedUserString = localStorage.getItem("core_user");
+          if (savedUserString) {
+            try {
+              const { getUserProfile } = await import("@/lib/actions");
+              const savedUser = JSON.parse(savedUserString);
+              if (savedUser?.id) {
+                console.log("Validating session for:", savedUser.id);
+                const profile = await getUserProfile(savedUser.id);
+                if (profile) {
+                  console.log("Session valid.");
+                  setCurrentUser(profile);
+                } else {
+                  console.warn("Invalid session found. Clearing.");
+                  localStorage.removeItem("core_user");
+                  setCurrentUser(null);
+                }
               } else {
-                console.warn("Invalid session found (User local but not in DB). Clearing.");
                 localStorage.removeItem("core_user");
                 setCurrentUser(null);
               }
-            } else {
-              localStorage.removeItem("pallars_user");
+            } catch (err) {
+              console.error("Error parsing/validating user session:", err);
+              localStorage.removeItem("core_user");
               setCurrentUser(null);
             }
-          } catch (err) {
-            console.error("Error parsing/validating user session:", err);
-            localStorage.removeItem("pallars_user");
-            setCurrentUser(null);
           }
         }
-
 
         // Fetch branding data
         const brands = await getAppBranding();
@@ -93,7 +105,6 @@ export default function Home() {
 
         setIsLoaded(true);
       } catch (e) {
-
         console.error("Error en inicialitzar:", e);
         setErrorType("general");
       }
