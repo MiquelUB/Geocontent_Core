@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { loginAsVisitor } from "@/lib/actions";
+import { loginOrRegister } from "@/lib/actions";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
 
@@ -29,7 +29,7 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
     }
 
     try {
-      const result = await loginAsVisitor(name, email);
+      const result = await loginOrRegister(name, email);
       if (result.success && result.user) {
         onLoginSuccess(result.user);
       } else {
