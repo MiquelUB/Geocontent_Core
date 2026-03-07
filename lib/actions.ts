@@ -904,7 +904,7 @@ export async function loginOrRegister(name: string, email: string) {
     return { success: true, user: fullProfile };
   } catch (err: any) {
     console.error('[loginOrRegister error]', err);
-    return { success: false, error: GENERIC_ERROR_MESSAGE };
+    return { success: false, error: err.message || GENERIC_ERROR_MESSAGE };
   }
 }
 
