@@ -4,9 +4,20 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createClient = (cookieStore: any) => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("Supabase URL or Anon Key missing in environment! Using placeholder for build.");
+      return createServerClient('https://placeholder.supabase.co', 'placeholder', { cookies: {} } as any);
+    }
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is undefined");
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder',
+    url,
+    key,
     {
       cookies: {
         get(name: string) {
@@ -37,8 +48,12 @@ export const createClient = (cookieStore: any) => {
 
 // Admin client for specialized tasks (bypassing RLS)
 export const getSupabaseAdmin = () => {
-  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!adminUrl || !adminKey) {
+    throw new Error("CRITICAL: SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL is not defined in environment variables. Please restart your server or check Vercel settings.");
+  }
 
   return createSupabaseClient(
     adminUrl,
