@@ -33,11 +33,15 @@ export const createClient = (cookieStore: any) => {
 
 // Admin client for specialized tasks (bypassing RLS)
 export const getSupabaseAdmin = () => {
-  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!adminUrl || !adminKey) {
-    throw new Error("Missing Supabase Admin Credentials");
+  if (!adminUrl) {
+    throw new Error("Dades de configuració incompletes: Falta NEXT_PUBLIC_SUPABASE_URL a Vercel.");
+  }
+
+  if (!adminKey || adminKey === 'placeholder') {
+    throw new Error("Dades de configuració incompletes: Falta SUPABASE_SERVICE_ROLE_KEY a Vercel.");
   }
 
   return createSupabaseClient(adminUrl, adminKey, {
