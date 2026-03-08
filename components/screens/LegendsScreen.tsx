@@ -143,6 +143,9 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                             {brand?.name?.[0] || 'P'}
                         </div>
                     )}
+                    <h1 className="font-serif text-xl font-bold tracking-tight text-primary-foreground">
+                        {brand?.name || 'PXX Guide'}
+                    </h1>
                 </div>
             </header>
 

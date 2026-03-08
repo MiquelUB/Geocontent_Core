@@ -172,7 +172,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
         className="bg-primary p-4"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center overflow-hidden shadow-lg">
               {brand?.logoUrl ? (
                 <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
@@ -182,6 +182,9 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 </span>
               )}
             </div>
+            <h1 className="text-lg font-serif font-bold text-primary-foreground">
+              {brand?.name || PxxConfig.appName}
+            </h1>
           </div>
           <div className="flex items-center space-x-1">
             <Button
@@ -330,7 +333,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 </div>
 
                 <div className="flex-1 min-w-0">
-                   <div className="flex items-start justify-between mb-1">
+                  <div className="flex items-start justify-between mb-1">
                     <h3 className="font-serif font-medium text-primary truncate">
                       {poi.title}
                     </h3>

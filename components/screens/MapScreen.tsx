@@ -173,6 +173,9 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                 </span>
               )}
             </div>
+            <h1 className="text-lg font-serif font-bold text-primary-foreground">
+              {brand?.name || PxxConfig.appName}
+            </h1>
           </div>
 
           <div className="flex items-center space-x-1">
@@ -253,10 +256,10 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
           center={
             selectedLegend
               ? [
-                selectedLegend.coordinates?.lng || selectedLegend.longitude || 0.95,
-                selectedLegend.coordinates?.lat || selectedLegend.latitude || 42.4
+                selectedLegend.coordinates?.lng || selectedLegend.longitude || 0.9870,
+                selectedLegend.coordinates?.lat || selectedLegend.latitude || 42.4140
               ]
-              : (userLocation ? [userLocation.longitude, userLocation.latitude] : [0.95, 42.4])
+              : (userLocation ? [userLocation.longitude, userLocation.latitude] : [0.9870, 42.4140])
           }
           zoom={selectedLegend ? 14 : 10} // Closer zoom for specific legend
           userLocation={userLocation}
