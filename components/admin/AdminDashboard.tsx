@@ -6,21 +6,20 @@ import AiRouteGenerator from '@/components/admin/AiRouteGenerator';
 import { UsersTable } from '@/components/admin/UsersTable';
 import ExecutiveReport from '@/components/admin/ExecutiveReport';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from "lucide-react";
-import { deleteLegend, createLegend, updateLegend, getAdminLegends, addVideoToPoi, createRoute, createPoi, updatePoi } from "@/lib/actions";
+import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
 import { getAdminTheme } from "@/lib/adminTheme";
 import VideoUploader from "./VideoUploader";
 import ManualPoiForm from "./ManualPoiForm";
-import { updateRoute } from "@/lib/actions";
 import RoutePoiManager from "./RoutePoiManager";
 import MunicipalityManager from "./MunicipalityManager";
 import AdminSecurityGate from "./AdminSecurityGate";
-import { verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
 
 interface Legend {
   id: string;
@@ -136,7 +135,8 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
       formData.append('thumbnail_1x1', routeThumbnail);
       formData.append('download_required', String(routeDownloadRequired));
       if (routeThumbFile) {
-        formData.append('thumbnail_file', routeThumbFile);
+        const compressed = await compressImage(routeThumbFile);
+        formData.append('thumbnail_file', compressed);
       }
       if (routeFinalQuiz) {
         formData.append('final_quiz', JSON.stringify(routeFinalQuiz));

@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, X, Plus, Music, Film, ImageIcon, History, MapPin, FolderIcon, Upload, Link2, Trash2, MapIcon } from "lucide-react";
 import iconsMapping from '@/lib/icons-mapping.json';
 import { getAdminTheme } from "@/lib/adminTheme";
+import { compressImage } from "@/lib/imageOptimization";
 
 const BIOME_MAP: Record<string, string> = {
   mountain: 'Montanya',
@@ -137,8 +139,15 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     formData.append('icon', icon);
     if (routeId) formData.append('route_id', routeId);
 
-    if (appThumbnailFile) formData.append('app_thumbnail_file', appThumbnailFile);
-    if (headerFile) formData.append('header_file', headerFile);
+    // Compress images before appending to FormData
+    if (appThumbnailFile) {
+      const compressed = await compressImage(appThumbnailFile);
+      formData.append('app_thumbnail_file', compressed);
+    }
+    if (headerFile) {
+      const compressed = await compressImage(headerFile);
+      formData.append('header_file', compressed);
+    }
     if (audioFile) formData.append('audio_file', audioFile);
 
     formData.append('app_thumbnail', appThumbnail);
@@ -160,14 +169,16 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
 
     // Carousel: files and existing URLs
     const finalCarouselUrls: string[] = [];
-    carouselImages.forEach((url, idx) => {
-      const file = carouselFiles[idx];
+    for (let i = 0; i < carouselImages.length; i++) {
+      const url = carouselImages[i];
+      const file = carouselFiles[i];
       if (file) {
-        formData.append(`carousel_file_${idx}`, file);
+        const compressed = await compressImage(file);
+        formData.append(`carousel_file_${i}`, compressed);
       } else if (!url.startsWith('blob:')) {
         finalCarouselUrls.push(url);
       }
-    });
+    }
     formData.append('carousel_images', JSON.stringify(finalCarouselUrls));
     formData.append('carousel_file_count', carouselImages.length.toString());
     formData.append('type', poiType);

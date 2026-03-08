@@ -135,11 +135,11 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('home')}>
                     {/* Logo Mark */}
                     {brand?.logoUrl ? (
-                        <div className="w-8 h-8 rounded overflow-hidden">
-                            <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain bg-white" />
+                        <div className="w-16 h-16 rounded-full overflow-hidden shadow-md border border-white/20">
+                            <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
                         </div>
                     ) : (
-                        <div className="w-8 h-8 bg-white/20 text-white flex items-center justify-center rounded font-serif font-bold text-lg tracking-tighter shadow-sm">
+                        <div className="w-16 h-16 bg-white/20 text-white flex items-center justify-center rounded-full font-serif font-bold text-2xl tracking-tighter shadow-sm border border-white/20">
                             {brand?.name?.[0] || 'P'}
                         </div>
                     )}

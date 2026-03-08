@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileText, UploadCloud, AlertCircle, Download } from "lucide-react";
+import { generateRouteFromDocumentAction } from '@/lib/ai-actions';
 
 export default function AiRouteGenerator({ theme }: { theme?: any }) {
   const activeTheme = theme || {
@@ -52,37 +53,16 @@ export default function AiRouteGenerator({ theme }: { theme?: any }) {
     formData.append('file', file);
 
     try {
-      console.log("Sending request to /api/ai/generate-route...");
-      const response = await fetch('/api/ai/generate-route', {
-        method: 'POST',
-        body: formData,
-      });
+      console.log("Generant ruta via Server Action...");
+      const result = await generateRouteFromDocumentAction(formData);
 
-      console.log("Response status:", response.status);
-
-      // 1. BLINDATGE: Comprovem el tipus de contingut ABANS de fer .json()
-      const contentType = response.headers.get("content-type");
-
-      // Si el servidor falla (400, 500)
-      if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
-          // Si el backend ha controlat l'error i retorna JSON
-          const errData = await response.json();
-          throw new Error(errData.error || 'Error al servidor generant la ruta');
-        } else {
-          // HARD CRASH: El backend ha mort i Next.js escup HTML
-          const errText = await response.text();
-          console.error("HTML Fatal Error:", errText.substring(0, 500) + "..."); // Imprimeix un tros de l'HTML per depurar
-          throw new Error(`Col·lapse del Servidor (HTTP ${response.status}). El backend no ha retornat JSON. Revisa el terminal de Node/Next.js.`);
-        }
+      if (!result.success) {
+        throw new Error(result.error || 'Error al servidor generant la ruta');
       }
 
-      // 2. Si l'status és OK (200), ja podem parsejar tranquils
-      const data = await response.json();
-      console.log("Response data:", data);
-
-      setResult(data.data);
-      console.log("Set result to:", data.data);
+      console.log("Response data:", result.data);
+      setResult(result.data);
+      console.log("Set result to:", result.data);
 
     } catch (err: any) {
       console.error("Error in handleGenerate:", err);
