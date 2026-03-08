@@ -56,8 +56,17 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
   const [header16x9, setHeader16x9] = useState(poi?.header16x9 || '');
   const [audioUrl, setAudioUrl] = useState(poi?.audioUrl || '');
 
-  const [carouselImages, setCarouselImages] = useState<string[]>(poi?.carouselImages || []);
-  const [carouselFiles, setCarouselFiles] = useState<(File | null)[]>(poi?.carouselImages?.map(() => null) || []);
+  const [carouselImages, setCarouselImages] = useState<string[]>(() => {
+    if (poi?.carouselImages && poi.carouselImages.length > 0) return poi.carouselImages;
+    // Fallback per punts antics on les imatges anaven al camp "images"
+    if (poi?.images && poi.images.length > 1) {
+      return poi.images.slice(1);
+    }
+    return [];
+  });
+  const [carouselFiles, setCarouselFiles] = useState<(File | null)[]>(() =>
+    new Array((poi?.carouselImages?.length || (poi?.images?.length > 1 ? poi.images.length - 1 : 0))).fill(null)
+  );
   const [newCarouselUrl, setNewCarouselUrl] = useState('');
   const [newCarouselFile, setNewCarouselFile] = useState<File | null>(null);
 
