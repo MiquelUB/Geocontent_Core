@@ -4,44 +4,44 @@ import OpenAI from 'openai';
 const pdfParse = require('pdf-parse');
 
 const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY || "sk-placeholder",
-    defaultHeaders: {
-        "HTTP-Referer": process.env.SITE_URL || "https://projectexinoxano.com",
-        "X-Title": "PXX Dashboard",
-    },
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY || "sk-placeholder",
+  defaultHeaders: {
+    "HTTP-Referer": process.env.SITE_URL || "https://projectexinoxano.com",
+    "X-Title": "PXX Dashboard",
+  },
 });
 
 export async function generateRouteFromDocumentAction(formData: FormData) {
-    try {
-        const file = formData.get('file') as File | null;
+  try {
+    const file = formData.get('file') as File | null;
 
-        if (!file) {
-            return { success: false, error: "No s'ha pujat cap document." };
-        }
+    if (!file) {
+      return { success: false, error: "No s'ha pujat cap document." };
+    }
 
-        if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
-            return {
-                success: false,
-                error: "Format no suportat. Només s'accepten documents de text (.txt) i PDF (.pdf)."
-            };
-        }
+    if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
+      return {
+        success: false,
+        error: "Format no suportat. Només s'accepten documents de text (.txt) i PDF (.pdf)."
+      };
+    }
 
-        let contextText = '';
+    let contextText = '';
 
-        if (file.type === 'application/pdf') {
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const pdfData = await pdfParse(buffer);
-            contextText = pdfData.text;
-        } else {
-            contextText = await file.text();
-        }
+    if (file.type === 'application/pdf') {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const pdfData = await pdfParse(buffer);
+      contextText = pdfData.text;
+    } else {
+      contextText = await file.text();
+    }
 
-        contextText = contextText.replace(/\n+/g, ' ').trim();
-        const safeContext = contextText.substring(0, 15000);
+    contextText = contextText.replace(/\n+/g, ' ').trim();
+    const safeContext = contextText.substring(0, 15000);
 
-        const systemPrompt = `
+    const systemPrompt = `
       Ets un expert en turisme, patrimoni cultural i natura. El teu rol és el d'un investigador que prepara material de treball per a un gestor de rutes turístiques humà.
 
       MISSIÓ: Analitza el text proporcionat i extreu TOTA la informació turísticament rellevant, organitzada i enriquida per facilitar la creació posterior de rutes. No crees la ruta: prepares la matèria primera perquè un humà la construeixi amb criteri.
@@ -127,24 +127,24 @@ export async function generateRouteFromDocumentAction(formData: FormData) {
       }
     `;
 
-        const completion = await openai.chat.completions.create({
-            model: process.env.AI_MODEL_ID || "qwen/qwen-2.5-72b-instruct",
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: `Analitza aquest document municipal i crea la ruta. Document: ${safeContext}` }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.1,
-        });
+    const completion = await openai.chat.completions.create({
+      model: process.env.AI_MODEL_ID || "qwen/qwen-2.5-72b-instruct",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Analitza aquest document municipal i crea la ruta. Document: ${safeContext}` }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.1,
+    });
 
-        const rawContent = completion.choices[0].message.content || "{}";
-        const cleanJson = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-        const sanitizedData = JSON.parse(cleanJson);
+    const rawContent = completion.choices[0].message.content || "{}";
+    const cleanJson = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    const sanitizedData = JSON.parse(cleanJson);
 
-        return { success: true, data: sanitizedData };
+    return { success: true, data: sanitizedData };
 
-    } catch (error: any) {
-        console.error("AI Route Fatal Error:", error);
-        return { success: false, error: "Error procesant el document: " + (error.message || "Fallo desconocido") };
-    }
+  } catch (error: any) {
+    console.error("AI Route Fatal Error:", error);
+    return { success: false, error: "Error procesant el document: " + (error.message || "Fallo desconocido") };
+  }
 }
