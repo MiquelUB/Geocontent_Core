@@ -36,7 +36,7 @@ interface VideoSlot {
 }
 
 const MAX_VIDEO_SLOTS = 3;
-const MAX_VIDEO_SIZE_MB = 15;
+const MAX_VIDEO_SIZE_MB = 10; // Reduït per evitar 413, recomanem usar VideoUploader si és més gran
 
 export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes = [], defaultRouteId, municipalityTheme }: ManualPoiFormProps) {
   const activeTheme = getAdminTheme(municipalityTheme);
@@ -138,6 +138,7 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     if (routeId) formData.append('route_id', routeId);
 
     // Compress images before appending to FormData
+
     if (appThumbnailFile) {
       const compressed = await compressImage(appThumbnailFile);
       formData.append('app_thumbnail_file', compressed);
@@ -235,6 +236,42 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
           </div>
 
           <div className="grid gap-2">
+            <Label className="flex items-center gap-2">
+              <MapIcon className="w-4 h-4 text-stone-400" />
+              Símbol al Mapa (Icona)
+            </Label>
+            <div className="flex flex-wrap gap-2 p-3 bg-stone-50 rounded-xl border border-stone-100 max-h-[160px] overflow-y-auto">
+              {(() => {
+                const biomeKey = municipalityTheme || 'mountain';
+                const biome = BIOME_MAP[biomeKey] || 'Montanya';
+                const availableIcons = (iconsMapping as any)[biome] || [];
+
+                return availableIcons.map((iconName: string) => {
+                  const iconUrl = `/icons/${biome}/${iconName}`;
+                  const isSelected = icon === iconName;
+
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => setIcon(iconName)}
+                      className={`relative w-12 h-12 rounded-lg border-2 transition-all p-1 bg-white hover:scale-105 ${isSelected ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-stone-200 opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                    >
+                      <img src={iconUrl} alt={iconName} className="w-full h-full object-contain" title={iconName} />
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 bg-primary text-white rounded-full p-0.5 shadow-sm">
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+            <p className="text-[10px] text-stone-400 italic px-1">Tria el símbol que apareixerà al mapa per aquest punt.</p>
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="textContent">Text Històric</Label>
             <Textarea id="textContent" value={textContent} onChange={(e) => setTextContent(e.target.value)} className="min-h-[150px]" />
           </div>
@@ -286,12 +323,13 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
             <Label className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Film className="w-4 h-4 text-stone-400" />
-                Vídeos Reel
+                Vídeos Reel (Màx 10MB)
               </div>
               <Button type="button" variant="outline" size="sm" className="h-7 text-[10px]" onClick={handleAddVideoSlot}>
                 Afegir Slot
               </Button>
             </Label>
+            <p className="text-[10px] text-orange-600 font-medium px-1">Per a vídeos pesats, guarda el punt i usa la 'Consola HLS' de sota.</p>
             {videoSlots.map((slot, idx) => (
               <div key={idx} className="p-3 rounded-xl border border-stone-200 bg-stone-50/50 space-y-2">
                 <div className="flex items-center justify-between">
@@ -338,6 +376,6 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel·lar</Button>
       </div>
-    </form>
+    </form >
   );
 }
