@@ -10,17 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from "lucide-react";
-import { deleteLegend, createLegend, updateLegend, getAdminLegends, addVideoToPoi, createRoute, createPoi, updatePoi } from "@/lib/actions";
+import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
 import { getAdminTheme } from "@/lib/adminTheme";
 import VideoUploader from "./VideoUploader";
 import ManualPoiForm from "./ManualPoiForm";
-import { updateRoute } from "@/lib/actions";
 import RoutePoiManager from "./RoutePoiManager";
 import MunicipalityManager from "./MunicipalityManager";
 import AdminSecurityGate from "./AdminSecurityGate";
-import { verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
 
 interface Legend {
   id: string;
@@ -28,87 +26,69 @@ interface Legend {
   description: string;
   category: string;
   location_name: string;
-  latitude: number;
-  longitude: number;
-  image_url: string;
-  hero_image_url: string;
-  audio_url: string;
-  video_url: string;
-  routePois?: Poi[];
+  pois?: any[];
+  downloadRequired?: boolean;
 }
 
-interface Poi {
-  id: string;
-  title: string;
-  category?: string;
-  videoUrls: string[];
-}
-
-export default function AdminDashboard({ legends: initialLegends, profiles, reports, municipalityId, municipalityTheme, brand }: { legends: any[], profiles: any[], reports?: any[], municipalityId?: string, municipalityTheme?: string, brand?: any }) {
-  const adminTheme = getAdminTheme(municipalityTheme);
-  const [activeTab, setActiveTab] = useState('rutes');
-  const [isLoading, setIsLoading] = useState(false);
-  const [legends, setLegends] = useState<Legend[]>(initialLegends as any[]);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [category, setCategory] = useState('mountain');
-  const [imageUrl, setImageUrl] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [editingLegend, setEditingLegend] = useState<Legend | null>(null);
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [isSuperUnlocked, setIsSuperUnlocked] = useState(false);
-
-  // Form State
-  // Note: Original code used a Dialog. Now we want it in the right column (Split Screen).
-  // We need state for the form fields if we want to "Edit".
-  // For simplicity in this split-screen "Creation" focused view, we assume "New" by default,
-  // but let's allow editing if someone clicks "Edit" in a list (which list? The legends list is needed).
-  // Strategy: We will keep a "Legends List" below the split screen or in a separate view?
-  // The user requirement says: "Columna esquerra: AiRouteGenerator... Columna dreta: Formulari".
-  // It implies a workspace for CREATION.
-  // But we also need to manage existing legends.
-  // Let's create a mode in the "Rutes" tab: "List" vs "Workspace".
-  // OR: Just show the workspace and a list below/modal.
-  // Given "Split-Screen" emphasis for copying from AI, we prioritize the grid.
-
+export default function AdminDashboard({ municipalityId, municipalityTheme }: { municipalityId?: string, municipalityTheme?: string }) {
   const router = useRouter();
+  const adminTheme = getAdminTheme(municipalityTheme);
+  const [activeTab, setActiveTab] = useState<'rutes' | 'usuaris' | 'executiu' | 'config'>('rutes');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [brand, setBrand] = useState<any>(null);
 
-  // Load unlock states from session
-  useEffect(() => {
-    const adminPass = sessionStorage.getItem('admin_master_unlocked');
-    const superPass = sessionStorage.getItem('super_master_unlocked');
-    if (adminPass) setIsAdminUnlocked(true);
-    if (superPass) setIsSuperUnlocked(true);
-  }, []);
+  // States per a la creació de Ruta (Carpeta/Legend)
   const [routeTitle, setRouteTitle] = useState('');
   const [routeDescription, setRouteDescription] = useState('');
   const [routeLocation, setRouteLocation] = useState('');
   const [routeThumbnail, setRouteThumbnail] = useState('');
   const [routeCategory, setRouteCategory] = useState(municipalityTheme || 'mountain');
   const [routeDownloadRequired, setRouteDownloadRequired] = useState(false);
+  const [routeThumbFile, setRouteThumbFile] = useState<File | null>(null);
   const [routeFinalQuiz, setRouteFinalQuiz] = useState<any>(null);
   const [isGeneratingRouteQuiz, setIsGeneratingRouteQuiz] = useState(false);
-  const [editingRoute, setEditingRoute] = useState<any>(null);
-  const [managingRoute, setManagingRoute] = useState<{ id: string; name: string; pois?: any[] } | null>(null);
-  const [editingPoi, setEditingPoi] = useState<any>(null);
-  const [routeThumbFile, setRouteThumbFile] = useState<File | null>(null);
 
-  // Handle initialization/edit sync
+  // State per llistat
+  const [legends, setLegends] = useState<Legend[]>([]);
+  const [editingRoute, setEditingRoute] = useState<Legend | null>(null);
+
+  // Per gestionar POIs de la ruta des d'aquest dashboard
+  const [managingRoute, setManagingRoute] = useState<any>(null);
+  const [editingPoi, setEditingPoi] = useState<any>(null);
+  const [editingLegend, setEditingLegend] = useState<any>(null);
+
   useEffect(() => {
-    if (editingLegend) {
-      setEditingRoute(editingLegend);
-      setRouteTitle(editingLegend.title || '');
-      setRouteDescription(editingLegend.description || '');
-      setRouteLocation(editingLegend.location_name || '');
-      setRouteThumbnail((editingLegend as any).thumbnail1x1 || '');
-      setRouteCategory(editingLegend.category || 'mountain');
-      setRouteDownloadRequired((editingLegend as any).downloadRequired || false);
-      setRouteFinalQuiz((editingLegend as any).finalQuiz || null);
+    // Check if administrative session unlocked
+    const isUnlocked = sessionStorage.getItem('admin_master_unlocked');
+    if (isUnlocked === 'true') {
+      setIsAdminUnlocked(true);
     }
-  }, [editingLegend]);
+
+    async function fetchData() {
+      const data = await getAdminLegends();
+      setLegends(data as any);
+
+      // Fetch brand if municipalityId provided
+      if (municipalityId) {
+        const res = await fetch(`/api/municipality?id=${municipalityId}`);
+        const brandData = await res.json();
+        setBrand(brandData);
+      }
+    }
+    fetchData();
+  }, [municipalityId]);
+
+  useEffect(() => {
+    if (editingRoute) {
+      setRouteTitle(editingRoute.title);
+      setRouteDescription(editingRoute.description);
+      setRouteLocation(editingRoute.location_name);
+      setRouteCategory(editingRoute.category);
+      setRouteDownloadRequired(editingRoute.downloadRequired || false);
+      // setRouteThumbnail(editingRoute.thumbnail_1x1 || ''); // Use server value if exists
+    }
+  }, [editingRoute]);
 
   const resetRouteForm = () => {
     setEditingLegend(null);
@@ -136,7 +116,8 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
       formData.append('thumbnail_1x1', routeThumbnail);
       formData.append('download_required', String(routeDownloadRequired));
       if (routeThumbFile) {
-        formData.append('thumbnail_file', routeThumbFile);
+        const compressed = await compressImage(routeThumbFile);
+        formData.append('thumbnail_file', compressed);
       }
       if (routeFinalQuiz) {
         formData.append('final_quiz', JSON.stringify(routeFinalQuiz));
@@ -169,11 +150,8 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
     try {
       let res;
       if (editingPoi) {
-        // Editar un POI existent
         res = await updatePoi(editingPoi.id, formData);
       } else {
-        // Crear un nou POI (amb route_id si managingRoute o editingLegend estan actius)
-        // ❌ NO cridem updateLegend — això sobreescriuria el nom de la ruta
         res = await createPoi(formData);
       }
 
@@ -210,10 +188,9 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 p-8 font-sans">
-      {/* CAPÇALERA INSTITUCIONAL AMB TONS DE BIOMA VIBRANTS */}
       <header
         className={`mb-8 flex flex-col md:flex-row justify-between items-center border ${adminTheme.border} backdrop-blur-md p-8 rounded-3xl gap-6 shadow-sm text-white`}
-        style={{ backgroundColor: `${adminTheme.hex}EE` }} // 93% opacity hex
+        style={{ backgroundColor: `${adminTheme.hex}EE` }}
       >
         <div className="flex items-center gap-4">
           {brand?.logoUrl ? (
@@ -231,7 +208,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
           </div>
         </div>
 
-        {/* NAVEGACIÓ AMB TONS DE BIOMA VIBRANTS */}
         <nav className={`flex flex-wrap md:flex-nowrap justify-center space-x-2 bg-white/20 p-1.5 rounded-xl border border-white/30 backdrop-blur-sm`}>
           <button
             onClick={() => setActiveTab('rutes')}
@@ -264,13 +240,11 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
         </nav>
       </header>
 
-      {/* CONTINGUT DINÀMIC */}
       <main className="animate-in fade-in duration-500">
         {activeTab === 'rutes' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
-              {/* COLUMNA ESQUERRA: MOTOR IA (NOMÉS VISTA) */}
               <Card className="border-stone-200 shadow-sm bg-white h-full">
                 <CardHeader className="bg-stone-50/50 border-b border-stone-100 pb-4">
                   <CardTitle className="font-serif text-xl text-stone-800 flex items-center gap-2">
@@ -283,7 +257,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                 </CardContent>
               </Card>
 
-              {/* COLUMNA DRETA: GESTOR DE CARPETA (MANUAL) */}
               <Card className="border-stone-200 shadow-sm bg-white h-full overflow-hidden">
                 <CardHeader className="bg-stone-50/50 border-b border-stone-100 pb-4">
                   <CardTitle className="font-serif text-xl text-stone-800 flex items-center gap-2">
@@ -331,7 +304,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                           <Input id="routeThumb" value={routeThumbnail} onChange={(e) => setRouteThumbnail(e.target.value)} placeholder="URL imatge" className="h-8 text-xs" />
                         </div>
                       </div>
-                      {/* Eliminat: Pell / Estil Visual (ara és global) */}
                       <div className="flex items-center gap-2 py-2">
                         <input
                           type="checkbox"
@@ -345,7 +317,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                         </Label>
                       </div>
 
-                      {/* AI Quiz per Ruta */}
                       {editingRoute && managingRoute && (
                         <div className="mt-2 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
                           <div className="flex items-center justify-between">
@@ -464,7 +435,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
               </Card>
             </div>
 
-            {/* ROUTE POI MANAGER PANEL */}
             {managingRoute && (
               <RoutePoiManager
                 routeId={managingRoute.id}
@@ -478,7 +448,6 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
               />
             )}
 
-            {/* LIST OF LEGENDS */}
             <Card className="border-stone-200 shadow-sm bg-white">
               <CardHeader>
                 <CardTitle className="font-serif text-xl text-stone-800">Llistat de Llegendes Existents</CardTitle>
@@ -500,44 +469,26 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`${adminTheme.mainText} ${adminTheme.hover} ${adminTheme.bg}`}
                               onClick={() => {
-                                setEditingLegend(legend);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                setEditingRoute(legend);
+                                setManagingRoute(legend);
+                                setEditingLegend(null);
+                                setEditingPoi(null);
                               }}
                             >
-                              Editar
+                              Editar Ruta
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`${managingRoute?.id === legend.id
-                                ? `${adminTheme.text} ${adminTheme.bg}`
-                                : `text-stone-500 hover:${adminTheme.mainText} hover:${adminTheme.bg}`
-                                }`}
                               onClick={() => {
-                                const next = managingRoute?.id === legend.id
-                                  ? null
-                                  : { id: legend.id, name: legend.title };
-                                setManagingRoute(next);
-                                if (next) window.scrollTo({ top: 0, behavior: 'smooth' });
-                                else setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+                                setManagingRoute(legend);
+                                setEditingRoute(null);
+                                setEditingPoi(null);
+                                setEditingLegend(null);
                               }}
                             >
-                              {managingRoute?.id === legend.id ? '▲ Tancar Punts' : 'Punts →'}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-stone-400 hover:text-red-600 hover:bg-red-50"
-                              onClick={async () => {
-                                if (confirm("Segur que vols esborrar?")) {
-                                  await deleteLegend(legend.id);
-                                  router.refresh();
-                                }
-                              }}
-                            >
-                              Esborrar
+                              Gestionar Punts
                             </Button>
                           </td>
                         </tr>
@@ -550,39 +501,20 @@ export default function AdminDashboard({ legends: initialLegends, profiles, repo
           </div>
         )}
 
-
         {activeTab === 'usuaris' && (
-          <UsersTable profiles={profiles} theme={adminTheme} />
+          <div className="animate-in fade-in duration-500">
+            <UsersTable />
+          </div>
         )}
 
         {activeTab === 'executiu' && (
-          <ExecutiveReport municipalityId={municipalityId || ''} theme={adminTheme} reports={reports} />
+          <div className="animate-in fade-in duration-500">
+            <ExecutiveReport />
+          </div>
         )}
 
         {activeTab === 'config' && (
-          <div className="max-w-2xl mx-auto space-y-8">
-            {isSuperUnlocked ? (
-              <Card className="border-stone-200 shadow-sm bg-white">
-                <CardHeader>
-                  <CardTitle className="font-serif text-xl text-stone-800">Paràmetres del Municipi/Territori</CardTitle>
-                  <p className="text-sm text-stone-500">Aquesta configuració afecta a com es mostren les localitzacions a l'app.</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <MunicipalityManager municipalityId={municipalityId} />
-                </CardContent>
-              </Card>
-            ) : (
-              <AdminSecurityGate
-                title="Àrea de Cincidència (Configuració)"
-                description="Accés exclusiu per a l'administrador del sistema per configurar paràmetres crítics."
-                onSuccess={() => {
-                  setIsSuperUnlocked(true);
-                  sessionStorage.setItem('super_master_unlocked', 'true');
-                }}
-                verifyFn={async (pass) => verifySuperAdminPassword(pass)}
-              />
-            )}
-          </div>
+          <MunicipalityManager municipalityId={municipalityId || ''} />
         )}
       </main>
     </div>
