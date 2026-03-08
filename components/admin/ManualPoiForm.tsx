@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, X, Plus, Music, Film, ImageIcon, History, MapPin, FolderIcon, Upload, Link2, Trash2, MapIcon } from "lucide-react";
+import { Loader2, X, Plus, Music, Film, ImageIcon, History, MapPin, FolderIcon, Upload, Link2, Trash2, MapIcon, CloudUpload } from "lucide-react";
 import iconsMapping from '@/lib/icons-mapping.json';
 import { getAdminTheme } from "@/lib/adminTheme";
 import { compressImage } from "@/lib/imageOptimization";
+import { uploadFileClient } from "@/lib/upload-client";
 
 const BIOME_MAP: Record<string, string> = {
   mountain: 'Montanya',
@@ -97,7 +98,11 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     updateVideoSlot(index, { file, url: file ? file.name : '' });
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
+
   const handleAddCarouselImage = () => {
+
     if (carouselImages.length >= 4) return;
 
     if (newCarouselFile) {
@@ -124,10 +129,11 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!routeId) {
-      alert('Has d\'assignar el punt a una ruta. Selecciona una carpeta abans de guardar.');
-      return;
-    }
+    if (isLoading || isUploading) return;
+
+    setIsUploading(true);
+    setUploadStatus("Comprimint i pujant arxius...");
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
@@ -136,57 +142,89 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
     formData.append('longitude', longitude);
     formData.append('icon', icon);
     if (routeId) formData.append('route_id', routeId);
-
-    // Compress images before appending to FormData
-
-    if (appThumbnailFile) {
-      const compressed = await compressImage(appThumbnailFile);
-      formData.append('app_thumbnail_file', compressed);
-    }
-    if (headerFile) {
-      const compressed = await compressImage(headerFile);
-      formData.append('header_file', compressed);
-    }
-    if (audioFile) formData.append('audio_file', audioFile);
-
-    formData.append('app_thumbnail', appThumbnail);
-    formData.append('header_16x9', header16x9);
-    formData.append('audio_url', audioUrl);
-
-    const videoUrls: string[] = [];
-    videoSlots.forEach((slot, idx) => {
-      if (slot.file) {
-        formData.append(`video_file_${idx}`, slot.file);
-      }
-      if (slot.url) {
-        videoUrls.push(slot.url);
-      }
-    });
-    formData.append('video_urls', JSON.stringify(videoUrls));
-    formData.append('video_slot_count', videoSlots.length.toString());
-
-    // Carousel: files and existing URLs
-    const finalCarouselUrls: string[] = [];
-    for (let i = 0; i < carouselImages.length; i++) {
-      const url = carouselImages[i];
-      const file = carouselFiles[i];
-      if (file) {
-        const compressed = await compressImage(file);
-        formData.append(`carousel_file_${i}`, compressed);
-      } else if (!url.startsWith('blob:')) {
-        finalCarouselUrls.push(url);
-      }
-    }
-    formData.append('carousel_images', JSON.stringify(finalCarouselUrls));
-    formData.append('carousel_file_count', carouselImages.length.toString());
     formData.append('type', poiType);
-    if (manualQuiz) formData.append('manual_quiz', JSON.stringify(manualQuiz));
 
-    await onSave(formData);
+    try {
+      // 1. Upload App Thumbnail
+      let finalAppThumbnail = appThumbnail;
+      if (appThumbnailFile) {
+        setUploadStatus("Pujant miniatura...");
+        const compressed = await compressImage(appThumbnailFile);
+        finalAppThumbnail = await uploadFileClient(compressed);
+      }
+      formData.append('app_thumbnail', finalAppThumbnail);
+
+      // 2. Upload Header Image
+      let finalHeader16x9 = header16x9;
+      if (headerFile) {
+        setUploadStatus("Pujant imatge de capçalera...");
+        const compressed = await compressImage(headerFile);
+        finalHeader16x9 = await uploadFileClient(compressed);
+      }
+      formData.append('header_16x9', finalHeader16x9);
+
+      // 3. Upload Audio
+      let finalAudioUrl = audioUrl;
+      if (audioFile) {
+        setUploadStatus("Pujant àudio...");
+        finalAudioUrl = await uploadFileClient(audioFile);
+      }
+      formData.append('audio_url', finalAudioUrl);
+
+      // 4. Upload Carousel Images
+      setUploadStatus("Pujant imatges del carrusel...");
+      const finalCarouselUrls: string[] = [];
+      for (let i = 0; i < carouselImages.length; i++) {
+        const url = carouselImages[i];
+        const file = carouselFiles[i];
+        if (file) {
+          const compressed = await compressImage(file);
+          const uploadedUrl = await uploadFileClient(compressed);
+          finalCarouselUrls.push(uploadedUrl);
+        } else if (!url.startsWith('blob:')) {
+          finalCarouselUrls.push(url);
+        }
+      }
+      formData.append('carousel_images', JSON.stringify(finalCarouselUrls));
+
+      // 5. Upload Videos
+      setUploadStatus("Pujant vídeos...");
+      const finalVideoUrls: string[] = [];
+      for (let i = 0; i < videoSlots.length; i++) {
+        const slot = videoSlots[i];
+        if (slot.file) {
+          const uploadedUrl = await uploadFileClient(slot.file);
+          finalVideoUrls.push(uploadedUrl);
+        } else if (slot.url && slot.url.startsWith('http')) {
+          finalVideoUrls.push(slot.url);
+        }
+      }
+      formData.append('video_urls', JSON.stringify(finalVideoUrls));
+      formData.append('video_slot_count', videoSlots.length.toString());
+
+      if (manualQuiz) formData.append('manual_quiz', JSON.stringify(manualQuiz));
+
+      setUploadStatus("Guardant informació al servidor...");
+      console.log(">>> [ADMIN DEBUG] Enviant dades al servidor. Claus:", Array.from(formData.keys()));
+      await onSave(formData);
+    } catch (err: any) {
+      alert("Error en la pujada client-side: " + err.message);
+    } finally {
+      setIsUploading(false);
+      setUploadStatus("");
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-between p-2 bg-blue-50 border border-blue-100 rounded-lg mb-4">
+        <div className="flex items-center gap-2 text-[10px] text-blue-600 font-bold uppercase tracking-wider">
+          <CloudUpload className="w-3 h-3" />
+          Mode Estalvi de Dades (Pujada Directa) Actiu
+        </div>
+        <div className="text-[9px] text-blue-400 italic">Evita errors 413 de tamany</div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="grid gap-2">
@@ -370,11 +408,27 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
         </div>
       </div>
 
-      <div className="pt-6 flex gap-4">
-        <Button type="submit" disabled={isLoading} className={`flex-1 ${activeTheme.primary} ${activeTheme.hover} text-white`}>
-          {isLoading ? 'Guardant...' : (poi ? 'Actualitzar Punt' : 'Crear Nou Punt')}
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel·lar</Button>
+      <div className="pt-6 flex flex-col gap-4">
+        {isUploading && (
+          <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center gap-4 animate-pulse">
+            <CloudUpload className="w-8 h-8 text-primary animate-bounce" />
+            <div className="flex-1">
+              <div className="text-sm font-bold text-primary">{uploadStatus}</div>
+              <div className="text-[10px] text-stone-500 italic">Estem enviant els arxius directament al núvol per evitar errors de tamany.</div>
+            </div>
+          </div>
+        )}
+        <div className="flex gap-4">
+          <Button type="submit" disabled={isLoading || isUploading} className={`flex-1 ${activeTheme.primary} ${activeTheme.hover} text-white py-6 h-auto text-lg font-serif`}>
+            {isLoading || isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {isUploading ? 'Pujant Multimèdia...' : 'Guardant...'}
+              </>
+            ) : (poi ? 'Actualitzar Punt Territorial' : 'Crear Nou Punt Territorial')}
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} className="py-6 h-auto px-8" disabled={isUploading}>Cancel·lar</Button>
+        </div>
       </div>
     </form >
   );

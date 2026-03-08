@@ -442,6 +442,14 @@ export async function createRoute(formData: FormData) {
 
 export async function createPoi(formData: FormData) {
   try {
+    const keys = Array.from(formData.keys());
+    console.log(">>> [SERVER DEBUG] createPoi keys:", keys);
+    keys.forEach(k => {
+      const v = formData.get(k);
+      if (v instanceof File) console.log(`  - ${k}: FILE (${v.name}, ${(v.size / 1024).toFixed(1)} KB)`);
+      else console.log(`  - ${k}: STRING (len: ${String(v).length})`);
+    });
+
     const validated = CreatePoiSchema.parse(Object.fromEntries(formData.entries()));
     const { title, description, latitude, longitude, route_id, text_content, video_urls, carousel_images, icon } = validated;
 
@@ -557,6 +565,14 @@ export async function createPoi(formData: FormData) {
 }
 
 export async function updatePoi(id: string, formData: FormData) {
+  const keys = Array.from(formData.keys());
+  console.log(">>> [SERVER DEBUG] updatePoi keys:", keys);
+  keys.forEach(k => {
+    const v = formData.get(k);
+    if (v instanceof File) console.log(`  - ${k}: FILE (${v.name}, ${(v.size / 1024).toFixed(1)} KB)`);
+    else console.log(`  - ${k}: STRING (len: ${String(v).length})`);
+  });
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const latitude = parseFloat(formData.get('latitude') as string);
