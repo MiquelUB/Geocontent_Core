@@ -256,14 +256,10 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           style={{ y }}
           className="absolute inset-0 w-full h-full"
         >
-          <ImageSlider
-            images={
-              (safeLegend.carouselImages?.length > 0
-                ? safeLegend.carouselImages
-                : (safeLegend.images?.length > 0 ? safeLegend.images : [safeLegend.header16x9 || safeLegend.image])
-              ).map(proxifyUrl)
-            }
-            isRecapture={safeLegend.is_recapture}
+          <ImageWithFallback
+            src={proxifyUrl(safeLegend.image || safeLegend.image_url || safeLegend.header16x9)}
+            alt={safeLegend.title}
+            className="w-full h-full object-cover"
           />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-background pointer-events-none z-20"></div>
@@ -342,6 +338,31 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               )}
             </div>
 
+            {/* Audio Player Box - Directly under text */}
+            {isUnlocked && safeLegend.audioUrl && (
+              <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-between transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                    <Volume2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">Àudio Guia</div>
+                    <div className="text-xs opacity-80">{isPlaying ? 'Reproduint...' : 'Clica per escoltar'}</div>
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePlayAudio}
+                  className="hover:bg-white/20 rounded-full h-12 w-12"
+                >
+                  {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                </Button>
+                <audio ref={audioRef} src={safeLegend.audioUrl} onEnded={() => setIsPlaying(false)} />
+              </div>
+            )}
+
             {!isUnlocked && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/40 backdrop-blur-[2px] rounded-3xl z-20">
                 <motion.div
@@ -365,37 +386,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
         )}
 
         <div className="mt-8 space-y-12">
-
-          {/* Audio Player */}
-          {safeLegend.audioUrl && (
-            <div className={`p-4 rounded-xl flex items-center justify-between transition-colors ${isUnlocked
-              ? 'bg-primary text-primary-foreground shadow-lg'
-              : 'bg-stone-200 text-stone-500 cursor-not-allowed'
-              }`}>
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isUnlocked ? 'bg-white/20' : 'bg-black/10'}`}>
-                  <Volume2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-bold text-sm">Àudio Guia</div>
-                  <div className="text-xs opacity-80">{isPlaying ? 'Reproduint...' : 'Clica per escoltar'}</div>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePlayAudio}
-                disabled={!isUnlocked}
-                className={`hover:bg-white/20 rounded-full h-12 w-12 ${!isUnlocked ? 'opacity-50' : ''}`}
-              >
-                {isUnlocked ? (
-                  isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />
-                ) : <Lock className="w-5 h-5" />}
-              </Button>
-              <audio ref={audioRef} src={safeLegend.audioUrl} onEnded={() => setIsPlaying(false)} />
-            </div>
-          )}
 
           {/* Multi-Video Section */}
           {safeLegend.videoUrls && safeLegend.videoUrls.length > 0 && (
@@ -460,7 +450,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           )}
 
           {/* POIs de la Ruta */}
-          {safeLegend.pois && safeLegend.pois.length > 0 && (
+          {isRoute && safeLegend.pois && safeLegend.pois.length > 0 && (
             <div className="pt-4">
               <h3 className="font-serif font-bold text-lg text-primary mb-5 flex items-center">
                 <span className="w-8 h-px bg-primary/40 mr-3"></span>
@@ -531,8 +521,21 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                       </div>
 
                       {poiUnlocked && (
-                        <div className="flex-shrink-0 self-center">
+                        <div className="flex flex-col items-center gap-2 self-center">
                           <Navigation2 className="w-4 h-4 text-primary" />
+                          {safeLegend.downloadRequired && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload();
+                              }}
+                              className="h-8 w-8 text-amber-500 hover:bg-amber-50"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -596,7 +599,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             </div>
           )}
 
-          {/* Punt D'Or & System Info */}
+          {/* Punt D'Or & System Info - Only in Route Overview */}
           <div className="pt-6 border-t border-stone-200 space-y-4">
             <div className="flex items-center justify-end">
               <span className={`flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider px-2.5 py-1 rounded-full ${network.isOnline
@@ -608,122 +611,126 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               </span>
             </div>
 
-            {(safeLegend as any).downloadRequired ? (
-              <div className="p-4 rounded-xl bg-amber-50 border-2 border-amber-400 shadow-md">
-                <div className="flex items-start gap-4 mb-3">
-                  <div className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white ${syncStatus === 'ready' ? 'bg-emerald-500' : 'bg-amber-500 shadow-lg'}`}>
-                    {syncStatus === 'ready' ? <CheckCircle2 className="w-6 h-6" /> : <Download className="w-6 h-6 animate-pulse" />}
-                  </div>
-                  <div>
-                    <div className="font-extrabold text-base uppercase tracking-tighter text-amber-900 drop-shadow-sm">Punt d'Or</div>
-                    <div className="text-sm font-bold text-amber-800 leading-tight mt-0.5">Baixa't aquesta ruta per poder-la disfrutar sense complicacions</div>
-                  </div>
-                </div>
-
-                {syncStatus !== 'ready' && (
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={handleDownload}
-                    disabled={syncStatus === 'syncing' || !network.isOnline}
-                    className="w-full mt-2 h-12 text-sm uppercase font-black tracking-widest bg-amber-500 hover:bg-amber-600 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all"
-                  >
-                    {syncStatus === 'syncing' ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Baixant Dades...
-                      </>
-                    ) : 'DESCARREGAR ARA'}
-                  </Button>
-                )}
-
-                {syncStatus === 'syncing' && syncProgress && (
-                  <div className="mt-4 space-y-1.5">
-                    <div className="h-2 w-full bg-amber-200/50 rounded-full overflow-hidden shadow-inner">
-                      <motion.div
-                        className="h-full bg-amber-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
-                      />
+            {isRoute && (
+              <>
+                {(safeLegend as any).downloadRequired ? (
+                  <div className="p-4 rounded-xl bg-amber-50 border-2 border-amber-400 shadow-md">
+                    <div className="flex items-start gap-4 mb-3">
+                      <div className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white ${syncStatus === 'ready' ? 'bg-emerald-500' : 'bg-amber-500 shadow-lg'}`}>
+                        {syncStatus === 'ready' ? <CheckCircle2 className="w-6 h-6" /> : <Download className="w-6 h-6 animate-pulse" />}
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-base uppercase tracking-tighter text-amber-900 drop-shadow-sm">Punt d'Or</div>
+                        <div className="text-sm font-bold text-amber-800 leading-tight mt-0.5">Baixa't aquesta ruta per poder-la disfrutar sense complicacions</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-amber-700 font-bold italic text-center">
-                      Buscant els tresors i desant-los al telèfon... {syncProgress.label}
-                    </div>
-                  </div>
-                )}
 
-                {syncStatus === 'ready' && (
-                  <div className="text-sm text-emerald-700 font-bold flex items-center justify-center bg-emerald-100 p-2 rounded-lg gap-2 mt-3 border border-emerald-300">
-                    <CheckCircle2 className="w-5 h-5" />
-                    Descarregada. Ja pots gaudir-la offline!
-                  </div>
-                )}
+                    {syncStatus !== 'ready' && (
+                      <Button
+                        variant="default"
+                        size="lg"
+                        onClick={handleDownload}
+                        disabled={syncStatus === 'syncing' || !network.isOnline}
+                        className="w-full mt-2 h-12 text-sm uppercase font-black tracking-widest bg-amber-500 hover:bg-amber-600 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all"
+                      >
+                        {syncStatus === 'syncing' ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Baixant Dades...
+                          </>
+                        ) : 'DESCARREGAR ARA'}
+                      </Button>
+                    )}
 
-                {!network.isOnline && syncStatus !== 'ready' && (
-                  <div className="text-xs text-red-500 font-bold flex items-center gap-1 mt-3 justify-center text-center">
-                    <AlertCircle className="w-4 h-4" />
-                    No tens internet per baixar-la en aquest moment.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-white border border-stone-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${syncStatus === 'ready' ? 'bg-emerald-500' : 'bg-primary/40'}`}>
-                      {syncStatus === 'ready' ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs uppercase tracking-tighter">Punt d'Or</div>
-                      <div className="text-[10px] text-muted-foreground">Paquet Offline</div>
-                    </div>
-                  </div>
-                  {syncStatus !== 'ready' && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleDownload}
-                      disabled={syncStatus === 'syncing' || !network.isOnline}
-                      className="h-8 text-[10px] uppercase font-bold"
-                    >
-                      {syncStatus === 'syncing' ? (
-                        <>
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Baixant
-                        </>
-                      ) : 'Baixar Ruta'}
-                    </Button>
-                  )}
-                </div>
+                    {syncStatus === 'syncing' && syncProgress && (
+                      <div className="mt-4 space-y-1.5">
+                        <div className="h-2 w-full bg-amber-200/50 rounded-full overflow-hidden shadow-inner">
+                          <motion.div
+                            className="h-full bg-amber-500"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-amber-700 font-bold italic text-center">
+                          Buscant els tresors i desant-los al telèfon... {syncProgress.label}
+                        </div>
+                      </div>
+                    )}
 
-                {syncStatus === 'syncing' && syncProgress && (
-                  <div className="mt-2 space-y-1">
-                    <div className="h-1 w-full bg-stone-100 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-primary"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
-                      />
-                    </div>
-                    <div className="text-[9px] text-stone-400 italic">
-                      {syncProgress.label}
-                    </div>
-                  </div>
-                )}
+                    {syncStatus === 'ready' && (
+                      <div className="text-sm text-emerald-700 font-bold flex items-center justify-center bg-emerald-100 p-2 rounded-lg gap-2 mt-3 border border-emerald-300">
+                        <CheckCircle2 className="w-5 h-5" />
+                        Descarregada. Ja pots gaudir-la offline!
+                      </div>
+                    )}
 
-                {syncStatus === 'ready' && (
-                  <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Aquesta ruta està disponible sense connexió.
+                    {!network.isOnline && syncStatus !== 'ready' && (
+                      <div className="text-xs text-red-500 font-bold flex items-center gap-1 mt-3 justify-center text-center">
+                        <AlertCircle className="w-4 h-4" />
+                        No tens internet per baixar-la en aquest moment.
+                      </div>
+                    )}
                   </div>
-                )}
+                ) : (
+                  <div className="p-4 rounded-xl bg-white border border-stone-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${syncStatus === 'ready' ? 'bg-emerald-500' : 'bg-primary/40'}`}>
+                          {syncStatus === 'ready' ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs uppercase tracking-tighter">Punt d'Or</div>
+                          <div className="text-[10px] text-muted-foreground">Paquet Offline</div>
+                        </div>
+                      </div>
+                      {syncStatus !== 'ready' && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleDownload}
+                          disabled={syncStatus === 'syncing' || !network.isOnline}
+                          className="h-8 text-[10px] uppercase font-bold"
+                        >
+                          {syncStatus === 'syncing' ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Baixant
+                            </>
+                          ) : 'Baixar Ruta'}
+                        </Button>
+                      )}
+                    </div>
 
-                {!network.isOnline && syncStatus !== 'ready' && (
-                  <div className="text-[10px] text-red-500 italic mt-1">
-                    Connecta't per baixar el paquet territorial.
+                    {syncStatus === 'syncing' && syncProgress && (
+                      <div className="mt-2 space-y-1">
+                        <div className="h-1 w-full bg-stone-100 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-primary"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-[9px] text-stone-400 italic">
+                          {syncProgress.label}
+                        </div>
+                      </div>
+                    )}
+
+                    {syncStatus === 'ready' && (
+                      <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Aquesta ruta està disponible sense connexió.
+                      </div>
+                    )}
+
+                    {!network.isOnline && syncStatus !== 'ready' && (
+                      <div className="text-[10px] text-red-500 italic mt-1">
+                        Connecta't per baixar el paquet territorial.
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
 
@@ -741,7 +748,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
         </div>
       </div>
-    </div >
+    </div>
   );
 }
-
