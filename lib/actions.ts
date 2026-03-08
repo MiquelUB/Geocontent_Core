@@ -476,18 +476,22 @@ export async function createPoi(formData: FormData) {
       ...(video_urls as string[]).filter(u => u && u.startsWith('http') && !uploadedVideoUrls.includes(u))
     ]
 
-    // Carousel file uploads
+    // --- Carousel logic ---
     const carouselFileCount = parseInt(formData.get('carousel_file_count') as string || '0', 10)
     const carouselUrlsFromForm = carousel_images as string[]
     const finalCarouselImages: string[] = []
 
-    let urlIdx = 0
-    for (let i = 0; i < carouselFileCount; i++) {
-      const file = formData.get(`carousel_file_${i}`) as File | null
-      if (file && file.size > 0) {
-        finalCarouselImages.push(await uploadFile(file))
-      } else {
-        if (carouselUrlsFromForm[urlIdx]) {
+    if (carouselFileCount === 0 && carouselUrlsFromForm.length > 0) {
+      // New mode: client-side pre-uploaded everything
+      carouselUrlsFromForm.forEach(u => finalCarouselImages.push(u))
+    } else {
+      // Legacy mode: server-side file uploads
+      let urlIdx = 0
+      for (let i = 0; i < carouselFileCount; i++) {
+        const file = formData.get(`carousel_file_${i}`) as File | null
+        if (file && file.size > 0) {
+          finalCarouselImages.push(await uploadFile(file))
+        } else if (carouselUrlsFromForm[urlIdx]) {
           finalCarouselImages.push(carouselUrlsFromForm[urlIdx])
           urlIdx++
         }
@@ -604,18 +608,22 @@ export async function updatePoi(id: string, formData: FormData) {
   const textContent = formData.get('text_content') as string || '';
   const icon = formData.get('icon') as string || null;
 
-  // Carousel: handle files and existing URLs preserving order
+  // --- Carousel logic ---
   const carouselFileCount = parseInt(formData.get('carousel_file_count') as string || '0', 10);
   const carouselUrlsFromForm: string[] = JSON.parse(formData.get('carousel_images') as string || '[]');
   const finalCarouselImages: string[] = [];
 
-  let urlIdx = 0;
-  for (let i = 0; i < carouselFileCount; i++) {
-    const file = formData.get(`carousel_file_${i}`) as File | null;
-    if (file && file.size > 0) {
-      finalCarouselImages.push(await uploadFile(file));
-    } else {
-      if (carouselUrlsFromForm[urlIdx]) {
+  if (carouselFileCount === 0 && carouselUrlsFromForm.length > 0) {
+    // New mode: client-side pre-uploaded everything
+    carouselUrlsFromForm.forEach(u => finalCarouselImages.push(u));
+  } else {
+    // Legacy mode: server-side or mixed
+    let urlIdx = 0;
+    for (let i = 0; i < carouselFileCount; i++) {
+      const file = formData.get(`carousel_file_${i}`) as File | null;
+      if (file && file.size > 0) {
+        finalCarouselImages.push(await uploadFile(file));
+      } else if (carouselUrlsFromForm[urlIdx]) {
         finalCarouselImages.push(carouselUrlsFromForm[urlIdx]);
         urlIdx++;
       }
@@ -640,10 +648,10 @@ export async function updatePoi(id: string, formData: FormData) {
         textContent,
         appThumbnail,
         header16x9,
-        icon,
-        type: type ? (type as any) : null,
-        manualQuiz,
         carouselImages: finalCarouselImages,
+        icon,
+        manualQuiz,
+        type: type ? (type as any) : undefined,
         images: appThumbnail ? [appThumbnail] : undefined,
       }
     });
