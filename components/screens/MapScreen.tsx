@@ -164,13 +164,14 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-lg font-serif font-bold text-primary-foreground">
-                Explorar Mapa
-              </h1>
-              <p className="text-xs text-primary-foreground/80">
-                {filteredLegends.length} llocs trobats
-              </p>
+            <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center overflow-hidden shadow-sm">
+              {brand?.logoUrl ? (
+                <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+              ) : (
+                <span className="text-xl font-serif font-bold text-primary">
+                  {brand?.name?.[0] || PxxConfig.appName[0]}
+                </span>
+              )}
             </div>
           </div>
 

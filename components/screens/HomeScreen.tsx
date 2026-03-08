@@ -169,24 +169,18 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-primary p-4 pb-2"
+        className="bg-primary p-4"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-background rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex items-center">
+            <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center overflow-hidden shadow-lg">
               {brand?.logoUrl ? (
-                <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+                <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
               ) : (
-                <span className="text-lg font-serif font-bold text-primary">
+                <span className="text-2xl font-serif font-bold text-primary">
                   {brand?.name?.[0] || PxxConfig.appName[0]}
                 </span>
               )}
-            </div>
-            <div>
-              <h1 className="text-lg font-serif font-bold text-primary-foreground">
-                {brand?.name || PxxConfig.appName}
-              </h1>
-              <p className="text-xs text-primary-foreground/80">{PxxConfig.appDescription}</p>
             </div>
           </div>
           <div className="flex items-center space-x-1">
@@ -336,7 +330,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-1">
+                   <div className="flex items-start justify-between mb-1">
                     <h3 className="font-serif font-medium text-primary truncate">
                       {poi.title}
                     </h3>
