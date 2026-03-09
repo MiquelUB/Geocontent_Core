@@ -131,6 +131,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   const isAlreadyVisited = safeLegend.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
   const isRoute = safeLegend.pois && safeLegend.pois.length > 0;
 
+  // Si té routeId, és un POI dins d'una ruta. Si no el té però té pois, és el contenidor (overview) de la ruta.
+  const isRouteContainer = isRoute && !safeLegend.routeId;
+
   // Master Admin bypass: Can see everything if role is admin
   const isMasterAdmin = currentUser?.role === 'admin';
 
@@ -138,7 +141,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   const effectiveAudioUrl = safeLegend.audioUrl || safeLegend.audio || safeLegend.audio_url;
 
   // A POI is unlocked if it's a route container, OR it was already visited, OR user is admin, OR user is close enough
-  const isUnlocked = isRoute || isAlreadyVisited || isMasterAdmin || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
+  const isUnlocked = isRouteContainer || isAlreadyVisited || isMasterAdmin || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
 
   const allPoisVisited = isRoute && safeLegend.pois?.length > 0 && safeLegend.pois.every((poi: any) =>
     isMasterAdmin || poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id)
@@ -440,13 +443,13 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             </div>
           )}
 
-          {/* Punts de la Ruta & Punt d'Or */}
+          {/* Punts de la Ruta & Itinerari - Es mostra sempre que hi hagis siblings */}
           {isRoute && (
             <div className="pt-4 space-y-6">
 
 
-              {/* Llistat de tots els Punts de la Ruta */}
-              {isRoute && sortedPois.length > 0 && (
+              {/* Llistat de tots els Punts de la Ruta (incloent-hi l'actual desactivat) */}
+              {sortedPois.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="font-serif font-bold text-xl text-primary flex items-center px-1">
                     Itinerari de la ruta
@@ -470,17 +473,17 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                             poiUnlocked ? onNavigate('legend-detail', poi) : onNavigate('map', poi);
                           }}
                           className={`group relative flex gap-4 rounded-3xl border-2 p-4 transition-all duration-300 ${isActive
-                              ? 'border-primary bg-primary/5 shadow-inner scale-[1.02]'
-                              : poiUnlocked
-                                ? 'border-primary/10 bg-white shadow-sm hover:shadow-md cursor-pointer hover:border-primary/30'
-                                : 'border-stone-100 bg-stone-50/50 cursor-pointer grayscale-[0.5]'
+                            ? 'border-primary bg-primary/5 shadow-inner scale-[1.02]'
+                            : poiUnlocked
+                              ? 'border-primary/10 bg-white shadow-sm hover:shadow-md cursor-pointer hover:border-primary/30'
+                              : 'border-stone-100 bg-stone-50/50 cursor-pointer grayscale-[0.5]'
                             }`}
                         >
                           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ${isActive
-                              ? 'bg-primary text-white ring-4 ring-primary/20'
-                              : poiUnlocked
-                                ? 'bg-primary/80 text-white'
-                                : 'bg-stone-200 text-stone-400'
+                            ? 'bg-primary text-white ring-4 ring-primary/20'
+                            : poiUnlocked
+                              ? 'bg-primary/80 text-white'
+                              : 'bg-stone-200 text-stone-400'
                             }`}>
                             {idx + 1}
                           </div>
