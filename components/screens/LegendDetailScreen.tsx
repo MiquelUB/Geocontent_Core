@@ -146,9 +146,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
   const finalQuizPassed = safeLegend.userRouteProgress?.some((urp: any) => urp.userId === currentUser?.id && urp.finalQuizPassed);
 
-  // Filter out the current POI from the list if we are inside a POI detail
-  const otherPois = safeLegend.pois?.filter((p: any) => p.id !== safeLegend.id) || [];
-
   // Parse POIs to calculate numeric raw distances for sorting
   const poisWithDistances = (safeLegend.pois || []).map((poi: any) => {
     const lat = typeof poi.latitude === 'number' ? poi.latitude : 0;
@@ -448,18 +445,19 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             <div className="pt-4 space-y-6">
 
 
-              {/* Llistat de Punts RESTANTS - Només si n'hi ha més d'un a la ruta */}
-              {isRoute && otherPois.length > 0 && (
+              {/* Llistat de tots els Punts de la Ruta */}
+              {isRoute && sortedPois.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="font-serif font-bold text-xl text-primary flex items-center px-1">
-                    Altres punts de la ruta
+                    Itinerari de la ruta
                     <Badge variant="secondary" className="ml-3 bg-primary/10 text-primary border-none text-[10px] uppercase">
-                      {otherPois.length} restants
+                      {sortedPois.length} punts
                     </Badge>
                   </h3>
 
                   <div className="grid grid-cols-1 gap-3">
-                    {otherPois.map((poi: any, idx: number) => {
+                    {sortedPois.map((poi: any, idx: number) => {
+                      const isActive = poi.id === safeLegend.id;
                       const poiVisited = poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
                       const poiUnlocked = isMasterAdmin || poiVisited || (poi.rawDist !== Infinity && poi.rawDist <= (UNLOCK_DISTANCE / 1000));
                       const distLabel = poi.formattedDist;
@@ -467,35 +465,52 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                       return (
                         <div
                           key={poi.id}
-                          onClick={() => poiUnlocked ? onNavigate('legend-detail', poi) : onNavigate('map', poi)}
-                          className={`group relative flex gap-4 rounded-3xl border-2 p-4 transition-all duration-300 ${poiUnlocked
-                            ? 'border-primary/10 bg-white shadow-sm hover:shadow-md cursor-pointer'
-                            : 'border-stone-100 bg-stone-50/50 cursor-pointer grayscale-[0.5]'
+                          onClick={() => {
+                            if (isActive) return; // No navegar al mateix punt
+                            poiUnlocked ? onNavigate('legend-detail', poi) : onNavigate('map', poi);
+                          }}
+                          className={`group relative flex gap-4 rounded-3xl border-2 p-4 transition-all duration-300 ${isActive
+                              ? 'border-primary bg-primary/5 shadow-inner scale-[1.02]'
+                              : poiUnlocked
+                                ? 'border-primary/10 bg-white shadow-sm hover:shadow-md cursor-pointer hover:border-primary/30'
+                                : 'border-stone-100 bg-stone-50/50 cursor-pointer grayscale-[0.5]'
                             }`}
                         >
-                          <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ${poiUnlocked ? 'bg-primary text-white shadow-md' : 'bg-stone-200 text-stone-400'
+                          <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ${isActive
+                              ? 'bg-primary text-white ring-4 ring-primary/20'
+                              : poiUnlocked
+                                ? 'bg-primary/80 text-white'
+                                : 'bg-stone-200 text-stone-400'
                             }`}>
                             {idx + 1}
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <h4 className={`font-serif font-bold text-base leading-tight ${poiUnlocked ? 'text-stone-800' : 'text-stone-400'}`}>
+                              <h4 className={`font-serif font-bold text-base leading-tight ${isActive ? 'text-primary' : poiUnlocked ? 'text-stone-800' : 'text-stone-400'
+                                }`}>
                                 {poi.title}
+                                {isActive && (
+                                  <span className="ml-2 inline-flex items-center text-[9px] uppercase tracking-tighter bg-primary text-white px-2 py-0.5 rounded-full font-black animate-pulse">
+                                    Vostè és aquí
+                                  </span>
+                                )}
                               </h4>
-                              {distLabel && (
+                              {distLabel && !isActive && (
                                 <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg ${poiUnlocked ? 'bg-primary/10 text-primary' : 'bg-stone-100 text-stone-300'}`}>
                                   {distLabel}
                                 </span>
                               )}
                             </div>
-                            <p className={`text-xs leading-relaxed line-clamp-2 ${poiUnlocked ? 'text-stone-500' : 'text-stone-300'}`}>
-                              {poi.description || 'Apropa\'t per descobrir els secrets d\'aquest punt.'}
+                            <p className={`text-xs leading-relaxed line-clamp-2 ${isActive ? 'text-primary/70' : poiUnlocked ? 'text-stone-500' : 'text-stone-300'
+                              }`}>
+                              {isActive ? 'Estàs explorant aquest punt ara mateix.' : (poi.description || 'Apropa\'t per descobrir els secrets d\'aquest punt.')}
                             </p>
                           </div>
 
                           <div className="flex flex-col items-center justify-center p-1">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${poiUnlocked ? 'bg-primary/5 text-primary' : 'text-stone-200'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isActive ? 'bg-primary text-white rotate-90 shadow-lg' : poiUnlocked ? 'bg-primary/5 text-primary' : 'text-stone-200'
+                              }`}>
                               <Navigation2 className="w-5 h-5" />
                             </div>
                           </div>
