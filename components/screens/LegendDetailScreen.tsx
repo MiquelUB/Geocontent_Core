@@ -140,10 +140,12 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   const isAlreadyVisited = safeLegend.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
   const isRoute = safeLegend.pois && safeLegend.pois.length > 0;
 
-  const isUnlocked = isRoute || isAlreadyVisited || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
+  // Master Admin bypass: Can see everything if role is admin
+  const isMasterAdmin = currentUser?.role === 'admin';
+  const isUnlocked = isRoute || isAlreadyVisited || isMasterAdmin || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
 
   const allPoisVisited = isRoute && safeLegend.pois?.length > 0 && safeLegend.pois.every((poi: any) =>
-    poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id)
+    isMasterAdmin || poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id)
   );
 
   const finalQuizPassed = safeLegend.userRouteProgress?.some((urp: any) => urp.userId === currentUser?.id && urp.finalQuizPassed);
@@ -520,7 +522,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                   <div className="grid grid-cols-1 gap-3">
                     {sortedPois.map((poi: any, idx: number) => {
                       const poiVisited = poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
-                      const poiUnlocked = poiVisited || (poi.rawDist !== Infinity && poi.rawDist <= (UNLOCK_DISTANCE / 1000));
+                      const poiUnlocked = isMasterAdmin || poiVisited || (poi.rawDist !== Infinity && poi.rawDist <= (UNLOCK_DISTANCE / 1000));
                       const distLabel = poi.formattedDist;
 
                       return (
