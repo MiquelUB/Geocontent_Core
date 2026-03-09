@@ -210,24 +210,23 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             className="mt-3 overflow-hidden"
           >
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {filterChips.map((chip) => (
-                <Button
-                  key={chip.id}
-                  variant={selectedRoute === chip.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedRoute(chip.id)}
-                  className={`whitespace-nowrap flex-shrink-0 ${selectedRoute === chip.id
-                    ? "bg-background text-primary"
-                    : "border-primary-foreground text-primary-foreground hover:bg-background/10"
-                    }`}
-                >
-                  <div
-                    className="w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: chip.color }}
-                  ></div>
-                  {chip.label}
-                </Button>
-              ))}
+              {filterChips.map((chip) => {
+                const isSelected = selectedRoute === chip.id;
+                return (
+                  <Button
+                    key={chip.id}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedRoute(chip.id)}
+                    className={`whitespace-nowrap flex-shrink-0 rounded-full font-bold transition-all px-4 ${isSelected
+                        ? "bg-white text-stone-900 shadow-md"
+                        : "text-white border border-white/30 hover:bg-white/10"
+                      }`}
+                  >
+                    {chip.label}
+                  </Button>
+                );
+              })}
             </div>
           </motion.div>
         )}
