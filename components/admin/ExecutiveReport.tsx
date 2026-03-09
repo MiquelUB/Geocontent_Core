@@ -13,7 +13,7 @@ import { Calendar, Download, RefreshCw, FileCheck, AlertCircle, Info } from "luc
 import { generateReport } from '@/lib/actions/reports';
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { deleteReport } from '@/lib/actions/reports';
 import { Trash2 } from "lucide-react";
@@ -67,7 +67,10 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
     const [period, setPeriod] = useState('month'); // 'week', 'month', 'year', 'custom'
 
     const fetchData = async () => {
-        if (!municipalityId || municipalityId === 'null') return;
+        if (!municipalityId || municipalityId === 'null') {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
             const res = await fetch(`/api/analytics/executive-report?municipalityId=${municipalityId}&startDate=${startDate}&endDate=${endDate}`);

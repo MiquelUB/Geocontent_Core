@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from "lucide-react";
-import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions";
+import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, verifyAdminPassword, verifySuperAdminPassword, getAllProfiles } from "@/lib/actions";
+import { getReports } from "@/lib/actions/reports";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
 import { getAdminTheme } from "@/lib/adminTheme";
@@ -31,13 +32,27 @@ interface Legend {
   downloadRequired?: boolean;
 }
 
-export default function AdminDashboard({ municipalityId, municipalityTheme }: { municipalityId?: string, municipalityTheme?: string }) {
+export default function AdminDashboard({
+  municipalityId,
+  municipalityTheme,
+  legends: initialLegends = [],
+  profiles: initialProfiles = [],
+  reports: initialReports = [],
+  brand: initialBrand = null
+}: {
+  municipalityId?: string,
+  municipalityTheme?: string,
+  legends?: Legend[],
+  profiles?: any[],
+  reports?: any[],
+  brand?: any
+}) {
   const router = useRouter();
   const adminTheme = getAdminTheme(municipalityTheme);
   const [activeTab, setActiveTab] = useState<'rutes' | 'usuaris' | 'executiu' | 'config'>('rutes');
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [brand, setBrand] = useState<any>(null);
+  const [brand, setBrand] = useState<any>(initialBrand);
 
   // States per a la creació de Ruta (Carpeta/Legend)
   const [routeTitle, setRouteTitle] = useState('');
@@ -51,13 +66,15 @@ export default function AdminDashboard({ municipalityId, municipalityTheme }: { 
   const [isGeneratingRouteQuiz, setIsGeneratingRouteQuiz] = useState(false);
 
   // State per llistat
-  const [legends, setLegends] = useState<Legend[]>([]);
+  const [legends, setLegends] = useState<Legend[]>(initialLegends);
   const [editingRoute, setEditingRoute] = useState<Legend | null>(null);
 
   // Per gestionar POIs de la ruta des d'aquest dashboard
   const [managingRoute, setManagingRoute] = useState<any>(null);
   const [editingPoi, setEditingPoi] = useState<any>(null);
   const [editingLegend, setEditingLegend] = useState<any>(null);
+  const [profiles, setProfiles] = useState<any[]>(initialProfiles);
+  const [reports, setReports] = useState<any[]>(initialReports);
 
   useEffect(() => {
     // Check if administrative session unlocked
@@ -67,18 +84,31 @@ export default function AdminDashboard({ municipalityId, municipalityTheme }: { 
     }
 
     async function fetchData() {
-      const data = await getAdminLegends();
-      setLegends(data as any);
+      // Si no tenim dades inicials o volem refrescar, les tornem a carregar solo si necesario
+      if (legends.length === 0) {
+        const data = await getAdminLegends();
+        setLegends(data as any);
+      }
 
-      // Fetch brand if municipalityId provided
-      if (municipalityId) {
+      if (profiles.length === 0) {
+        const profilesData = await getAllProfiles();
+        setProfiles(profilesData);
+      }
+
+      if (reports.length === 0) {
+        const reportsData = await getReports(municipalityId);
+        setReports(reportsData || []);
+      }
+
+      // Fetch brand if not provided
+      if (!brand && municipalityId) {
         const res = await fetch(`/api/municipality?id=${municipalityId}`);
         const brandData = await res.json();
         setBrand(brandData);
       }
     }
     fetchData();
-  }, [municipalityId]);
+  }, [municipalityId, initialLegends.length, initialProfiles.length, initialReports.length]);
 
   useEffect(() => {
     if (editingRoute) {
@@ -504,13 +534,17 @@ export default function AdminDashboard({ municipalityId, municipalityTheme }: { 
 
         {activeTab === 'usuaris' && (
           <div className="animate-in fade-in duration-500">
-            <UsersTable />
+            <UsersTable profiles={profiles} theme={adminTheme} />
           </div>
         )}
 
         {activeTab === 'executiu' && (
           <div className="animate-in fade-in duration-500">
-            <ExecutiveReport />
+            <ExecutiveReport
+              municipalityId={municipalityId || 'null'}
+              theme={adminTheme}
+              reports={reports}
+            />
           </div>
         )}
 
