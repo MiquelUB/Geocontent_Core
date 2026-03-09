@@ -174,7 +174,7 @@ export default function Home() {
         return <HomeScreen onNavigate={handleNavigate} onOpenHelp={reopenOnboarding} brand={brand} userLocation={location} error={geoError} />;
 
       case "legends":
-        return <LegendsScreen onNavigate={handleNavigate} brand={brand} />;
+        return <LegendsScreen onNavigate={handleNavigate} onOpenHelp={reopenOnboarding} brand={brand} />;
       case "legend-detail":
         return <LegendDetailScreen legend={navigationData} onNavigate={handleNavigate} userLocation={location} currentUser={currentUser} onUserUpdate={handleUserUpdate} />;
       case "map":

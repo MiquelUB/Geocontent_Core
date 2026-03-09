@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { MapPin, Bookmark, Heart, SlidersHorizontal, BarChart, Mountain } from "lucide-react";
+import { MapPin, Bookmark, Heart, SlidersHorizontal, BarChart, Mountain, HelpCircle } from "lucide-react";
+import { Button } from "../ui/button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
 import { getLegends, getAppBranding } from "@/lib/actions";
@@ -7,6 +8,7 @@ import { PxxConfig } from "@/projects/active/config";
 
 interface LegendsScreenProps {
     onNavigate: (screen: string, data?: any) => void;
+    onOpenHelp: () => void;
     brand?: any;
 }
 
@@ -53,7 +55,7 @@ function hexToHsl(hex: string) {
 }
 
 
-export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenProps) {
+export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: LegendsScreenProps) {
     const [selectedRoute, setSelectedRoute] = useState("all");
     const [legends, setLegends] = useState<any[]>([]);
     const [brand, setBrand] = useState<any>(propBrand);
@@ -141,6 +143,16 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                         {brand?.name || 'PXX Guide'}
                     </h1>
                 </div>
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onOpenHelp}
+                    className="text-primary-foreground hover:bg-white/10 p-2"
+                    title="Ajuda"
+                >
+                    <HelpCircle className="w-6 h-6" />
+                </Button>
             </header>
 
             {/* Main Content Area */}
