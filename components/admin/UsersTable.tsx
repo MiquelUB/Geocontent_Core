@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUserVisits } from "@/lib/actions";
+import { Download as DownloadIcon } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -54,10 +55,45 @@ export function UsersTable({ profiles, theme }: { profiles: any[], theme?: any }
     }
   };
 
+  const handleExportCSV = () => {
+    if (!profiles || profiles.length === 0) return;
+
+    // CSV Header
+    const headers = ["Usuari", "Email"];
+
+    // CSV Rows
+    const rows = profiles.map(p => [
+      `"${(p.username || 'Anonim').replace(/"/g, '""')}"`,
+      `"${(p.email || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `usuaris_geocontent_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Card className="border-stone-200 shadow-sm bg-white">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-serif text-xl text-stone-800">Directori d'Usuaris</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportCSV}
+          className={`flex items-center gap-2 border-stone-200 transition-all hover:shadow-md ${activeTheme.text}`}
+        >
+          <DownloadIcon className="w-4 h-4" />
+          Exportar CSV
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border border-stone-200">
