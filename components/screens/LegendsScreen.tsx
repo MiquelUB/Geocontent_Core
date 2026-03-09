@@ -54,12 +54,12 @@ function hexToHsl(hex: string) {
 
 
 export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenProps) {
-    const [selectedLocation, setSelectedLocation] = useState("all");
+    const [selectedRoute, setSelectedRoute] = useState("all");
     const [legends, setLegends] = useState<any[]>([]);
     const [brand, setBrand] = useState<any>(propBrand);
 
-    // Derive unique locations (towns) from fetched routes
-    const [locations, setLocations] = useState<any[]>([{ id: "all", label: "Totes" }]);
+    // Filter Buttons (Routes)
+    const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: "Totes" }]);
 
     useEffect(() => {
         async function fetchData() {
@@ -81,36 +81,30 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                 console.log("Mapped routes for library:", mapped[0]); // Debug coords
                 setLegends(mapped);
 
-                // Extract unique locations and their first found category for coloring
-                const uniqueLocsMap = new Map();
-                mapped.forEach((l: any) => {
-                    if (l.location && !uniqueLocsMap.has(l.location)) {
-                        uniqueLocsMap.set(l.location, l.category);
-                    }
-                });
-
-                const locChips = [
+                // Create chips for each individual route
+                const routeChips = [
                     { id: "all", label: "Totes", category: "all" },
-                    ...Array.from(uniqueLocsMap.entries()).map(([loc, cat]) => ({
-                        id: loc,
-                        label: loc,
-                        category: cat
+                    ...mapped.map((l: any) => ({
+                        id: l.id,
+                        label: l.title,
+                        category: l.category
                     }))
                 ];
-                setLocations(locChips);
+                setFilterChips(routeChips);
             }
         }
         fetchData();
     }, []);
 
     const featuredLegend = legends[0];
-    // Filter by selected location ("all" shows everything)
-    const filteredLegends = selectedLocation === 'all'
-        ? legends
-        : legends.filter(l => l.location === selectedLocation);
 
-    const activeLoc = locations.find(c => c.id === selectedLocation);
-    const activeLabel = activeLoc?.label ?? 'Totes';
+    // Filter by selected route ID ("all" shows everything)
+    const filteredLegends = selectedRoute === 'all'
+        ? legends
+        : legends.filter(l => l.id === selectedRoute);
+
+    const activeChip = filterChips.find(c => c.id === selectedRoute);
+    const activeLabel = activeChip?.label ?? 'Totes';
 
     // El bioma de la plana SEMPRE ha de ser el del municipi (brand), no el de la ruta filtrada
     const activeCategory = brand?.themeId || 'mountain';
@@ -154,17 +148,17 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
 
                 {/* Filter Chips (Horizontal Scroll) */}
                 <div className="flex gap-3 px-6 overflow-x-auto pb-6 pt-6 no-scrollbar">
-                    {locations.map(loc => {
-                        const isSelected = selectedLocation === loc.id;
+                    {filterChips.map(chip => {
+                        const isSelected = selectedRoute === chip.id;
                         const globalThemeId = brand?.themeId || 'mountain';
 
-                        // Usem el color del bioma global per als chips per coherència institucional
+                        // Use global biome color for chips
                         const biomeColor = PxxConfig.chameleonThemes[globalThemeId as keyof typeof PxxConfig.chameleonThemes]?.primary || PxxConfig.chameleonThemes['mountain'].primary;
 
                         return (
                             <button
-                                key={loc.id}
-                                onClick={() => setSelectedLocation(loc.id)}
+                                key={chip.id}
+                                onClick={() => setSelectedRoute(chip.id)}
                                 className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-bold transition-transform shadow-sm active:scale-95`}
                                 style={{
                                     backgroundColor: isSelected ? biomeColor : 'transparent',
@@ -172,7 +166,7 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                                     border: `2px solid ${biomeColor}`
                                 }}
                             >
-                                {loc.label}
+                                {chip.label}
                             </button>
                         );
                     })}
@@ -183,7 +177,7 @@ export function LegendsScreen({ onNavigate, brand: propBrand }: LegendsScreenPro
                     {/* Section Header */}
                     <div className="flex items-center gap-4">
                         <h2 className="font-serif text-2xl text-foreground font-bold">
-                            {selectedLocation === 'all' ? 'Totes les Rutes' : `Rutes a ${activeLabel}`}
+                            {selectedRoute === 'all' ? 'Biblioteca de Rutes' : activeLabel}
                         </h2>
                         <div className="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
                         <span className="text-sm text-gray-400">{filteredLegends.length} rutes</span>
