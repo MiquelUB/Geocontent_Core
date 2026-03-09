@@ -219,24 +219,6 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1">Interval Personalitzat</label>
-                        <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-stone-200 shadow-sm">
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => { setStartDate(e.target.value); setPeriod('custom'); }}
-                                className="h-8 w-36 text-xs border-none bg-transparent focus-visible:ring-0"
-                            />
-                            <span className="text-stone-400">→</span>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => { setEndDate(e.target.value); setPeriod('custom'); }}
-                                className="h-8 w-36 text-xs border-none bg-transparent focus-visible:ring-0"
-                            />
-                        </div>
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -465,12 +447,45 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
 
                 {/* 4. HEATMAP */}
                 <Card className="lg:col-span-3">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="flex items-center gap-2">
-                            Mapa de Calor (Interaccions GPS)
-                            <Badge variant="secondary" className="text-[10px]">REAL-TIME</Badge>
-                        </CardTitle>
-                        <p className="text-xs text-stone-500 italic">Dades recollides de la telemetria anònima dels usuaris</p>
+                    <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 gap-4">
+                        <div className="flex flex-col gap-1">
+                            <CardTitle className="flex items-center gap-2">
+                                <MapIcon className={`w-5 h-5 ${activeTheme.text}`} />
+                                Mapa de Calor d'Activitat
+                                <Badge variant="secondary" className="text-[10px]">VEHICLE GPS</Badge>
+                            </CardTitle>
+                            <p className="text-xs text-stone-500 italic">Interaccions anònimes dels visitants al bosc.</p>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 min-w-[320px]">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                Cerca per Dates al Mapa
+                            </label>
+                            <div className="flex items-center gap-2 bg-white p-0.5 px-3 rounded-xl border border-stone-200 shadow-sm transition-all hover:border-stone-300">
+                                <Input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => { setStartDate(e.target.value); setPeriod('custom'); }}
+                                    className="h-9 w-32 text-xs border-none bg-transparent focus-visible:ring-0"
+                                />
+                                <span className="text-stone-300 font-light">→</span>
+                                <Input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => { setEndDate(e.target.value); setPeriod('custom'); }}
+                                    className="h-9 w-32 text-xs border-none bg-transparent focus-visible:ring-0"
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-stone-400"
+                                    onClick={fetchData}
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                                </Button>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent className="h-[400px] p-0 overflow-hidden rounded-b-xl relative border-t border-stone-100">
                         <MapLibreMap

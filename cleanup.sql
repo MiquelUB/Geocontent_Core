@@ -15,5 +15,5 @@ TRUNCATE TABLE public.ai_usage_logs CASCADE;
 -- 3. Reseteig de progressió (mantenint els usuaris/admins però a zero XP)
 UPDATE public.profiles SET xp = 0, level = 1;
 
--- 4. Esborrat d'usuaris de prova (opcional - si volem mantenir admins recomanem filtrar)
--- DELETE FROM public.profiles WHERE role = 'user';
+-- 4. Esborrat d'usuaris de prova (nomes mantenim els que tenen rol 'admin')
+DELETE FROM public.profiles WHERE role IS NULL OR role != 'admin';
