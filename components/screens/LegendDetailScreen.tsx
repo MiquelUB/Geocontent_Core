@@ -132,6 +132,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
   // Master Admin bypass: Can see everything if role is admin
   const isMasterAdmin = currentUser?.role === 'admin';
+
+  // A POI is unlocked if it's a route container, OR it was already visited, OR user is admin, OR user is close enough
   const isUnlocked = isRoute || isAlreadyVisited || isMasterAdmin || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
 
   const allPoisVisited = isRoute && safeLegend.pois?.length > 0 && safeLegend.pois.every((poi: any) =>
@@ -139,6 +141,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   );
 
   const finalQuizPassed = safeLegend.userRouteProgress?.some((urp: any) => urp.userId === currentUser?.id && urp.finalQuizPassed);
+
+  // Filter out the current POI from the list if we are inside a POI detail
+  const otherPois = safeLegend.pois?.filter((p: any) => p.id !== safeLegend.id) || [];
 
   // Parse POIs to calculate numeric raw distances for sorting
   const poisWithDistances = (safeLegend.pois || []).map((poi: any) => {
@@ -265,18 +270,22 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           </div>
         </div>
 
-        {/* Title Overlay (Fades out on scroll) */}
         <motion.div
           style={{ opacity }}
           className="absolute bottom-12 left-6 right-6 z-10"
         >
-          <div className="flex items-center text-white/80 font-medium tracking-widest uppercase text-xs mb-2">
+          <div className="flex items-center text-white/80 font-medium tracking-widest uppercase text-[10px] mb-1">
             <MapPin className="w-3 h-3 mr-2" />
-            {safeLegend.location}
+            {safeLegend.routeName || safeLegend.location}
           </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white mb-4 leading-none drop-shadow-md">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-2 leading-tight drop-shadow-md">
             {safeLegend.title}
           </h1>
+          {safeLegend.routeName && (
+            <div className="text-white/60 text-xs font-serif italic">
+              Part de la ruta: {safeLegend.routeName}
+            </div>
+          )}
         </motion.div>
       </div>
 
@@ -430,18 +439,18 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             <div className="pt-4 space-y-6">
 
 
-              {/* Llistat de Punts amb boxes individuals */}
-              {safeLegend.pois && safeLegend.pois.length > 0 && (
+              {/* Llistat de Punts RESTANTS - Només si n'hi ha més d'un a la ruta */}
+              {isRoute && otherPois.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="font-serif font-bold text-xl text-primary flex items-center px-1">
-                    Punts de la Ruta
+                    Altres punts de la ruta
                     <Badge variant="secondary" className="ml-3 bg-primary/10 text-primary border-none text-[10px] uppercase">
-                      {safeLegend.pois.length} localitzacions
+                      {otherPois.length} restants
                     </Badge>
                   </h3>
 
                   <div className="grid grid-cols-1 gap-3">
-                    {sortedPois.map((poi: any, idx: number) => {
+                    {otherPois.map((poi: any, idx: number) => {
                       const poiVisited = poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
                       const poiUnlocked = isMasterAdmin || poiVisited || (poi.rawDist !== Infinity && poi.rawDist <= (UNLOCK_DISTANCE / 1000));
                       const distLabel = poi.formattedDist;
