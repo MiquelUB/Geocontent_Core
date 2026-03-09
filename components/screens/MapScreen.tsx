@@ -70,7 +70,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
 
   const [selectedLegend, setSelectedLegend] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("totes");
+  const [selectedRoute, setSelectedRoute] = useState("all");
   const [legends, setLegends] = useState<any[]>([]);
   const [viewState, setViewState] = useState({
     longitude: 0.9870,
@@ -78,7 +78,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     zoom: 11
   });
 
-  const [locations, setLocations] = useState<any[]>([{ id: "totes", label: "Totes" }]);
+  const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: "Totes" }]);
   const [hasInitialPosition, setHasInitialPosition] = useState(false);
 
   useEffect(() => {
@@ -97,13 +97,16 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
         }));
         setLegends(mapped);
 
-        // Extract unique locations (towns)
-        const uniqueLocs = Array.from(new Set(mapped.map(l => l.location).filter(Boolean)));
-        const locChips = [
-          { id: "totes", label: "Totes", color: "#3E4E3F" },
-          ...uniqueLocs.map(loc => ({ id: loc, label: loc, color: "#3E4E3F" }))
+        // Extract individual routes for filtering
+        const chips = [
+          { id: "all", label: "Totes", color: "#3E4E3F" },
+          ...mapped.map(l => ({
+            id: l.id,
+            label: l.title,
+            color: "#3E4E3F"
+          }))
         ];
-        setLocations(locChips);
+        setFilterChips(chips);
       }
     }
     fetchData();
@@ -132,9 +135,9 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     }
   }, [focusLegend, userLocation, hasInitialPosition]);
 
-  const filteredLegends = activeCategory === "totes"
+  const filteredLegends = selectedRoute === "all"
     ? legends
-    : legends.filter(legend => legend.location === activeCategory);
+    : legends.filter(legend => legend.id === selectedRoute);
 
   // Generem una llista plana de tots els POIs de les rutes filtrades per mostrar al mapa
   const allMapPoints = filteredLegends.flatMap(legend =>
@@ -206,23 +209,23 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             animate={{ height: "auto", opacity: 1 }}
             className="mt-3 overflow-hidden"
           >
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {locations.map((loc) => (
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {filterChips.map((chip) => (
                 <Button
-                  key={loc.id}
-                  variant={activeCategory === loc.id ? "default" : "outline"}
+                  key={chip.id}
+                  variant={selectedRoute === chip.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setActiveCategory(loc.id)}
-                  className={`whitespace-nowrap flex-shrink-0 ${activeCategory === loc.id
+                  onClick={() => setSelectedRoute(chip.id)}
+                  className={`whitespace-nowrap flex-shrink-0 ${selectedRoute === chip.id
                     ? "bg-background text-primary"
                     : "border-primary-foreground text-primary-foreground hover:bg-background/10"
                     }`}
                 >
                   <div
                     className="w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: loc.color }}
+                    style={{ backgroundColor: chip.color }}
                   ></div>
-                  {loc.label}
+                  {chip.label}
                 </Button>
               ))}
             </div>
