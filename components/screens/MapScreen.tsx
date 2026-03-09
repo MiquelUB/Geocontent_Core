@@ -85,6 +85,10 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     async function fetchData() {
       const data = await getLegends();
       if (data) {
+        const activeCategory = brand?.themeId || 'mountain';
+        const theme = PxxConfig.chameleonThemes[activeCategory as keyof typeof PxxConfig.chameleonThemes] || PxxConfig.chameleonThemes['mountain'];
+        const biomeColor = theme.primary;
+
         const mapped = data.map((l: any) => ({
           ...l,
           location: l.location_name || "",
@@ -93,17 +97,17 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
           hero: l.hero_image_url,
           audio: l.audio_url,
           video: l.video_url,
-          color: "#3E4E3F",
+          color: biomeColor,
         }));
         setLegends(mapped);
 
         // Extract individual routes for filtering
         const chips = [
-          { id: "all", label: "Totes", color: "#3E4E3F" },
+          { id: "all", label: "Totes", color: biomeColor },
           ...mapped.map(l => ({
             id: l.id,
             label: l.title,
-            color: "#3E4E3F"
+            color: biomeColor
           }))
         ];
         setFilterChips(chips);
@@ -212,6 +216,9 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {filterChips.map((chip) => {
                 const isSelected = selectedRoute === chip.id;
+                const activeCategory = brand?.themeId || 'mountain';
+                const theme = PxxConfig.chameleonThemes[activeCategory as keyof typeof PxxConfig.chameleonThemes] || PxxConfig.chameleonThemes['mountain'];
+
                 return (
                   <Button
                     key={chip.id}
@@ -219,9 +226,10 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                     size="sm"
                     onClick={() => setSelectedRoute(chip.id)}
                     className={`whitespace-nowrap flex-shrink-0 rounded-full font-bold transition-all px-4 ${isSelected
-                        ? "bg-white text-stone-900 shadow-md"
-                        : "text-white border border-white/30 hover:bg-white/10"
+                      ? "bg-white shadow-md"
+                      : "text-white border border-white/30 hover:bg-white/10"
                       }`}
+                    style={isSelected ? { color: theme.primary } : {}}
                   >
                     {chip.label}
                   </Button>

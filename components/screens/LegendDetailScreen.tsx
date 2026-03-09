@@ -8,8 +8,7 @@ import HlsVideoPlayer from "../ui/HlsVideoPlayer";
 import { motion, useScroll, useTransform } from "motion/react";
 import { recordVisit } from "@/lib/actions";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { downloadTerritorialPackage, isRouteCached, SyncProgress } from "@/lib/services/sync-service";
-import { CheckCircle2, Download, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import PoiQuiz from "../quiz/PoiQuiz";
 import FinalRouteQuiz from "../quiz/FinalRouteQuiz";
 
@@ -87,19 +86,10 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userRating, setUserRating] = useState(0);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'ready'>('idle');
-  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const network = useNetworkStatus();
-
-  // Check if already cached on mount
-  useEffect(() => {
-    if (safeLegend.id && isRouteCached(safeLegend.id)) {
-      setSyncStatus('ready');
-    }
-  }, [safeLegend.id]);
 
   // Parallax effect for hero
   const { scrollY } = useScroll();
@@ -203,27 +193,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
   const handleRating = (rating: number) => {
     setUserRating(rating);
-  };
-
-  const handleViewOnMap = () => {
-    onNavigate('map', safeLegend);
-  };
-
-  const handleDownload = async () => {
-    if (syncStatus === 'syncing') return;
-    setSyncStatus('syncing');
-
-    const pois = safeLegend.pois || [];
-    const result = await downloadTerritorialPackage(safeLegend.id, pois, (p) => {
-      setSyncProgress(p);
-    });
-
-    if (result.success) {
-      setSyncStatus('ready');
-    } else {
-      setSyncStatus('idle');
-      alert(`Error en la descàrrega: ${result.error}`);
-    }
   };
 
   const handleShare = async () => {
@@ -457,57 +426,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           {isRoute && (
             <div className="pt-4 space-y-6">
 
-              {/* Punt D'Or prominent - NOMÉS si està activat a la configuració */}
-              {(safeLegend as any).downloadRequired && (
-                <div className="p-5 rounded-3xl bg-amber-50 border-2 border-amber-200 shadow-md">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white ${syncStatus === 'ready' ? 'bg-emerald-500' : 'bg-amber-500 shadow-lg'}`}>
-                      {syncStatus === 'ready' ? <CheckCircle2 className="w-6 h-6" /> : <Download className="w-6 h-6 animate-pulse" />}
-                    </div>
-                    <div>
-                      <div className="font-black text-lg uppercase tracking-tighter text-amber-900 leading-tight">Punt d'Or</div>
-                      <div className="text-sm font-medium text-amber-700/80">Ruta disponible per a ús offline</div>
-                    </div>
-                  </div>
-
-                  {syncStatus !== 'ready' ? (
-                    <Button
-                      variant="default"
-                      size="lg"
-                      onClick={handleDownload}
-                      disabled={syncStatus === 'syncing' || !network.isOnline}
-                      className="w-full h-14 text-sm uppercase font-black tracking-widest bg-amber-500 hover:bg-amber-600 text-white shadow-xl rounded-2xl transition-all"
-                    >
-                      {syncStatus === 'syncing' ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Preparant paquet...
-                        </>
-                      ) : 'DESCARREGAR RUTA'}
-                    </Button>
-                  ) : (
-                    <div className="text-sm text-emerald-700 font-bold flex items-center justify-center bg-emerald-100 p-3 rounded-2xl gap-2 border border-emerald-200">
-                      <CheckCircle2 className="w-5 h-5" />
-                      Ja la tens al dispositiu!
-                    </div>
-                  )}
-
-                  {syncStatus === 'syncing' && syncProgress && (
-                    <div className="mt-4 space-y-2">
-                      <div className="h-2 w-full bg-amber-200/50 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-amber-500"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
-                        />
-                      </div>
-                      <div className="text-[10px] text-amber-700 font-bold text-center italic">
-                        Desant tresors... {syncProgress.label}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Llistat de Punts amb boxes individuals */}
               {safeLegend.pois && safeLegend.pois.length > 0 && (
@@ -638,12 +556,11 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           </div>
         </div>
 
-        {/* Map Button */}
         <div className="pb-8">
           <Button
             variant="outline"
             className="w-full py-6 border-primary text-primary hover:bg-primary/5 font-serif text-lg"
-            onClick={handleViewOnMap}
+            onClick={() => onNavigate('map', safeLegend)}
           >
             <MapPin className="w-5 h-5 mr-2" />
             Veure al Mapa

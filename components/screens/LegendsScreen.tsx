@@ -5,6 +5,9 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
 import { getLegends, getAppBranding } from "@/lib/actions";
 import { PxxConfig } from "@/projects/active/config";
+import { downloadTerritorialPackage, isRouteCached, SyncProgress } from "@/lib/services/sync-service";
+import { CheckCircle2, Download, Loader2, AlertCircle } from "lucide-react";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface LegendsScreenProps {
     onNavigate: (screen: string, data?: any) => void;
@@ -63,6 +66,12 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
     // Filter Buttons (Routes)
     const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: "Totes" }]);
 
+    // Download Status Tracking
+    const [downloadStatuses, setDownloadStatuses] = useState<Record<string, 'idle' | 'syncing' | 'ready'>>({});
+    const [downloadProgress, setDownloadProgress] = useState<Record<string, SyncProgress | null>>({});
+
+    const network = useNetworkStatus();
+
     useEffect(() => {
         async function fetchData() {
             const [data, brandData] = await Promise.all([
@@ -97,6 +106,40 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
         }
         fetchData();
     }, []);
+
+    // Initialize cached status
+    useEffect(() => {
+        if (legends.length > 0) {
+            const initialStatuses: Record<string, 'idle' | 'syncing' | 'ready'> = {};
+            legends.forEach(l => {
+                if (isRouteCached(l.id)) {
+                    initialStatuses[l.id] = 'ready';
+                }
+            });
+            setDownloadStatuses(prev => ({ ...prev, ...initialStatuses }));
+        }
+    }, [legends]);
+
+    const handleDownload = async (e: React.MouseEvent, route: any) => {
+        e.stopPropagation();
+        const routeId = route.id;
+
+        if (downloadStatuses[routeId] === 'syncing') return;
+
+        setDownloadStatuses(prev => ({ ...prev, [routeId]: 'syncing' }));
+
+        const pois = route.pois || [];
+        const result = await downloadTerritorialPackage(routeId, pois, (p) => {
+            setDownloadProgress(prev => ({ ...prev, [routeId]: p }));
+        });
+
+        if (result.success) {
+            setDownloadStatuses(prev => ({ ...prev, [routeId]: 'ready' }));
+        } else {
+            setDownloadStatuses(prev => ({ ...prev, [routeId]: 'idle' }));
+            alert(`Error en la descàrrega: ${result.error}`);
+        }
+    };
 
     const featuredLegend = legends[0];
 
@@ -238,11 +281,60 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                                 </div>
                             </div>
 
-                            {/* Short Description */}
-                            <div className="p-4 bg-white dark:bg-zinc-900">
+                            {/* Short Description & Offline Button */}
+                            <div className="p-4 bg-white dark:bg-zinc-900 space-y-4">
                                 <p className="text-gray-600 dark:text-gray-400 font-serif text-base leading-relaxed line-clamp-2">
                                     {legend.description}
                                 </p>
+
+                                {/* Punt D'Or - ONLY if downloadRequired is true in DB config */}
+                                {legend.downloadRequired && (
+                                    <div className="pt-2 border-t border-gray-100 dark:border-zinc-800">
+                                        {downloadStatuses[legend.id] === 'ready' ? (
+                                            <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-sm border border-emerald-100">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <span>Ja la tens offline</span>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="lg"
+                                                    onClick={(e) => handleDownload(e, legend)}
+                                                    disabled={downloadStatuses[legend.id] === 'syncing' || !network.isOnline}
+                                                    className="w-full h-12 text-xs uppercase font-black tracking-widest bg-amber-50 text-amber-900 border-2 border-amber-200 hover:bg-amber-100 shadow-sm rounded-xl"
+                                                >
+                                                    {downloadStatuses[legend.id] === 'syncing' ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                            Descarregant...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Download className="w-4 h-4 mr-2" />
+                                                            PUNT D'OR - ÚS OFFLINE
+                                                        </>
+                                                    )}
+                                                </Button>
+
+                                                {downloadStatuses[legend.id] === 'syncing' && downloadProgress[legend.id] && (
+                                                    <div className="space-y-1.5">
+                                                        <div className="h-1.5 w-full bg-amber-200/50 rounded-full overflow-hidden">
+                                                            <motion.div
+                                                                className="h-full bg-amber-500"
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${(downloadProgress[legend.id]!.current / downloadProgress[legend.id]!.total) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="text-[9px] text-amber-700 font-bold text-center italic uppercase tracking-tighter">
+                                                            {downloadProgress[legend.id]?.label}...
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
