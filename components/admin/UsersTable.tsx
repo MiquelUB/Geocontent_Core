@@ -26,6 +26,7 @@ interface Visit {
 
 export function UsersTable({ profiles, theme }: { profiles: any[], theme?: any }) {
   const activeTheme = theme || {
+    hex: "#2D4636",
     text: "text-[#2D4636]",
     mainText: "text-[#2D4636]/80",
     bg: "bg-[#2D4636]/10",

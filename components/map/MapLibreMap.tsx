@@ -17,6 +17,7 @@ interface MapLibreMapProps {
   userLocation?: { latitude: number; longitude: number } | null;
   children?: React.ReactNode;
   heatmapData?: Array<{ latitude: number; longitude: number; weight?: number }>; // NEW: Heatmap support
+  showUserLocation?: boolean; // NEW: Option to hide the user marker
 }
 
 export default function MapLibreMap({
@@ -25,10 +26,11 @@ export default function MapLibreMap({
   zoom,
   userLocation: propUserLocation,
   children,
-  heatmapData
+  heatmapData,
+  showUserLocation = true
 }: MapLibreMapProps) {
   const { location: hookCoordinates } = useGeolocation();
-  const coordinates = propUserLocation || hookCoordinates;
+  const coordinates = showUserLocation ? (propUserLocation || hookCoordinates) : null;
 
   const defaultCenter = useMemo(() => ({
     longitude: 1.5209, // Center of catalunya roughly (Igualada)

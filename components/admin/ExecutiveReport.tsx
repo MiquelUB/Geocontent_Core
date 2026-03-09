@@ -26,6 +26,7 @@ interface ExecutiveReportProps {
 
 export default function ExecutiveReport({ municipalityId, theme, reports: initialReports = [] }: ExecutiveReportProps) {
     const activeTheme = theme || {
+        hex: "#2D4636",
         text: "text-[#2D4636]",
         mainText: "text-[#2D4636]/80",
         bg: "bg-[#2D4636]/10",
@@ -65,6 +66,27 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
     const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
     const [period, setPeriod] = useState('month'); // 'week', 'month', 'year', 'custom'
+
+    // Update dates when period changes
+    useEffect(() => {
+        const end = new Date();
+        let start = new Date();
+
+        if (period === 'day') {
+            start.setHours(0, 0, 0, 0);
+        } else if (period === 'week') {
+            start.setDate(end.getDate() - 7);
+        } else if (period === 'month') {
+            start.setMonth(end.getMonth() - 1);
+        } else if (period === 'year') {
+            start.setFullYear(end.getFullYear() - 1);
+        } else {
+            return; // Custom is handled by inputs
+        }
+
+        setStartDate(start.toISOString().split('T')[0]);
+        setEndDate(end.toISOString().split('T')[0]);
+    }, [period]);
 
     const fetchData = async () => {
         if (!municipalityId || municipalityId === 'null') {
@@ -131,7 +153,15 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
     if (loading) return <div className="p-8 text-center text-muted-foreground">Carregant Informe Executiu...</div>;
     if (!data) return <div className="p-8 text-center text-red-500">Error carregant dades.</div>;
 
-    const { metrics, routeCompletions, aiInsights, heatmap } = data;
+    const metrics = data.metrics || {
+        users: { value: 0, active: 0, change: 0 },
+        abandonmentRate: { value: 0 },
+        routesCompleted: { value: 0 },
+        quizStats: { value: 0, solved: 0, total: 0, details: [] }
+    };
+    const routeCompletions = data.routeCompletions || [];
+    const aiInsights = data.aiInsights || "No hi ha conclusions disponibles.";
+    const heatmap = data.heatmap || [];
 
     const getChangeBadge = (change: number) => {
         if (change === 0) return null;
@@ -158,6 +188,13 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
                     <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1">Període d'Anàlisi</label>
                         <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-stone-200 shadow-sm">
+                            <button
+                                onClick={() => setPeriod('day')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${period === 'day' ? `text-white shadow-md scale-105` : 'text-stone-600 hover:bg-stone-50'}`}
+                                style={period === 'day' ? { backgroundColor: activeTheme.hex } : {}}
+                            >
+                                Avui
+                            </button>
                             <button
                                 onClick={() => setPeriod('week')}
                                 className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${period === 'week' ? `text-white shadow-md scale-105` : 'text-stone-600 hover:bg-stone-50'}`}
@@ -264,14 +301,48 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
                 </motion.div>
 
                 <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}>
-                    <StatsCard
-                        title="Rutes Completades"
-                        description={<>
-                            <span className="text-2xl font-bold">{metrics.routesCompleted.value}</span>
-                            <p className="text-[10px] text-stone-500 mt-1">Passaports segellats totals</p>
-                        </>}
-                        icon={<MapIcon className={`w-6 h-6 ${activeTheme.mainText}`} />}
-                    />
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <div className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                                <StatsCard
+                                    title="Rutes Completades"
+                                    description={<>
+                                        <span className="text-2xl font-bold">{metrics.routesCompleted.value}</span>
+                                        <div className="mt-2 text-[10px] text-primary font-bold flex items-center gap-1">
+                                            <span>Veure detalls</span>
+                                            <TrendingUp className="w-3 h-3" />
+                                        </div>
+                                    </>}
+                                    icon={<MapIcon className={`w-6 h-6 ${activeTheme.mainText}`} />}
+                                />
+                            </div>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[600px] bg-white border-stone-200">
+                            <DialogHeader>
+                                <DialogTitle className="font-serif text-2xl text-stone-800">Detall de Rutes Completades</DialogTitle>
+                                <DialogDescription className="text-stone-500">Nombre total de passaports segellats per cada itinerari.</DialogDescription>
+                            </DialogHeader>
+                            <div className="max-h-[60vh] overflow-y-auto pr-2 mt-4 space-y-3">
+                                {routeCompletions?.map((item: any, i: number) => (
+                                    <div key={i} className={`flex justify-between items-center p-4 rounded-xl border ${activeTheme.border} ${activeTheme.bgSoft}`}>
+                                        <div className="flex flex-col">
+                                            <span className="font-serif font-bold text-stone-800">{item.name}</span>
+                                            <span className="text-[10px] text-stone-500 uppercase tracking-tighter">Ruta Turística</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className={`text-lg font-bold ${activeTheme.text}`}>
+                                                {item.count}
+                                            </div>
+                                            <div className="text-[10px] text-stone-400 font-medium">FINALITZACIONS</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!routeCompletions || routeCompletions.length === 0) && (
+                                    <div className="py-12 text-center text-stone-400 italic">No hi ha dades de finalització disponibles.</div>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </motion.div>
 
                 <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}>
@@ -407,6 +478,7 @@ export default function ExecutiveReport({ municipalityId, theme, reports: initia
                             heatmapData={heatmap || []}
                             center={data.mapCenter || [1.5209, 41.5912]}
                             zoom={15}
+                            showUserLocation={false}
                         />
                         <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-stone-200/50 max-w-xs animate-in slide-in-from-left-4">
                             <div className="flex items-center gap-2 mb-2">

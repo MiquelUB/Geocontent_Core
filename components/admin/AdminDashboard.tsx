@@ -109,6 +109,13 @@ export default function AdminDashboard({
     }
     fetchData();
   }, [municipalityId, initialLegends.length, initialProfiles.length, initialReports.length]);
+  useEffect(() => {
+    setProfiles(initialProfiles);
+  }, [initialProfiles]);
+
+  useEffect(() => {
+    setReports(initialReports);
+  }, [initialReports]);
 
   useEffect(() => {
     if (editingRoute) {
