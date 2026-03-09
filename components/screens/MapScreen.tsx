@@ -153,6 +153,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
       category: legend.category, // El bioma de la ruta
       location: legend.location,
       image: poi.image_url || legend.image,
+      audioUrl: poi.audioUrl || poi.audio || poi.audio_url || legend.audio || legend.audio_url || '',
       coordinates: { lat: poi.latitude, lng: poi.longitude }
     }))
   );

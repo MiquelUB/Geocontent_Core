@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { ArrowLeft, Play, Pause, Heart, Star, Share2, MapPin, Calendar, Volume2, Lock, History, Wifi, WifiOff, Navigation2, Trophy } from "lucide-react";
+import { ArrowLeft, Play, Pause, Heart, Star, Share2, MapPin, Calendar, Volume2, Lock, History, Wifi, WifiOff, Navigation2, Trophy, AlertCircle } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import ImageSlider from "../ui/ImageSlider";
 import HlsVideoPlayer from "../ui/HlsVideoPlayer";
@@ -79,6 +79,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
     categoryLabel: legend?.categoryLabel || legend?.category || "Desconegut",
     coordinates: { lat, lng },
     videoUrls: legend?.videoUrls || (legend?.video_url ? [legend.video_url] : []),
+    audioUrl: legend?.audioUrl || legend?.audio || legend?.audio_url, // Added audioUrl fallback
     manualQuiz: legend?.manualQuiz,
     userUnlocks: legend?.userUnlocks || []
   };
@@ -132,6 +133,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
   // Master Admin bypass: Can see everything if role is admin
   const isMasterAdmin = currentUser?.role === 'admin';
+
+  // Normalitzem l'URL de l'àudio (pot venir com 'audioUrl', 'audio' o 'audio_url' depenent de l'origen)
+  const effectiveAudioUrl = safeLegend.audioUrl || safeLegend.audio || safeLegend.audio_url;
 
   // A POI is unlocked if it's a route container, OR it was already visited, OR user is admin, OR user is close enough
   const isUnlocked = isRoute || isAlreadyVisited || isMasterAdmin || (distanceMeters !== null && distanceMeters <= UNLOCK_DISTANCE);
@@ -309,7 +313,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                   <div className="clear-both"></div>
 
                   {/* Audio Player Box - Directly under text */}
-                  {isUnlocked && safeLegend.audioUrl && (
+                  {isUnlocked && effectiveAudioUrl ? (
                     <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-between transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -329,7 +333,12 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                       >
                         {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
                       </Button>
-                      <audio ref={audioRef} src={safeLegend.audioUrl} onEnded={() => setIsPlaying(false)} />
+                      <audio ref={audioRef} src={effectiveAudioUrl} onEnded={() => setIsPlaying(false)} />
+                    </div>
+                  ) : isUnlocked && !isRoute && (
+                    <div className="mt-4 p-2 rounded-lg bg-red-50 border border-red-100 flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase tracking-wider">
+                      <AlertCircle className="w-3 h-3" />
+                      Xivato: Aquest punt no té cap arxiu d'àudio assignat a la BD
                     </div>
                   )}
                 </motion.div>
