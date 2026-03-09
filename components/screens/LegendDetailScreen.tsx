@@ -284,7 +284,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
       <div className="relative -mt-10 bg-background rounded-t-[2.5rem] z-20 px-8 py-10 min-h-[50vh] shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
 
         {/* Contenid Principal */}
-        {(safeLegend.textContent || safeLegend.description) && (
+        {(safeLegend.textContent || safeLegend.description) ? (
           <div className="relative group overflow-hidden rounded-3xl mb-12">
             <div className={`prose prose-lg prose-stone max-w-none leading-relaxed font-serif transition-all duration-1000 z-10 relative ${isUnlocked ? 'text-foreground/90' : 'text-stone-300 blur-[8px] select-none scale-[0.98]'}`}>
               {isUnlocked ? (
@@ -298,6 +298,31 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                     {safeLegend.textContent || safeLegend.description}
                   </p>
                   <div className="clear-both"></div>
+
+                  {/* Audio Player Box - Directly under text */}
+                  {isUnlocked && safeLegend.audioUrl && (
+                    <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-between transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                          <Volume2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm">Àudio Guia</div>
+                          <div className="text-xs opacity-80">{isPlaying ? 'Reproduint...' : 'Clica per escoltar'}</div>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handlePlayAudio}
+                        className="hover:bg-white/20 rounded-full h-12 w-12"
+                      >
+                        {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                      </Button>
+                      <audio ref={audioRef} src={safeLegend.audioUrl} onEnded={() => setIsPlaying(false)} />
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <div className="space-y-4 pt-4">
@@ -308,31 +333,6 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                 </div>
               )}
             </div>
-
-            {/* Audio Player Box - Directly under text */}
-            {isUnlocked && safeLegend.audioUrl && (
-              <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground shadow-lg flex items-center justify-between transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                    <Volume2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">Àudio Guia</div>
-                    <div className="text-xs opacity-80">{isPlaying ? 'Reproduint...' : 'Clica per escoltar'}</div>
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handlePlayAudio}
-                  className="hover:bg-white/20 rounded-full h-12 w-12"
-                >
-                  {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
-                </Button>
-                <audio ref={audioRef} src={safeLegend.audioUrl} onEnded={() => setIsPlaying(false)} />
-              </div>
-            )}
 
             {!isUnlocked && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/40 backdrop-blur-[2px] rounded-3xl z-20">
@@ -354,6 +354,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               </div>
             )}
           </div>
+        ) : (
+          <div className="text-center py-10 text-stone-400 font-serif italic">Sense descripció disponible</div>
         )}
 
         <div className="mt-8 space-y-12">
@@ -377,6 +379,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                         <HlsVideoPlayer
                           src={videoUrl.endsWith('.m3u8') ? videoUrl : videoUrl}
                           lowBitrateSrc={lowResSrc}
+                          muted={false}
                           className="w-full"
                         />
                       ) : (
@@ -537,7 +540,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                     onUserUpdate(res.user);
                   }
                 }}
-                isAlreadyCompleted={safeLegend.userUnlocks.some((u: any) => u.userId === currentUser?.id && u.progress >= 1.0)}
+                isAlreadyCompleted={!isMasterAdmin && safeLegend.userUnlocks.some((u: any) => u.userId === currentUser?.id && u.progress >= 1.0)}
               />
             </div>
           )}
