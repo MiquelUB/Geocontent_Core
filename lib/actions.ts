@@ -223,6 +223,7 @@ function mapRoute(route: any) {
     manualQuiz: rp.poi.manualQuiz,
     type: rp.poi.type,
     userUnlocks: rp.poi.userUnlocks || [],
+    routeId: route.id,
   })) ?? [];
 
   const muniName = (route.municipality?.name || route.municipality_name || '').replace(/^Ajuntament de /i, '');
@@ -238,22 +239,22 @@ function mapRoute(route: any) {
     longitude: firstPoi?.longitude ?? 0,
     image_url: route.thumbnail1x1 || firstPoi?.appThumbnail || firstPoi?.images?.[0] || '',
     hero_image_url: route.thumbnail1x1 || firstPoi?.header16x9 || '',
-    audio_url: firstPoi?.audioUrl || '',
-    video_url: firstPoi?.videoUrls?.[0] || '',
+    audio_url: '',
+    video_url: '',
     icon: firstPoi?.icon || null,
     is_active: true,
     poiCount: pois.length,
     pois,
     thumbnail1x1: route.thumbnail1x1 || '',
     downloadRequired: route.downloadRequired || false,
-    // Camps pel detall de la ruta (si s'usa com a POI únic)
-    textContent: firstPoi?.textContent || '',
-    videoUrls: firstPoi?.videoUrls || [],
-    carouselImages: firstPoi?.carouselImages || [],
-    header16x9: firstPoi?.header16x9 || '',
-    images: firstPoi?.images || [],
-    manualQuiz: firstPoi?.manualQuiz,
-    userUnlocks: firstPoi?.userUnlocks || [],
+    // Camps pel detall de la ruta: buits per forçar geofencing en cada punt individual
+    textContent: '',
+    videoUrls: [],
+    carouselImages: [],
+    header16x9: '',
+    images: [],
+    manualQuiz: null,
+    userUnlocks: [],
     finalQuiz: route.finalQuiz || null,
   };
 }
