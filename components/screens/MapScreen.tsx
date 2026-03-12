@@ -154,7 +154,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
       location: legend.location,
       image: poi.image_url || legend.image,
       audioUrl: poi.audioUrl || poi.audio || poi.audio_url || legend.audio || legend.audio_url || '',
-      pois: legend.pois,
+      parentRoutePois: legend.pois,
       coordinates: { lat: poi.latitude, lng: poi.longitude }
     }))
   );

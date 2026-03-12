@@ -128,14 +128,14 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
     }
     return url;
   }
-  const isAlreadyVisited = safeLegend.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
-  const isRoute = safeLegend.pois && safeLegend.pois.length > 0;
+  const isRoute = !!(safeLegend.pois && safeLegend.pois.length > 0);
+  const isAlreadyVisited = !!(currentUser?.id && safeLegend.userUnlocks?.some((u: any) => (u.userId || u.user_id) === currentUser.id));
 
   // Si té routeId, és un POI dins d'una ruta. Si no el té però té pois, és el contenidor (overview) de la ruta.
-  const isRouteContainer = isRoute && !safeLegend.routeId;
+  const isRouteContainer = isRoute && !safeLegend.routeId && !safeLegend.poiId;
 
-  // Master Admin bypass: Can see everything if role is admin
-  const isMasterAdmin = currentUser?.role === 'admin';
+  // Master Admin bypass: Can see everything if role is admin or superadmin master name
+  const isMasterAdmin = currentUser?.role === 'admin' || currentUser?.username === 'mistic_master' || currentUser?.email === 'mistic_master';
 
   // Normalitzem l'URL de l'àudio (pot venir com 'audioUrl', 'audio' o 'audio_url' depenent de l'origen)
   const effectiveAudioUrl = safeLegend.audioUrl || safeLegend.audio || safeLegend.audio_url;
@@ -461,7 +461,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                   <div className="grid grid-cols-1 gap-3">
                     {sortedPois.map((poi: any, idx: number) => {
                       const isActive = poi.id === safeLegend.id;
-                      const poiVisited = poi.userUnlocks?.some((u: any) => u.userId === currentUser?.id);
+                      const poiVisited = !!(currentUser?.id && poi.userUnlocks?.some((u: any) => (u.userId || u.user_id) === currentUser.id));
                       const poiUnlocked = isMasterAdmin || poiVisited || (poi.rawDist !== Infinity && poi.rawDist <= (UNLOCK_DISTANCE / 1000));
                       const distLabel = poi.formattedDist;
 

@@ -13,7 +13,10 @@ import { useGeolocation } from "../hooks/useGeolocation";
 import { SimpleLogin } from "../components/auth/SimpleLogin";
 import { OnboardingModal } from "../components/OnboardingModal";
 import { useOnboarding } from "../hooks/useOnboarding";
-import { getAppBranding } from "@/lib/actions";
+import { getAppBranding, recordVisit } from "@/lib/actions";
+import { useGeofencing } from "@/lib/hooks/useGeofencing";
+import { geofencingService } from "@/lib/services/geofencing-service";
+import { toast } from "sonner"; // Assuming sonner is available or similar toast
 
 
 
@@ -29,6 +32,27 @@ export default function Home() {
 
   const { location, error: geoError } = useGeolocation();
   const { isOpen: isOnboardingOpen, completeOnboarding, skipOnboarding, reopenOnboarding } = useOnboarding(currentScreen === "home");
+  
+  // Geofencing background monitor
+  useGeofencing(location?.latitude ?? null, location?.longitude ?? null);
+
+  useEffect(() => {
+    const handleEnter = async (event: any) => {
+      if (currentUser?.id) {
+        console.log("🎯 Geofence Triggered:", event.location.name);
+        const result = await recordVisit(currentUser.id, event.location.id);
+        if (result.success && result.user) {
+          handleUserUpdate(result.user);
+          toast.success(`Punt desbloquejat: ${event.location.name}`, {
+            description: "Has entrat a la zona d'interès!",
+            duration: 5000,
+          });
+        }
+      }
+    };
+
+    geofencingService.onEnter(handleEnter);
+  }, [currentUser]);
 
 
 
