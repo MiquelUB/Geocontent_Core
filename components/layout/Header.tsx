@@ -32,50 +32,41 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
         backgroundColor: 'var(--primary)', // Fallback visible color
       }}
     >
-      {/* Logos & Help (Home-style elements integrated) */}
-      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none">
-        {/* Left section: Profile & Logo */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            onClick={() => onNavigate?.('profile')}
-            className="w-10 h-10 rounded-full border-2 border-white/30 overflow-hidden shadow-sm bg-black/10 backdrop-blur-sm"
-          >
-            <span className="sr-only">Perfil</span>
-            <div className="w-full h-full flex items-center justify-center bg-primary/20">
-              <span className="text-[10px] font-bold text-white tracking-widest uppercase">YOU</span>
-            </div>
-          </button>
+      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between">
+        {/* Left section: Municipality Logo & Name */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 p-1 flex items-center justify-center shadow-inner">
+            {brand?.logoUrl ? (
+              <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-xl font-serif font-bold text-white">
+                {brand?.name?.[0] || 'X'}
+              </span>
+            )}
+          </div>
           
-          <div className="hidden xs:flex flex-col">
-            <span className="text-[10px] font-bold text-white/80 uppercase tracking-tighter leading-none">
-              {brand?.name || 'PXX'}
+          <div className="flex flex-col">
+            <span className="text-xs font-black text-white uppercase tracking-wider leading-tight drop-shadow-sm">
+              {brand?.name || 'Explora'}
+            </span>
+            <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest leading-none">
+              Territori Viu
             </span>
           </div>
         </div>
 
-        {/* Right section: Help & Logout */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            onClick={onOpenHelp}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white"
-            title="Ayuda"
-          >
-            <span className="text-xl">?</span>
-          </button>
+        {/* Right section: Language Selector & Help */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <LanguageSelector />
           
           <button
-            onClick={handleLogout}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white"
-            title="Salir"
+            onClick={onOpenHelp}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all active:scale-95 shadow-lg"
+            title="Ajuda"
           >
-             <span className="text-xl">🚪</span>
+            <span className="text-xl font-bold">?</span>
           </button>
         </div>
-      </div>
-
-      {/* Container for Language Selector - Centered */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-auto">
-        <LanguageSelector />
       </div>
     </header>
   )
