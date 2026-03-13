@@ -139,9 +139,14 @@ export default function Home() {
         }
 
         // Fetch branding data
-        const brands = await getAppBranding();
-        setBrand(brands);
+        try {
+          const brands = await getAppBranding();
+          setBrand(brands);
+        } catch (brandErr) {
+          console.warn("Could not fetch branding, using defaults:", brandErr);
+        }
 
+        console.log("Initialization complete. setting isLoaded=true");
         setIsLoaded(true);
       } catch (e) {
         console.error("Error en inicialitzar:", e);
@@ -161,7 +166,14 @@ export default function Home() {
   const handleSplashComplete = useCallback(() => {
     // If data is still loading, wait (splash will retry via its own loop)
     if (!isLoaded && !errorType) {
-      console.log("Splash finished but brand not ready. Waiting...");
+      console.log("Splash finished but data not ready. currentScreen:", currentScreen, "isLoaded:", isLoaded);
+      // Fallback: if after 5 seconds of splash we still haven't loaded, force it
+      setTimeout(() => {
+        if (!isLoaded) {
+          console.log("Forcing isLoaded=true after timeout safety");
+          setIsLoaded(true);
+        }
+      }, 2000);
       return;
     }
 
