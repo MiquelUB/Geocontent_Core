@@ -24,7 +24,7 @@ import { useTranslations } from "next-intl";
 
 
 export default function Home() {
-  console.log("🚀 Geocontent App Version: v1.0.3 - FORCE UPDATE - Branch: i18n-implementacio");
+  console.log("🚀 Geocontent App Version: v1.0.4 - GHOST BUSTER [Active] - Branch: i18n-implementacio");
   const t_geo = useTranslations('geofencing');
   const t_splash = useTranslations('splash');
   const [currentScreen, setCurrentScreen] = useState("splash");
@@ -233,8 +233,8 @@ export default function Home() {
   return (
     <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
       {/* MASSIVE DEBUG BANNER TO VERIFY VERSION */}
-      <div className="bg-yellow-400 text-black text-xs py-3 text-center font-extrabold z-[9999] border-b-2 border-black shadow-lg">
-        🚨 APP VERSION v1.0.3 - IF YOU SEE THIS, IT IS UPDATED 🚨
+      <div className="bg-orange-500 text-white text-[14px] py-4 text-center font-extrabold z-[9999] border-b-4 border-black shadow-2xl animate-pulse">
+        💥 APP VERSION v1.0.4 - GHOST BUSTER ACTIVE 💥
       </div>
       {showBottomNav && (
         <Header 
