@@ -1,81 +1,180 @@
 {
   "common": {
-    "appName": "Projecte Xino Xano",
     "loading": "Carregant...",
     "error": "S'ha produït un error",
-    "retry": "Torna-ho a provar",
-    "save": "Desar",
+    "back": "Tornar",
+    "save": "Guardar",
     "cancel": "Cancel·lar",
     "delete": "Eliminar",
-    "edit": "Editar",
-    "create": "Crear",
-    "back": "Tornar",
-    "next": "Següent",
-    "search": "Cercar"
+    "help": "Ajuda",
+    "unknown": "Desconegut",
+    "close": "Tancar",
+    "viewDetail": "Veure detall",
+    "video": "Vídeo",
+    "connected": "Connectat",
+    "slow": "Lenta",
+    "offline": "Offline"
+  },
+  "nav": {
+    "home": "Inici",
+    "map": "Mapa",
+    "legends": "Explorar",
+    "profile": "Perfil",
+    "admin": "Administració"
   },
   "auth": {
-    "login": "Entrar",
-    "logout": "Sortir",
-    "magicLinkSent": "T'hem enviat un enllaç màgic al correu!",
-    "emailPlaceholder": "El teu correu electrònic",
-    "displayNameLabel": "Com et dius?",
-    "displayNamePlaceholder": "Ex: Jordi",
-    "createPassport": "Crear el meu Passaport",
-    "welcome": "Benvingut/da, {name}!"
+    "welcome": "Benvingut/da",
+    "intro": "Introdueix les teves dades per començar",
+    "name": "Nom",
+    "namePlaceholder": "El teu nom",
+    "email": "Correu electrònic",
+    "emailPlaceholder": "el-teu@email.com",
+    "loginButton": "Entrar / Registrar-se",
+    "errorFill": "Si us plau, emplena tots els camps",
+    "errorLogin": "Error al entrar",
+    "errorConnection": "Error de connexió"
+  },
+  "geofencing": {
+    "entry": "Has entrat a: {name}",
+    "exit": "Has sortit de: {name}",
+    "toastTitle": "Punt desbloquejat: {name}",
+    "toastDesc": "Has entrat a la zona d'interès!"
+  },
+  "detail": {
+    "notFound": "Punt no trobat",
+    "unknown": "Desconegut",
+    "partOfRoute": "Part de la ruta: {name}",
+    "audioGuide": "Àudio Guia",
+    "playing": "Reproduint...",
+    "clickToListen": "Clica per escoltar",
+    "protectedContent": "Contingut Protegit",
+    "itinerary": "Itinerari de la ruta",
+    "points": "{count} {count, plural, one {punt} other {punts}}",
+    "youAreHere": "Vostè és aquí",
+    "viewOnMap": "Veure al Mapa",
+    "distanceTo": "Ets a {distance} d'aquest punt.",
+    "unlockInstruction": "Aprova't a menys de {meters}m per desbloquejar-ne els secrets.",
+    "noDescription": "Sense descripció disponible",
+    "gpsInstruction": "Activa el GPS i apropa't per descobrir els secrets amagats.",
+    "noAudio": "Xivato: Aquest punt no té cap arxiu d'àudio assignat a la BD",
+    "digitalLock": "Cadenat Digital",
+    "videoLocked": "El vídeo es revelarà quan arribis a la localització.",
+    "galleryLocked": "Galeria Protegida",
+    "finalChallengeLocked": "Repte Final Bloquejat",
+    "finalChallengeInstruction": "Visita tots els punts de la ruta per activar el qüestionari final",
+    "startFinalChallenge": "Començar Repte Final",
+    "shareText": "Mira aquest punt de ruta: {name}",
+    "linkCopied": "Enllaç copiat al porta-retalls per compartir!"
+  },
+  "home": {
+    "nearbyPlaces": "Llocs propers",
+    "viewAll": "Veure tot",
+    "searchingGps": "Buscant senyal GPS...",
+    "gpsActive": "Senyal GPS actiu",
+    "toUnlock": "a {distance} per desbloquejar",
+    "defaultLocationName": "Lloc"
+  },
+  "legends": {
+    "all": "Totes",
+    "libraryTitle": "Biblioteca de Rutes",
+    "routesCount": "{count} {count, plural, one {ruta} other {rutes}}",
+    "noRoutes": "Cap ruta en aquesta categoria.",
+    "createAdmin": "Crea-les des del panell d'administració.",
+    "alreadyOffline": "Ja la tens offline",
+    "downloading": "Descarregant...",
+    "offlineUsage": "PUNT D'OR - ÚS OFFLINE",
+    "downloadError": "Error en la descàrrega: {error}",
+    "difficulty": {
+      "easy": "Fàcil",
+      "medium": "Mitjà",
+      "expert": "Expert"
+    }
   },
   "map": {
-    "title": "Mapa",
-    "myLocation": "La meva ubicació",
-    "downloadOffline": "Descarregar per usar offline",
-    "downloading": "Descarregant mapa...",
-    "offlineReady": "Mapa disponible offline!"
-  },
-  "routes": {
-    "title": "Rutes",
-    "explore": "Explorar",
-    "permanent": "Permanent",
-    "temporal": "Temporal",
-    "event": "Esdeveniment",
-    "expired": "Arxivada",
-    "upcoming": "Programada",
-    "premium": "Premium",
-    "distance": "{km} km",
-    "duration": "{hours}h {minutes}m",
-    "pois": "{count} punts d'interès"
-  },
-  "passport": {
-    "title": "Passaport",
-    "stamps": "Segells",
-    "locked": "Bloquejat",
-    "unlocked": "Desbloquejat!",
-    "xp": "{points} XP",
-    "level": "Nivell {level}",
-    "progress": "{current}/{total} descoberts"
-  },
-  "quiz": {
-    "title": "Repte del Territori",
-    "question": "Pregunta",
-    "correct": "Correcte! +{xp} XP",
-    "incorrect": "No és correcte. Torna-ho a provar!",
-    "answerChallenge": "Respon el Repte ({xp} XP)"
+    "all": "Totes",
+    "filters": "Filtres",
+    "legendTitle": "Mapa interactiu"
   },
   "profile": {
-    "title": "Perfil de l'Explorador",
-    "totalXp": "XP Total",
-    "routesCompleted": "Rutes completades",
-    "stampsCollected": "Segells col·leccionats",
-    "memberSince": "Membre des de {date}",
-    "settings": "Configuració",
-    "language": "Idioma"
+    "title": "El Meu Quadern",
+    "anonymous": "Explorador Anònim",
+    "level": "Nivell {level}",
+    "xp": "{xp} XP",
+    "visitedPlaces": "Llocs Visitats",
+    "totalPoints": "Punts Totals",
+    "solvedQuizzes": "Quizes Resolts",
+    "passportTitle": "El Teu Passaport",
+    "stamps": "Segells",
+    "unlocked": "desbloquejats",
+    "errorAvatar": "Error al pujar l'avatar",
+    "ranks": {
+      "level1": "Explorador Novell",
+      "level2": "Rastrejador de Camins",
+      "level3": "Viatger del Territori",
+      "level4": "Naturalista Expert",
+      "level5": "Mestre del Pirineu"
+    }
   },
-  "admin": {
-    "dashboard": "Panell d'Administració",
-    "manageRoutes": "Gestionar Rutes",
-    "managePois": "Gestionar Punts d'Interès",
-    "uploadPdf": "Pujar PDF",
-    "themeSelector": "Tema Visual",
-    "temporalConfig": "Configuració Temporal",
-    "startDate": "Data d'inici",
-    "endDate": "Data de finalització"
+  "error": {
+    "no-connection": {
+      "title": "Sense connexió",
+      "message": "No pots accedir a les llegendes sense connexió a internet. Comprova la teva xarxa i torna-ho a provar.",
+      "action": "Tornar a provar"
+    },
+    "gps-denied": {
+      "title": "Ubicació requerida",
+      "message": "Per descobrir les llegendes més properes, necessitem accés a la teva ubicació. Activa el GPS i dona permisos a l'app.",
+      "action": "Configurar ubicació",
+      "howTo": "Com activar la ubicació:",
+      "step1": "1. Ves a Configuració del dispositiu",
+      "step2": "2. Cerca \"Ubicació\" o \"GPS\"",
+      "step3": "3. Activa els serveis d'ubicació",
+      "step4": "4. Dona permisos a l'aplicació"
+    },
+    "general": {
+      "title": "Alguna cosa ha anat malament",
+      "message": "Hi ha hagut un error inesperat. Si el problema persisteix, contacta amb nosaltres.",
+      "action": "Tornar a provar"
+    },
+    "backToHome": "Tornar a l'inici",
+    "footer": "Llegendes dels Pirineus · Patrimoni i Territori"
+  },
+  "splash": {
+    "loading": "Carregant experiència...",
+    "project": "Projecte Xino Xano"
+  },
+  "onboarding": {
+    "title": "Quadern de Camp Digital",
+    "start": "Comença a Caminar",
+    "items": {
+      "parking": {
+        "title": "APARCA I CAMINA",
+        "desc": "Els carrers són estrets, fets per a les persones. Si us plau, deixa el cotxe al pàrquing i gaudeix a peu."
+      },
+      "silence": {
+        "title": "EL SILENCI ÉS PATRIMONI",
+        "desc": "Gaudeix de la calma. Sense altaveus ni crits. Respecta els animals, ells són a casa seva."
+      },
+      "offline": {
+        "title": "ANTICIPA'T A LA COBERTURA",
+        "desc": "Baixa't els continguts indicats abans de sortir. Així tindràs els mapes i àudios quan falli el 5G."
+      },
+      "timeslider": {
+        "title": "TIME SLIDER",
+        "desc": "Mou el dit per veure el passat (o l'ànima) del paisatge."
+      },
+      "legacy": {
+        "title": "EL TEU LLEGAT",
+        "desc": "Completa la ruta per segellar el teu Passaport. No col·leccionem dades, col·leccionem moments."
+      },
+      "gps": {
+        "title": "GPS DE PRECISIÓ",
+        "desc": "Activa la ubicació per trobar els secrets. Tip: El Bluetooth ajuda a afinar la posició."
+      }
+    }
+  },
+  "meta": {
+    "title": "Geocontent - Descobreix el Patrimoine",
+    "description": "Una experiència immersiva per descobrir les llegendes i el patrimoni del territori."
   }
 }

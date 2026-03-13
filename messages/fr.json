@@ -1,81 +1,180 @@
 {
   "common": {
-    "appName": "Projecte Xino Xano",
-    "loading": "Carregant...",
-    "error": "S'ha produït un error",
-    "retry": "Torna-ho a provar",
-    "save": "Desar",
-    "cancel": "Cancel·lar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "create": "Crear",
-    "back": "Tornar",
-    "next": "Següent",
-    "search": "Cercar"
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "help": "Aide",
+    "unknown": "Inconnu",
+    "close": "Fermer",
+    "viewDetail": "Voir le détail",
+    "video": "Vidéo",
+    "connected": "Connecté",
+    "slow": "Lent",
+    "offline": "Hors ligne"
+  },
+  "nav": {
+    "home": "Accueil",
+    "map": "Carte",
+    "legends": "Explorer",
+    "profile": "Profil",
+    "admin": "Administration"
   },
   "auth": {
-    "login": "Entrar",
-    "logout": "Sortir",
-    "magicLinkSent": "T'hem enviat un enllaç màgic al correu!",
-    "emailPlaceholder": "El teu correu electrònic",
-    "displayNameLabel": "Com et dius?",
-    "displayNamePlaceholder": "Ex: Jordi",
-    "createPassport": "Crear el meu Passaport",
-    "welcome": "Benvingut/da, {name}!"
+    "welcome": "Bienvenue",
+    "intro": "Entrez vos coordonnées pour commencer",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "email": "E-mail",
+    "emailPlaceholder": "votre@email.com",
+    "loginButton": "Entrer / S'inscrire",
+    "errorFill": "Veuillez remplir tous les champs",
+    "errorLogin": "Erreur de connexion",
+    "errorConnection": "Erreur de connexion"
+  },
+  "geofencing": {
+    "entry": "Vous êtes entré dans: {name}",
+    "exit": "Vous avez quitté: {name}",
+    "toastTitle": "Point débloqué: {name}",
+    "toastDesc": "Vous êtes entré dans la zone d'intérêt!"
+  },
+  "detail": {
+    "notFound": "Point non trouvé",
+    "unknown": "Inconnu",
+    "partOfRoute": "Fait partie de l'itinéraire: {name}",
+    "audioGuide": "Guide Audio",
+    "playing": "Lecture en cours...",
+    "clickToListen": "Cliquez pour écouter",
+    "protectedContent": "Contenu Protegé",
+    "itinerary": "Itinéraire du parcours",
+    "points": "{count} {count, plural, one {point} other {points}}",
+    "youAreHere": "Vous êtes ici",
+    "viewOnMap": "Voir sur la Carte",
+    "distanceTo": "Vous êtes à {distance} de ce point.",
+    "unlockInstruction": "Approchez-vous à moins de {meters}m pour débloquer ses secrets.",
+    "noDescription": "Aucune description disponible",
+    "gpsInstruction": "Activez le GPS et approchez-vous pour découvrir les secrets cachés.",
+    "noAudio": "Notice: Ce point n'a aucun fichier audio assigné dans la BD",
+    "digitalLock": "Cadenas Numérique",
+    "videoLocked": "La vidéo sera révélée lorsque vous arriverez sur place.",
+    "galleryLocked": "Galerie Protégée",
+    "finalChallengeLocked": "Défi Final Verrouillé",
+    "finalChallengeInstruction": "Visitez tous les points du parcours pour activer le quiz final",
+    "startFinalChallenge": "Démarrer le Défi Final",
+    "shareText": "Découvrez ce point du parcours: {name}",
+    "linkCopied": "Lien copié dans le presse-papiers pour le partager!"
+  },
+  "home": {
+    "nearbyPlaces": "Lieux à proximité",
+    "viewAll": "Voir tout",
+    "searchingGps": "Recherche du signal GPS...",
+    "gpsActive": "Signal GPS actif",
+    "toUnlock": "à {distance} pour débloquer",
+    "defaultLocationName": "Lieu"
+  },
+  "legends": {
+    "all": "Toutes",
+    "libraryTitle": "Bibliothèque de Itinéraires",
+    "routesCount": "{count} {count, plural, one {itinéraire} other {itinéraires}}",
+    "noRoutes": "Aucun itinéraire dans cette catégorie.",
+    "createAdmin": "Créez-les depuis le panneau d'administration.",
+    "alreadyOffline": "Déjà hors ligne",
+    "downloading": "Téléchargement...",
+    "offlineUsage": "POINT D'OR - UTILISATION HORS LIGNE",
+    "downloadError": "Erreur de téléchargement: {error}",
+    "difficulty": {
+      "easy": "Facile",
+      "medium": "Moyen",
+      "expert": "Expert"
+    }
   },
   "map": {
-    "title": "Mapa",
-    "myLocation": "La meva ubicació",
-    "downloadOffline": "Descarregar per usar offline",
-    "downloading": "Descarregant mapa...",
-    "offlineReady": "Mapa disponible offline!"
-  },
-  "routes": {
-    "title": "Rutes",
-    "explore": "Explorar",
-    "permanent": "Permanent",
-    "temporal": "Temporal",
-    "event": "Esdeveniment",
-    "expired": "Arxivada",
-    "upcoming": "Programada",
-    "premium": "Premium",
-    "distance": "{km} km",
-    "duration": "{hours}h {minutes}m",
-    "pois": "{count} punts d'interès"
-  },
-  "passport": {
-    "title": "Passaport",
-    "stamps": "Segells",
-    "locked": "Bloquejat",
-    "unlocked": "Desbloquejat!",
-    "xp": "{points} XP",
-    "level": "Nivell {level}",
-    "progress": "{current}/{total} descoberts"
-  },
-  "quiz": {
-    "title": "Repte del Territori",
-    "question": "Pregunta",
-    "correct": "Correcte! +{xp} XP",
-    "incorrect": "No és correcte. Torna-ho a provar!",
-    "answerChallenge": "Respon el Repte ({xp} XP)"
+    "all": "Toutes",
+    "filters": "Filtres",
+    "legendTitle": "Carte interactive"
   },
   "profile": {
-    "title": "Perfil de l'Explorador",
-    "totalXp": "XP Total",
-    "routesCompleted": "Rutes completades",
-    "stampsCollected": "Segells col·leccionats",
-    "memberSince": "Membre des de {date}",
-    "settings": "Configuració",
-    "language": "Idioma"
+    "title": "Mon Journal",
+    "anonymous": "Explorateur Anonyme",
+    "level": "Niveau {level}",
+    "xp": "{xp} XP",
+    "visitedPlaces": "Lieux Visités",
+    "totalPoints": "Points Totals",
+    "solvedQuizzes": "Quizzes Résolus",
+    "passportTitle": "Votre Passeport",
+    "stamps": "Timbres",
+    "unlocked": "débloqués",
+    "errorAvatar": "Erreur lors du téléchargement de l'avatar",
+    "ranks": {
+      "level1": "Explorateur Novice",
+      "level2": "Traqueur de Chemins",
+      "level3": "Voyageur du Territoire",
+      "level4": "Naturaliste Expert",
+      "level5": "Maître des Pyrénées"
+    }
   },
-  "admin": {
-    "dashboard": "Panell d'Administració",
-    "manageRoutes": "Gestionar Rutes",
-    "managePois": "Gestionar Punts d'Interès",
-    "uploadPdf": "Pujar PDF",
-    "themeSelector": "Tema Visual",
-    "temporalConfig": "Configuració Temporal",
-    "startDate": "Data d'inici",
-    "endDate": "Data de finalització"
+  "error": {
+    "no-connection": {
+      "title": "Pas de connexion",
+      "message": "Vous ne pouvez pas accéder aux légendes sans connexion Internet. Vérifiez votre réseau et réessayez.",
+      "action": "Réessayer"
+    },
+    "gps-denied": {
+      "title": "Emplacement requis",
+      "message": "Pour découvrir les légendes les plus proches, nous avons besoin d'accéder à votre emplacement. Activez le GPS et accordez les autorisations à l'application.",
+      "action": "Configurer l'emplacement",
+      "howTo": "Comment activer la localisation :",
+      "step1": "1. Allez dans les Paramètres de l'appareil",
+      "step2": "2. Recherchez \"Emplacement\" ou \"GPS\"",
+      "step3": "3. Activez les services de localisation",
+      "step4": "4. Accordez des autorisations à l'application"
+    },
+    "general": {
+      "title": "Quelque chose s'est mal passé",
+      "message": "Une erreur inattendue s'est produite. Si le problème persiste, veuillez nous contacter.",
+      "action": "Réessayer"
+    },
+    "backToHome": "Retour à l'accueil",
+    "footer": "Légendes des Pyrénées · Patrimoine et Territoire"
+  },
+  "splash": {
+    "loading": "Chargement de l'expérience...",
+    "project": "Projet Xino Xano"
+  },
+  "onboarding": {
+    "title": "Journal de Bord Numérique",
+    "start": "Commencer à Marcher",
+    "items": {
+      "parking": {
+        "title": "GAREZ-VOUS ET MARCHEZ",
+        "desc": "Les rues sont étroites, faites pour les gens. Veuillez laisser la voiture au parking et profitez-en à pied."
+      },
+      "silence": {
+        "title": "LE SILENCE EST UN PATRIMOINE",
+        "desc": "Profitez du calme. Pas de haut-parleurs ni de cris. Respectez les animaux, ils sont chez eux."
+      },
+      "offline": {
+        "title": "ANTICIPEZ LA COUVERTURE",
+        "desc": "Téléchargez les contenus indiqués avant de partir. Ainsi, vous aurez les cartes et les audios en cas de panne de la 5G."
+      },
+      "timeslider": {
+        "title": "TIME SLIDER",
+        "desc": "Faites glisser votre doigt pour voir le passé (ou l'âme) du paysage."
+      },
+      "legacy": {
+        "title": "VOTRE HÉRITAGE",
+        "desc": "Complétez le parcours pour sceller votre Passeport. Nous ne collectons pas de données, nous collectons des moments."
+      },
+      "gps": {
+        "title": "GPS DE PRÉCISION",
+        "desc": "Activez la localisation pour trouver les secrets. Astuce : Le Bluetooth aide à affiner la position."
+      }
+    }
+  },
+  "meta": {
+    "title": "Geocontent - Découvrez le Patrimoine",
+    "description": "Une expérience immersive pour découvrir les légendes et le patrimoine du territoire."
   }
 }

@@ -55,6 +55,9 @@ function getPoiIconSrc(poi: any, parentRoute: any, globalBiome?: string) {
   return `/icons/${biome}/${finalIcon}`;
 }
 
+import { useLocale, useTranslations } from "next-intl";
+import { getLocalizedContent } from "@/lib/i18n-db";
+
 interface LegendDetailScreenProps {
   legend: any;
   onNavigate: (screen: string, data?: any) => void;
@@ -65,23 +68,28 @@ interface LegendDetailScreenProps {
 }
 
 export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, currentUser, onUserUpdate }: LegendDetailScreenProps) {
+  const locale = useLocale();
+  const t = useTranslations('detail');
+  const tCommon = useTranslations('common');
+
   // Extract coordinates safely
   const lat = legend?.latitude ?? legend?.coordinates?.lat ?? 0;
   const lng = legend?.longitude ?? legend?.coordinates?.lng ?? 0;
 
-  // Fallback for missing legend data
+  // Fallback for missing legend data with localization
   const safeLegend = {
     ...legend,
-    title: legend?.title || "Punt no trobat",
-    description: legend?.description || "",
+    title: getLocalizedContent(legend, 'title', locale) || t('notFound'),
+    description: getLocalizedContent(legend, 'description', locale) || "",
     image: legend?.image || legend?.image_url || "",
-    location: legend?.location || legend?.location_name || "Desconegut",
-    categoryLabel: legend?.categoryLabel || legend?.category || "Desconegut",
+    location: getLocalizedContent(legend, 'location', locale) || t('unknown'),
+    categoryLabel: getLocalizedContent(legend, 'categoryLabel', locale) || t('unknown'),
     coordinates: { lat, lng },
     videoUrls: legend?.videoUrls || (legend?.video_url ? [legend.video_url] : []),
     audioUrl: legend?.audioUrl || legend?.audio || legend?.audio_url, // Added audioUrl fallback
     manualQuiz: legend?.manualQuiz,
-    userUnlocks: legend?.userUnlocks || []
+    userUnlocks: legend?.userUnlocks || [],
+    routeName: getLocalizedContent(legend, 'route_name', locale) || legend?.routeName
   };
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -207,7 +215,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
   const handleShare = async () => {
     const shareData = {
       title: safeLegend.title,
-      text: `Mira aquest punt de ruta: ${safeLegend.title}`,
+      text: t('shareText', { name: safeLegend.title }),
       url: window.location.href,
     };
 
@@ -221,7 +229,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
       // Fallback: Copy to clipboard
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert("Enllaç copiat al porta-retalls per compartir!");
+        alert(t('linkCopied'));
       } catch (err) {
         console.error("Fallada al copiar:", err);
       }
@@ -287,7 +295,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           </h1>
           {safeLegend.routeName && (
             <div className="text-white/60 text-xs font-serif italic">
-              Part de la ruta: {safeLegend.routeName}
+              {t('partOfRoute', { name: safeLegend.routeName })}
             </div>
           )}
         </motion.div>
@@ -320,8 +328,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                           <Volume2 className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-sm">Àudio Guia</div>
-                          <div className="text-xs opacity-80">{isPlaying ? 'Reproduint...' : 'Clica per escoltar'}</div>
+                          <div className="font-bold text-sm">{t('audioGuide')}</div>
+                          <div className="text-xs opacity-80">{isPlaying ? t('playing') : t('clickToListen')}</div>
                         </div>
                       </div>
 
@@ -338,7 +346,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                   ) : isUnlocked && !isRoute && (
                     <div className="mt-4 p-2 rounded-lg bg-red-50 border border-red-100 flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase tracking-wider">
                       <AlertCircle className="w-3 h-3" />
-                      Xivato: Aquest punt no té cap arxiu d'àudio assignat a la BD
+                      {t('noAudio')}
                     </div>
                   )}
                 </motion.div>
@@ -361,19 +369,19 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                 >
                   <Lock className="w-8 h-8" />
                 </motion.div>
-                <h4 className="font-serif text-xl font-bold text-primary mb-2">Contingut Protegit</h4>
+                <h4 className="font-serif text-xl font-bold text-primary mb-2">{t('protectedContent')}</h4>
                 <p className="text-stone-500 text-sm max-w-[200px] leading-relaxed">
                   {distanceMeters !== null ? (
-                    <>Ets a <span className="font-bold text-stone-700">{distanceStr}</span> d'aquest punt. Apropa't a menys de {UNLOCK_DISTANCE}m per desbloquejar-ne els secrets.</>
+                    <>{t('distanceTo', { distance: distanceStr || '' })} {t('unlockInstruction', { meters: UNLOCK_DISTANCE })}</>
                   ) : (
-                    "Activa el GPS i apropa't per descobrir els secrets amagats."
+                    t('gpsInstruction')
                   )}
                 </p>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-10 text-stone-400 font-serif italic">Sense descripció disponible</div>
+          <div className="text-center py-10 text-stone-400 font-serif italic">{t('noDescription')}</div>
         )}
 
         <div className="mt-8 space-y-12">
@@ -385,7 +393,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-stone-500 font-serif text-sm px-1">
                 <Play className="w-3 h-3" />
-                <span>Vídeo</span>
+                <span>{tCommon('video')}</span>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {safeLegend.videoUrls.map((videoUrl: string, idx: number) => {
@@ -407,8 +415,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                             <Lock className="w-5 h-5" />
                           </div>
                           <div className="text-center z-10 px-6">
-                            <span className="block text-[10px] uppercase tracking-[0.2em] font-black text-stone-500 mb-1">Cadenat Digital</span>
-                            <p className="text-[11px] leading-tight text-stone-400">El vídeo es revelarà quan arribis a la localització.</p>
+                            <span className="block text-[10px] uppercase tracking-[0.2em] font-black text-stone-500 mb-1">{t('digitalLock')}</span>
+                            <p className="text-[11px] leading-tight text-stone-400">{t('videoLocked')}</p>
                           </div>
                         </div>
                       )}
@@ -436,7 +444,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                     <Lock className="w-5 h-5" />
                   </div>
                   <span className="font-serif font-bold tracking-widest text-sm uppercase text-stone-600 drop-shadow-sm z-10 w-3/4 text-center">
-                    Galeria Protegida
+                    {t('galleryLocked')}
                   </span>
                 </div>
               )}
@@ -452,9 +460,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               {sortedPois.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="font-serif font-bold text-xl text-primary flex items-center px-1">
-                    Itinerari de la ruta
+                    {t('itinerary')}
                     <Badge variant="secondary" className="ml-3 bg-primary/10 text-primary border-none text-[10px] uppercase">
-                      {sortedPois.length} punts
+                      {t('points', { count: sortedPois.length })}
                     </Badge>
                   </h3>
 
@@ -492,10 +500,10 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                             <div className="flex items-start justify-between gap-2 mb-1">
                               <h4 className={`font-serif font-bold text-base leading-tight ${isActive ? 'text-primary' : poiUnlocked ? 'text-stone-800' : 'text-stone-400'
                                 }`}>
-                                {poi.title}
+                                {getLocalizedContent(poi, 'title', locale)}
                                 {isActive && (
                                   <span className="ml-2 inline-flex items-center text-[9px] uppercase tracking-tighter bg-primary text-white px-2 py-0.5 rounded-full font-black animate-pulse">
-                                    Vostè és aquí
+                                    {t('youAreHere')}
                                   </span>
                                 )}
                               </h4>
@@ -507,7 +515,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                             </div>
                             <p className={`text-xs leading-relaxed line-clamp-2 ${isActive ? 'text-primary/70' : poiUnlocked ? 'text-stone-500' : 'text-stone-300'
                               }`}>
-                              {isActive ? 'Estàs explorant aquest punt ara mateix.' : (poi.description || 'Apropa\'t per descobrir els secrets d\'aquest punt.')}
+                              {isActive ? t('youAreHere') : (getLocalizedContent(poi, 'description', locale) || t('unlockInstruction', { meters: UNLOCK_DISTANCE }))}
                             </p>
                           </div>
 
@@ -530,8 +538,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                   {!allPoisVisited ? (
                     <div className="w-full p-5 rounded-3xl bg-stone-100 border-2 border-dashed border-stone-200 flex flex-col items-center gap-2 text-stone-400 text-center">
                       <Lock className="w-6 h-6 mb-1 opacity-20" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Repte Final Bloquejat</span>
-                      <span className="text-xs">Visita tots els punts de la ruta per activar el qüestionari final</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">{t('finalChallengeLocked')}</span>
+                      <span className="text-xs">{t('finalChallengeInstruction')}</span>
                     </div>
                   ) : (
                     <Button
@@ -539,7 +547,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                       onClick={() => setShowFinalQuiz(true)}
                     >
                       <Trophy className="w-6 h-6 mr-3 text-yellow-400" />
-                      Començar Repte Final
+                      {t('startFinalChallenge')}
                     </Button>
                   )}
                 </div>
@@ -589,7 +597,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                 : 'bg-red-100 text-red-500'
                 }`}>
                 {network.isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                {network.isOnline ? (network.isSlowNetwork ? 'Lenta' : 'Connectat') : 'Offline'}
+                {network.isOnline ? (network.isSlowNetwork ? tCommon('slow') : tCommon('connected')) : tCommon('offline')}
               </span>
             </div>
           </div>
@@ -602,7 +610,7 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             onClick={() => onNavigate('map', safeLegend)}
           >
             <MapPin className="w-5 h-5 mr-2" />
-            Veure al Mapa
+            {t('viewOnMap')}
           </Button>
         </div>
       </div>

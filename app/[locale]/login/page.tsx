@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function LoginPage() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -13,7 +15,7 @@ export default function LoginPage() {
     setError('')
     
     if (!email || !email.includes('@')) {
-      setError('Introdueix un correu vàlid')
+      setError(t('errorLogin')) // Or use a specific key like invalidEmail
       return
     }
 
@@ -101,7 +103,7 @@ export default function LoginPage() {
             cursor: 'pointer',
             zIndex: 10
           }}
-          aria-label="Enviar"
+          aria-label={t('loginButton')}
         />
 
       </form>

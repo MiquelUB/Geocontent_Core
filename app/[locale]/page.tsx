@@ -1,27 +1,30 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { HomeScreen } from "../components/screens/HomeScreen";
-import { LegendsScreen } from "../components/screens/LegendsScreen";
-import { LegendDetailScreen } from "../components/screens/LegendDetailScreen";
-import { MapScreen } from "../components/screens/MapScreen";
-import { ProfileScreen } from "../components/screens/ProfileScreen";
-import { SplashScreen } from "../components/screens/SplashScreen";
-import { ErrorScreen } from "../components/screens/ErrorScreen";
-import { BottomNavigation } from "../components/BottomNavigation";
-import { useGeolocation } from "../hooks/useGeolocation";
-import { SimpleLogin } from "../components/auth/SimpleLogin";
-import { OnboardingModal } from "../components/OnboardingModal";
-import { useOnboarding } from "../hooks/useOnboarding";
+import { HomeScreen } from "@/components/screens/HomeScreen";
+import { LegendsScreen } from "@/components/screens/LegendsScreen";
+import { LegendDetailScreen } from "@/components/screens/LegendDetailScreen";
+import { MapScreen } from "@/components/screens/MapScreen";
+import { ProfileScreen } from "@/components/screens/ProfileScreen";
+import { SplashScreen } from "@/components/screens/SplashScreen";
+import { ErrorScreen } from "@/components/screens/ErrorScreen";
+import { BottomNavigation } from "@/components/BottomNavigation";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { SimpleLogin } from "@/components/auth/SimpleLogin";
+import { OnboardingModal } from "@/components/OnboardingModal";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { getAppBranding, recordVisit } from "@/lib/actions";
 import { useGeofencing } from "@/lib/hooks/useGeofencing";
 import { geofencingService } from "@/lib/services/geofencing-service";
 import { toast } from "sonner"; // Assuming sonner is available or similar toast
+import { useTranslations } from "next-intl";
 
 
 
 
 export default function Home() {
+  const t_geo = useTranslations('geofencing');
+  const t_splash = useTranslations('splash');
   const [currentScreen, setCurrentScreen] = useState("splash");
   const [navigationData, setNavigationData] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -43,8 +46,8 @@ export default function Home() {
         const result = await recordVisit(currentUser.id, event.location.id);
         if (result.success && result.user) {
           handleUserUpdate(result.user);
-          toast.success(`Punt desbloquejat: ${event.location.name}`, {
-            description: "Has entrat a la zona d'interès!",
+          toast.success(t_geo('toastTitle', { name: event.location.name }), {
+            description: t_geo('toastDesc'),
             duration: 5000,
           });
         }
@@ -52,7 +55,7 @@ export default function Home() {
     };
 
     geofencingService.onEnter(handleEnter);
-  }, [currentUser]);
+  }, [currentUser, t_geo]);
 
 
 
@@ -96,7 +99,7 @@ export default function Home() {
               localStorage.setItem("core_user", JSON.stringify(profile));
               console.log("Magic link login successful:", profile);
             } else {
-              console.warn("No s'ha pogut carregar el perfil després de 3 intents per uid:", uid);
+              console.warn("Could not load profile after 3 attempts for uid:", uid);
             }
           } catch (err) {
             console.error("Error loading profile after magic link:", err);
@@ -235,7 +238,7 @@ export default function Home() {
         <div className="flex flex-col items-center mb-4">
           <div className="mb-2 opacity-30 select-none pointer-events-none">
             <span className="text-[9px] font-serif italic tracking-[0.15em] text-stone-500 uppercase">
-              Projecte Xino Xano
+              {t_splash('project')}
             </span>
           </div>
           <BottomNavigation

@@ -1,6 +1,7 @@
 import { Button } from "../ui/button";
 import { Wifi, MapPin, AlertTriangle, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
 interface ErrorScreenProps {
   type: "no-connection" | "gps-denied" | "general";
@@ -9,26 +10,28 @@ interface ErrorScreenProps {
 }
 
 export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
+  const t = useTranslations('error');
+  
   const errorConfig = {
     "no-connection": {
       icon: Wifi,
-      title: "Sense connexió",
-      message: "No pots accedir a les llegendes sense connexió a internet. Comprova la teva xarxa i torna-ho a provar.",
-      action: "Tornar a provar",
+      title: t('no-connection.title'),
+      message: t('no-connection.message'),
+      action: t('no-connection.action'),
       color: "#6B7280"
     },
     "gps-denied": {
       icon: MapPin,
-      title: "Ubicació requerida",
-      message: "Per descobrir les llegendes més properes, necessitem accés a la teva ubicació. Activa el GPS i dona permisos a l'app.",
-      action: "Configurar ubicació",
+      title: t('gps-denied.title'),
+      message: t('gps-denied.message'),
+      action: t('gps-denied.action'),
       color: "#3E4E3F"
     },
     "general": {
       icon: AlertTriangle,
-      title: "Alguna cosa ha anat malament",
-      message: "Hi ha hagut un error inesperat. Si el problema persisteix, contacta amb nosaltres.",
-      action: "Tornar a provar",
+      title: t('general.title'),
+      message: t('general.message'),
+      action: t('general.action'),
       color: "#d4183d"
     }
   };
@@ -104,7 +107,7 @@ export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
             onClick={() => onNavigate('home')}
             className="w-full border-pallars-green text-primary hover:bg-primary/10"
           >
-            Tornar a l'inici
+            {t('backToHome')}
           </Button>
         </motion.div>
 
@@ -116,12 +119,12 @@ export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
             transition={{ delay: 0.6 }}
             className="text-sm text-muted-foreground space-y-2 mt-4 text-left p-4 bg-muted/50 rounded-lg"
           >
-            <p className="font-medium">Com activar la ubicació:</p>
+            <p className="font-medium">{t('gps-denied.howTo')}</p>
             <ol className="text-left space-y-1">
-              <li>1. Ves a Configuració del dispositiu</li>
-              <li>2. Cerca "Ubicació" o "GPS"</li>
-              <li>3. Activa els serveis d'ubicació</li>
-              <li>4. Dona permisos a Mistic Pallars</li>
+              <li>{t('gps-denied.step1')}</li>
+              <li>{t('gps-denied.step2')}</li>
+              <li>{t('gps-denied.step3')}</li>
+              <li>{t('gps-denied.step4')}</li>
             </ol>
           </motion.div>
         )}
@@ -130,7 +133,7 @@ export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
       {/* Decoració de fons */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-pallars-green/5 to-transparent pointer-events-none"></div>
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground w-full text-center">
-        Llegendes dels Pirineus · Pallars Jussà i Sobirà
+        {t('footer')}
       </div>
     </div>
   );

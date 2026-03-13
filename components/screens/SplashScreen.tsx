@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { PxxConfig } from "@/projects/active/config";
+import { useTranslations } from "next-intl";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -8,6 +9,7 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onComplete, brand }: SplashScreenProps) {
+  const t = useTranslations('splash');
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete; // always up-to-date without re-triggering effect
 
@@ -119,7 +121,7 @@ export function SplashScreen({ onComplete, brand }: SplashScreenProps) {
               />
             ))}
           </div>
-          <p className="text-sm text-primary-foreground/60">Cargando...</p>
+          <p className="text-sm text-primary-foreground/60">{t('loading')}</p>
         </motion.div>
       </div>
 
@@ -134,7 +136,7 @@ export function SplashScreen({ onComplete, brand }: SplashScreenProps) {
         }}
       >
         <div className="flex items-center space-x-2 text-primary-foreground/40 text-[10px] tracking-[0.2em] font-serif italic uppercase">
-          <span>Projecte Xino Xano</span>
+          <span>{t('project')}</span>
         </div>
       </motion.div>
     </div>

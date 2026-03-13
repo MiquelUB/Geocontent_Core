@@ -1,6 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -10,6 +11,9 @@ interface OnboardingModalProps {
 }
 
 export function OnboardingModal({ isOpen, onComplete, onSkip, onNavigate }: OnboardingModalProps) {
+  const t = useTranslations('onboarding');
+  const t_common = useTranslations('common');
+
   if (!isOpen) return null;
 
   const handleStart = () => {
@@ -33,12 +37,12 @@ export function OnboardingModal({ isOpen, onComplete, onSkip, onNavigate }: Onbo
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-primary/5 bg-background z-10">
           <h2 className="text-3xl font-serif font-black tracking-tighter text-primary">
-            Quadern de Camp Digital
+            {t('title')}
           </h2>
           <button
             onClick={onSkip}
             className="p-2 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors text-secondary"
-            aria-label="Cerrar"
+            aria-label={t_common('close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -49,33 +53,33 @@ export function OnboardingModal({ isOpen, onComplete, onSkip, onNavigate }: Onbo
           <div className="space-y-7">
 
             <InstructionItem
-              title="APARCA I CAMINA"
-              desc="Els carrers són estrets, fets per a les persones. Si us plau, deixa el cotxe al pàrquing i gaudeix a peu."
+              title={t('items.parking.title')}
+              desc={t('items.parking.desc')}
             />
 
             <InstructionItem
-              title="EL SILENCI ÉS PATRIMONI"
-              desc="Gaudeix de la calma. Sense altaveus ni crits. Respecta els animals, ells són a casa seva."
+              title={t('items.silence.title')}
+              desc={t('items.silence.desc')}
             />
 
             <InstructionItem
-              title="ANTICIPA'T A LA COBERTURA"
-              desc="Baixa't els continguts indicats abans de sortir. Així tindràs els mapes i àudios quan falli el 5G."
+              title={t('items.offline.title')}
+              desc={t('items.offline.desc')}
             />
 
             <InstructionItem
-              title="TIME SLIDER"
-              desc="Mou el dit per veure el passat (o l'ànima) del paisatge."
+              title={t('items.timeslider.title')}
+              desc={t('items.timeslider.desc')}
             />
 
             <InstructionItem
-              title="EL TEU LLEGAT"
-              desc="Completa la ruta per segellar el teu Passaport. No col·leccionem dades, col·leccionem moments."
+              title={t('items.legacy.title')}
+              desc={t('items.legacy.desc')}
             />
 
             <InstructionItem
-              title="GPS DE PRECISIÓ"
-              desc="Activa la ubicació per trobar els secrets. Tip: El Bluetooth ajuda a afinar la posició."
+              title={t('items.gps.title')}
+              desc={t('items.gps.desc')}
             />
 
           </div>
@@ -87,7 +91,7 @@ export function OnboardingModal({ isOpen, onComplete, onSkip, onNavigate }: Onbo
             onClick={handleStart}
             className="w-full py-4 px-6 font-serif font-bold text-lg tracking-widest text-primary-foreground bg-primary rounded-2xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] uppercase"
           >
-            Comença a Caminar
+            {t('start')}
           </button>
         </div>
       </div>

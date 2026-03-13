@@ -1,7 +1,7 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { PxxConfig } from "@/projects/active/config";
 
 const geistSans = Geist({
@@ -21,19 +21,28 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-export async function generateMetadata(): Promise<Metadata> {
+import { getTranslations } from 'next-intl/server';
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ locale: string }> 
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'meta' });
+  
   let brand = null;
   try {
     brand = await getAppBranding();
   } catch (e) {
     // Graceful fallback during build-time static generation
   }
-  const appName = brand?.name || PxxConfig.appName;
+  const appName = brand?.name || t('title') || PxxConfig.appName;
 
   return {
     metadataBase: new URL(PxxConfig.metadata.url),
     title: appName,
-    description: PxxConfig.appDescription,
+    description: t('description') || PxxConfig.appDescription,
     keywords: PxxConfig.metadata.keywords,
     authors: [{ name: PxxConfig.metadata.creator }],
     creator: PxxConfig.metadata.creator,
@@ -114,11 +123,29 @@ function hexToHsl(hex: string) {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+import { getMessages } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
+
 export default async function RootLayout({
   children,
-}: Readonly<{
+  params
+}: {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  // Validate that the incoming `locale` parameter is valid
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  // Providing all messages to the client
+  // side is the easiest way to get started
+  const messages = await getMessages();
+
   let brand = null;
   try {
     brand = await getAppBranding();
@@ -136,7 +163,7 @@ export default async function RootLayout({
   } as React.CSSProperties;
 
   return (
-    <html lang={PxxConfig.metadata.locale.split('_')[0]}>
+    <html lang={locale}>
       <head>
         <script
           type="application/ld+json"
@@ -159,7 +186,9 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} antialiased`}
         style={themeStyles}
       >
-        {children}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

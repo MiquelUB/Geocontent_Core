@@ -7,11 +7,14 @@ import { loginOrRegister } from "@/lib/actions";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 interface SimpleLoginProps {
   onLoginSuccess: (user: any) => void;
 }
 
 export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
+  const t = useTranslations('auth');
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +26,7 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
     setError("");
 
     if (!name || !email) {
-      setError("Si us plau, emplena tots els camps");
+      setError(t('errorFill'));
       setIsLoading(false);
       return;
     }
@@ -33,10 +36,10 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
       if (result.success && result.user) {
         onLoginSuccess(result.user);
       } else {
-        setError(result.error || "Error al entrar");
+        setError(result.error || t('errorLogin'));
       }
     } catch (err) {
-      setError("Error de connexió");
+      setError(t('errorConnection'));
     } finally {
       setIsLoading(false);
     }
@@ -50,15 +53,15 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
         className="bg-white rounded-xl p-8 w-full max-w-sm shadow-2xl"
       >
         <div className="mb-6">
-          <h1 className="text-2xl font-serif font-bold text-primary mb-2">Benvingut/da</h1>
-          <p className="text-gray-500 text-sm">Introdueix les teves dades per començar</p>
+          <h1 className="text-2xl font-serif font-bold text-primary mb-2">{t('welcome')}</h1>
+          <p className="text-gray-500 text-sm">{t('intro')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="text-left">
-            <label className="text-xs font-semibold text-gray-500 uppercase ml-1">Nom</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase ml-1">{t('name')}</label>
             <Input
-              placeholder="El teu nom"
+              placeholder={t('namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-gray-50"
@@ -66,10 +69,10 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
           </div>
 
           <div className="text-left">
-            <label className="text-xs font-semibold text-gray-500 uppercase ml-1">Correu Electrònic</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase ml-1">{t('email')}</label>
             <Input
               type="email"
-              placeholder="el-teu@email.com"
+              placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-gray-50"
@@ -79,7 +82,7 @@ export function SimpleLogin({ onLoginSuccess }: SimpleLoginProps) {
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <Button type="submit" className="w-full pallars-button" disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : "Entrar / Registrar-se"}
+            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : t('loginButton')}
           </Button>
         </form>
       </motion.div>

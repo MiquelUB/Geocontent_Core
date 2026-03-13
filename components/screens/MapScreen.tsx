@@ -10,6 +10,8 @@ import { Marker, Popup } from "react-map-gl/maplibre";
 import { getLegends } from "@/lib/actions";
 import { PxxConfig } from "@/projects/active/config";
 import iconsMapping from '@/lib/icons-mapping.json';
+import { useTranslations, useLocale } from "next-intl";
+import { getLocalizedContent } from "@/lib/i18n-db";
 
 const BIOME_MAP: Record<string, string> = {
   mountain: 'Montanya',
@@ -67,6 +69,10 @@ interface MapScreenProps {
 
 
 export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLocation, error: geoError }: MapScreenProps) {
+  const t = useTranslations('map');
+  const tHome = useTranslations('home');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
 
   const [selectedLegend, setSelectedLegend] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -78,7 +84,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     zoom: 11
   });
 
-  const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: "Totes" }]);
+  const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: t('all') }]);
   const [hasInitialPosition, setHasInitialPosition] = useState(false);
 
   useEffect(() => {
@@ -103,10 +109,10 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
 
         // Extract individual routes for filtering
         const chips = [
-          { id: "all", label: "Totes", color: biomeColor },
+          { id: "all", label: t('all'), color: biomeColor },
           ...mapped.map(l => ({
             id: l.id,
-            label: l.title,
+            label: getLocalizedContent(l, 'title', locale),
             color: biomeColor
           }))
         ];
@@ -114,7 +120,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
       }
     }
     fetchData();
-  }, []);
+  }, [locale, t, brand]);
 
   // Gestió intel·ligent del reposicionament del mapa
   useEffect(() => {
@@ -149,7 +155,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
       ...poi,
       // Normalitzem pel popup i detall
       routeId: legend.id,
-      routeName: legend.title,
+      routeName: getLocalizedContent(legend, 'title', locale),
       category: legend.category, // El bioma de la ruta
       location: legend.location,
       image: poi.image_url || legend.image,
@@ -193,53 +199,39 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
               size="sm"
               onClick={onOpenHelp}
               className="text-primary-foreground hover:bg-background/10"
-              title="Ajuda"
+              title={tCommon('help')}
             >
               <HelpCircle className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="text-primary-foreground hover:bg-background/10"
-            >
-              <Filter className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
         {/* Filtres de categoria */}
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            className="mt-3 overflow-hidden"
-          >
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {filterChips.map((chip) => {
-                const isSelected = selectedRoute === chip.id;
-                const activeCategory = brand?.themeId || 'mountain';
-                const theme = PxxConfig.chameleonThemes[activeCategory as keyof typeof PxxConfig.chameleonThemes] || PxxConfig.chameleonThemes['mountain'];
+        <div className="mt-3">
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {filterChips.map((chip) => {
+              const isSelected = selectedRoute === chip.id;
+              const activeCategory = brand?.themeId || 'mountain';
+              const theme = PxxConfig.chameleonThemes[activeCategory as keyof typeof PxxConfig.chameleonThemes] || PxxConfig.chameleonThemes['mountain'];
 
-                return (
-                  <Button
-                    key={chip.id}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedRoute(chip.id)}
-                    className={`whitespace-nowrap flex-shrink-0 rounded-full font-bold transition-all px-4 ${isSelected
-                      ? "bg-white shadow-md"
-                      : "text-white border border-white/30 hover:bg-white/10"
-                      }`}
-                    style={isSelected ? { color: theme.primary } : {}}
-                  >
-                    {chip.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+              return (
+                <Button
+                  key={chip.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedRoute(chip.id)}
+                  className={`whitespace-nowrap flex-shrink-0 rounded-full font-bold transition-all px-4 ${isSelected
+                    ? "bg-white shadow-md"
+                    : "text-white border border-white/30 hover:bg-white/10"
+                    }`}
+                  style={isSelected ? { color: theme.primary } : {}}
+                >
+                  {chip.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* GPS Status Badge */}
         <div className="flex mt-2 items-center space-x-2">
@@ -251,12 +243,12 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
           ) : !userLocation ? (
             <>
               <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-2 h-2 rounded-full bg-yellow-400" />
-              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider italic">Buscant senyal GPS...</span>
+              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider italic">{tHome('searchingGps')}</span>
             </>
           ) : (
             <>
               <div className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider">Senyal GPS actiu</span>
+              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider">{tHome('gpsActive')}</span>
             </>
           )}
         </div>
@@ -288,7 +280,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                 className="relative cursor-pointer hover:scale-110 transition-transform"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("POI CLICKED:", poi.title);
                   setSelectedLegend(poi);
                 }}
               >
@@ -298,7 +289,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                     <img
                       src={iconSrc}
                       className="w-10 h-10 drop-shadow-md object-contain"
-                      alt={poi.title}
+                      alt={getLocalizedContent(poi, 'title', locale)}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -330,7 +321,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="absolute bottom-4 left-4 right-4 z-50"
-            onLayoutAnimationComplete={() => console.log("Popup rendered for:", selectedLegend.title)}
           >
             <div
               className="bg-white rounded-lg p-4 shadow-xl border border-gray-200 cursor-pointer active:scale-95 transition-transform"
@@ -340,20 +330,20 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                 <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                   <ImageWithFallback
                     src={selectedLegend.image}
-                    alt={selectedLegend.title}
+                    alt={getLocalizedContent(selectedLegend, 'title', locale)}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-serif font-medium text-primary mb-1">
-                    {selectedLegend.title}
+                    {getLocalizedContent(selectedLegend, 'title', locale)}
                   </h3>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
                     <MapPin className="w-3 h-3" />
                     <span>{selectedLegend.location}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {selectedLegend.description}
+                    {getLocalizedContent(selectedLegend, 'description', locale)}
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
@@ -366,13 +356,13 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
                         }}
                         className="text-xs"
                       >
-                        Tancar
+                        {tCommon('close')}
                       </Button>
                       <Button
                         size="sm"
                         className="text-xs bg-primary text-primary-foreground pointer-events-none"
                       >
-                        Veure detall
+                        {tCommon('viewDetail')}
                       </Button>
                     </div>
                   </div>

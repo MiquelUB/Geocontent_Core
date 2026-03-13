@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import { Navigation, Star, Clock, MapPin, HelpCircle } from "lucide-react";
+import { Navigation, MapPin, HelpCircle } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
 import MapLibreMap from '@/components/map/MapLibreMap';
@@ -9,6 +9,8 @@ import { Marker, useMap } from "react-map-gl/maplibre";
 import iconsMapping from '@/lib/icons-mapping.json';
 import { PxxConfig } from "@/projects/active/config";
 import { getLegends, getAppBranding } from "@/lib/actions";
+import { useTranslations, useLocale } from "next-intl";
+import { getLocalizedContent } from "@/lib/i18n-db";
 
 const BIOME_MAP: Record<string, string> = {
   mountain: 'Montanya',
@@ -95,6 +97,10 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocation, error: geoError }: HomeScreenProps) {
+  const t = useTranslations('home');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  
   // Use a sensible default if location is not yet available for first render (e.g. Sort center)
   const defaultLoc = { latitude: 42.4140, longitude: 0.9870 };
   const currentLoc = userLocation || defaultLoc;
@@ -134,7 +140,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 ),
                 image: poi.image_url || l.image_url,
                 rating: l.rating || 4.5,
-                location: l.location_name || "Lloc",
+                location: l.location_name || t('defaultLocationName'),
               });
             });
           }
@@ -161,7 +167,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
       }
     }
     fetchData();
-  }, [currentLoc, propBrand]);
+  }, [currentLoc, propBrand, t]);
 
   return (
     <div className="screen bg-background">
@@ -192,7 +198,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
               size="sm"
               onClick={onOpenHelp}
               className="text-primary-foreground hover:bg-background/10"
-              title="Ajuda"
+              title={tCommon('help')}
             >
               <HelpCircle className="w-5 h-5" />
             </Button>
@@ -225,7 +231,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                       <img
                         src={iconSrc}
                         className="w-10 h-10 drop-shadow-md object-contain"
-                        alt={p.title}
+                        alt={getLocalizedContent(p, 'title', locale)}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -241,7 +247,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                     ) : (
                       <div className="w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden bg-primary/20 backdrop-blur-sm relative z-10">
                         {p.image ? (
-                          <ImageWithFallback src={p.image} alt={p.title} className="w-full h-full object-cover" />
+                          <ImageWithFallback src={p.image} alt={getLocalizedContent(p, 'title', locale)} className="w-full h-full object-cover" />
                         ) : (
                           <MapPin className="w-4 h-4 text-white m-1.5" />
                         )}
@@ -278,14 +284,14 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]"
               />
               <p className="text-[10px] font-bold uppercase tracking-wider text-primary-foreground/90">
-                Buscant senyal GPS...
+                {t('searchingGps')}
               </p>
             </>
           ) : (
             <>
               <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
               <p className="text-[10px] font-bold uppercase tracking-wider text-primary-foreground/90">
-                Senyal GPS actiu
+                {t('gpsActive')}
               </p>
             </>
           )}
@@ -301,7 +307,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
           className="flex items-center justify-between mb-4"
         >
           <h2 className="text-xl font-serif font-semibold text-primary">
-            Llocs propers
+            {t('nearbyPlaces')}
           </h2>
           <Button
             variant="ghost"
@@ -309,7 +315,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
             onClick={() => onNavigate('legends')}
             className="text-secondary hover:bg-secondary/10"
           >
-            Veure tot
+            {t('viewAll')}
           </Button>
         </motion.div>
 
@@ -327,7 +333,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <ImageWithFallback
                     src={poi.image}
-                    alt={poi.title}
+                    alt={getLocalizedContent(poi, 'title', locale)}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -335,7 +341,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-1">
                     <h3 className="font-serif font-medium text-primary truncate">
-                      {poi.title}
+                      {getLocalizedContent(poi, 'title', locale)}
                     </h3>
                   </div>
 
@@ -345,12 +351,12 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                   </div>
 
                   <p className="text-sm text-foreground/80 line-clamp-1 mb-2">
-                    {poi.description || poi.parentRoute.title}
+                    {getLocalizedContent(poi, 'description', locale) || getLocalizedContent(poi.parentRoute, 'title', locale)}
                   </p>
 
                   <div className="flex items-center justify-between">
                     <span className="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-medium">
-                      a {poi.distance} per desbloquejar
+                      {t('toUnlock', { distance: poi.distance })}
                     </span>
                   </div>
                 </div>

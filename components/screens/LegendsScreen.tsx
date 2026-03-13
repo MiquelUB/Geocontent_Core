@@ -8,6 +8,8 @@ import { PxxConfig } from "@/projects/active/config";
 import { downloadTerritorialPackage, isRouteCached, SyncProgress } from "@/lib/services/sync-service";
 import { CheckCircle2, Download, Loader2, AlertCircle } from "lucide-react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useTranslations, useLocale } from "next-intl";
+import { getLocalizedContent } from "@/lib/i18n-db";
 
 interface LegendsScreenProps {
     onNavigate: (screen: string, data?: any) => void;
@@ -16,10 +18,10 @@ interface LegendsScreenProps {
 }
 
 // Difficulty derived deterministically from POI count (no Math.random)
-function getDifficulty(poiCount: number): string {
-    if (poiCount >= 8) return 'Expert';
-    if (poiCount >= 4) return 'Mitjà';
-    return 'Fàcil';
+function getDifficultyKey(poiCount: number): string {
+    if (poiCount >= 8) return 'expert';
+    if (poiCount >= 4) return 'medium';
+    return 'easy';
 }
 
 function hexToHsl(hex: string) {
@@ -59,12 +61,16 @@ function hexToHsl(hex: string) {
 
 
 export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: LegendsScreenProps) {
+    const t = useTranslations('legends');
+    const tCommon = useTranslations('common');
+    const locale = useLocale();
+
     const [selectedRoute, setSelectedRoute] = useState("all");
     const [legends, setLegends] = useState<any[]>([]);
     const [brand, setBrand] = useState<any>(propBrand);
 
     // Filter Buttons (Routes)
-    const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: "Totes" }]);
+    const [filterChips, setFilterChips] = useState<any[]>([{ id: "all", label: t('all') }]);
 
     // Download Status Tracking
     const [downloadStatuses, setDownloadStatuses] = useState<Record<string, 'idle' | 'syncing' | 'ready'>>({});
@@ -86,18 +92,17 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                     coordinates: { lat: l.latitude, lng: l.longitude },
                     image: l.image_url,
                     hero: l.hero_image_url,
-                    difficulty: getDifficulty(l.poiCount ?? 0),
+                    difficultyKey: getDifficultyKey(l.poiCount ?? 0),
                     poiCount: l.poiCount ?? (l.pois?.length ?? 0),
                 }));
-                console.log("Mapped routes for library:", mapped[0]); // Debug coords
                 setLegends(mapped);
 
                 // Create chips for each individual route
                 const routeChips = [
-                    { id: "all", label: "Totes", category: "all" },
+                    { id: "all", label: t('all'), category: "all" },
                     ...mapped.map((l: any) => ({
                         id: l.id,
-                        label: l.title,
+                        label: getLocalizedContent(l, 'title', locale),
                         category: l.category
                     }))
                 ];
@@ -105,7 +110,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
             }
         }
         fetchData();
-    }, []);
+    }, [locale, t, propBrand]);
 
     // Initialize cached status
     useEffect(() => {
@@ -137,11 +142,9 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
             setDownloadStatuses(prev => ({ ...prev, [routeId]: 'ready' }));
         } else {
             setDownloadStatuses(prev => ({ ...prev, [routeId]: 'idle' }));
-            alert(`Error en la descàrrega: ${result.error}`);
+            alert(t('downloadError', { error: result.error || tCommon('unknown') }));
         }
     };
-
-    const featuredLegend = legends[0];
 
     // Filter by selected route ID ("all" shows everything)
     const filteredLegends = selectedRoute === 'all'
@@ -149,7 +152,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
         : legends.filter(l => l.id === selectedRoute);
 
     const activeChip = filterChips.find(c => c.id === selectedRoute);
-    const activeLabel = activeChip?.label ?? 'Totes';
+    const activeLabel = activeChip?.label ?? t('all');
 
     // El bioma de la plana SEMPRE ha de ser el del municipi (brand), no el de la ruta filtrada
     const activeCategory = brand?.themeId || 'mountain';
@@ -192,7 +195,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                     size="sm"
                     onClick={onOpenHelp}
                     className="text-primary-foreground hover:bg-white/10 p-2"
-                    title="Ajuda"
+                    title={tCommon('help')}
                 >
                     <HelpCircle className="w-6 h-6" />
                 </Button>
@@ -232,18 +235,18 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                     {/* Section Header */}
                     <div className="flex items-center gap-4">
                         <h2 className="font-serif text-2xl text-foreground font-bold">
-                            {selectedRoute === 'all' ? 'Biblioteca de Rutes' : activeLabel}
+                            {selectedRoute === 'all' ? t('libraryTitle') : activeLabel}
                         </h2>
                         <div className="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
-                        <span className="text-sm text-gray-400">{filteredLegends.length} rutes</span>
+                        <span className="text-sm text-gray-400">{t('routesCount', { count: filteredLegends.length })}</span>
                     </div>
 
                     {/* Empty state */}
                     {filteredLegends.length === 0 && (
                         <div className="text-center py-16 text-gray-400">
                             <Mountain className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                            <p className="font-serif text-lg">Cap ruta en aquesta categoria.</p>
-                            <p className="text-sm mt-1">Crea-les des del panell d'administració.</p>
+                            <p className="font-serif text-lg">{t('noRoutes')}</p>
+                            <p className="text-sm mt-1">{t('createAdmin')}</p>
                         </div>
                     )}
 
@@ -258,13 +261,13 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                             <div className="relative h-64 w-full overflow-hidden">
                                 <ImageWithFallback
                                     src={legend.image}
-                                    alt={legend.title}
+                                    alt={getLocalizedContent(legend, 'title', locale)}
                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
 
                                 <div className="absolute bottom-0 left-0 w-full p-5">
-                                    <h3 className="font-serif text-white text-2xl font-bold mb-3 tracking-wide drop-shadow-md">{legend.title}</h3>
+                                    <h3 className="font-serif text-white text-2xl font-bold mb-3 tracking-wide drop-shadow-md">{getLocalizedContent(legend, 'title', locale)}</h3>
 
                                     <div className="flex flex-wrap gap-2 text-xs font-bold tracking-wide text-white">
                                         {legend.location && (
@@ -277,6 +280,9 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                                                 <span>{legend.location}</span>
                                             </div>
                                         )}
+                                        <div className="px-3 py-1 rounded shadow-sm bg-black/30 backdrop-blur-sm border border-white/10">
+                                            <span>{t('difficulty.' + legend.difficultyKey)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -284,7 +290,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                             {/* Short Description & Offline Button */}
                             <div className="p-4 bg-white dark:bg-zinc-900 space-y-4">
                                 <p className="text-gray-600 dark:text-gray-400 font-serif text-base leading-relaxed line-clamp-2">
-                                    {legend.description}
+                                    {getLocalizedContent(legend, 'description', locale)}
                                 </p>
 
                                 {/* Punt D'Or - ONLY if downloadRequired is true in DB config */}
@@ -293,7 +299,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                                         {downloadStatuses[legend.id] === 'ready' ? (
                                             <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-sm border border-emerald-100">
                                                 <CheckCircle2 className="w-4 h-4" />
-                                                <span>Ja la tens offline</span>
+                                                <span>{t('alreadyOffline')}</span>
                                             </div>
                                         ) : (
                                             <div className="space-y-3">
@@ -307,12 +313,12 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
                                                     {downloadStatuses[legend.id] === 'syncing' ? (
                                                         <>
                                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                            Descarregant...
+                                                            {t('downloading')}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Download className="w-4 h-4 mr-2" />
-                                                            PUNT D'OR - ÚS OFFLINE
+                                                            {t('offlineUsage')}
                                                         </>
                                                     )}
                                                 </Button>

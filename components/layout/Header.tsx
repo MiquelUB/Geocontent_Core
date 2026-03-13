@@ -1,7 +1,8 @@
 'use client'
 
 import { createClient } from '@/lib/database/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
+import LanguageSelector from '@/components/LanguageSelector'
 
 interface HeaderProps {
   visitedCount?: number
@@ -16,7 +17,6 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
-    router.refresh()
   }
 
   return (
@@ -30,6 +30,11 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
         maxHeight: '180px'
       }}
     >
+      {/* Container for Language Selector - Centered */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[60]">
+        <LanguageSelector />
+      </div>
+
       {/* Transparent avatar button positioned over the left avatar figure */}
       <button
         onClick={() => {

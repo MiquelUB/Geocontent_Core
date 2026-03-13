@@ -1,4 +1,5 @@
 import { Home, BookOpen, Map as MapIcon, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface BottomNavigationProps {
   currentScreen: string;
@@ -6,25 +7,27 @@ interface BottomNavigationProps {
 }
 
 export function BottomNavigation({ currentScreen, onScreenChange }: BottomNavigationProps) {
+  const t = useTranslations('nav');
+  
   const navItems = [
     {
       id: "home",
-      label: "Inici",
+      label: t('home'),
       icon: Home,
     },
     {
       id: "legends",
-      label: "Explorar",
+      label: t('legends'),
       icon: BookOpen,
     },
     {
       id: "map",
-      label: "Mapa",
+      label: t('map'),
       icon: MapIcon,
     },
     {
       id: "profile",
-      label: "Perfil",
+      label: t('profile'),
       icon: User,
     },
   ];

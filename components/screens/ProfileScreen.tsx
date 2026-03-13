@@ -4,6 +4,7 @@ import { ArrowLeft, Settings, Edit, Trophy, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { PassportGrid } from "@/components/passport/PassportGrid";
 import { getPassportData, handleAvatarUploadAction, getUserScore } from "@/lib/actions";
+import { useTranslations } from "next-intl";
 
 interface ProfileScreenProps {
     onNavigate: (screen: string, data?: any) => void;
@@ -12,6 +13,9 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: ProfileScreenProps) {
+    const t = useTranslations('profile');
+    const tCommon = useTranslations('common');
+    
     const [passportData, setPassportData] = useState<any[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [totalScore, setTotalScore] = useState(currentUser?.xp || 0);
@@ -28,11 +32,11 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
     }, [currentUser?.id, currentUser?.xp]);
 
     const getRank = (level: number) => {
-        if (level >= 5) return "Mestre del Pirineu";
-        if (level === 4) return "Naturalista Expert";
-        if (level === 3) return "Viatger del Territori";
-        if (level === 2) return "Rastrejador de Camins";
-        return "Explorador Novell";
+        if (level >= 5) return t('ranks.level5');
+        if (level === 4) return t('ranks.level4');
+        if (level === 3) return t('ranks.level3');
+        if (level === 2) return t('ranks.level2');
+        return t('ranks.level1');
     };
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,10 +56,10 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                     window.location.reload();
                 }
             } else {
-                alert("Error al pujar l'avatar");
+                alert(t('errorAvatar'));
             }
         } catch (err) {
-            alert("Error al pujar l'avatar");
+            alert(t('errorAvatar'));
         } finally {
             setIsUploading(false);
         }
@@ -69,7 +73,7 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                 <button onClick={() => onNavigate('home')} className="text-[#1e2b25] dark:text-white p-2 rounded-full hover:bg-primary/10 transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h2 className="font-serif text-xl font-medium tracking-wide text-[#1e2b25] dark:text-white">El Meu Quadern</h2>
+                <h2 className="font-serif text-xl font-medium tracking-wide text-[#1e2b25] dark:text-white">{t('title')}</h2>
                 <div className="w-10" />
             </div>
 
@@ -105,13 +109,13 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                     </div>
                     <div className="mt-4 text-center">
                         <h1 className="font-serif text-3xl font-bold text-[#1e2b25] dark:text-white leading-tight">
-                            {currentUser?.username || "Explorador Anònim"}
+                            {currentUser?.username || t('anonymous')}
                         </h1>
                         <p className="font-serif italic text-primary text-lg mt-1">
                             {getRank(currentUser?.level || 1)}
                         </p>
                         <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">
-                            Nivell {currentUser?.level || 1} • {currentUser?.xp || 0} XP
+                            {t('level', { level: currentUser?.level || 1 })} • {t('xp', { xp: currentUser?.xp || 0 })}
                         </p>
                     </div>
                 </div>
@@ -120,15 +124,15 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                     <div className="bg-white dark:bg-white/5 rounded-2xl p-6 shadow-[0_2px_8px_-2px_rgba(86,143,114,0.15)] border border-primary/10 flex justify-between divide-x divide-primary/10">
                         <div className="flex-1 flex flex-col items-center justify-center gap-1 px-2">
                             <span className="font-serif text-3xl font-bold text-primary">{currentUser?.visitedCount || 0}</span>
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Llocs Visitats</span>
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">{t('visitedPlaces')}</span>
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center gap-1 px-2">
                             <span className="font-serif text-3xl font-bold text-primary">{totalScore}</span>
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Punts Totals</span>
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">{t('totalPoints')}</span>
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center gap-1 px-2">
                             <span className="font-serif text-3xl font-bold text-primary">{solvedQuizzes}</span>
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Quizes Resolts</span>
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">{t('solvedQuizzes')}</span>
                         </div>
                     </div>
                 </div>
@@ -137,9 +141,9 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                 <div className="px-4 mt-2">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="font-serif text-2xl font-bold text-[#1e2b25] dark:text-white italic">El Teu Passaport</h3>
+                            <h3 className="font-serif text-2xl font-bold text-[#1e2b25] dark:text-white italic">{t('passportTitle')}</h3>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5">
-                                Segells — {passportData.filter((s: any) => s.isCompleted).length} / {passportData.length} desbloquejats
+                                {t('stamps')} — {passportData.filter((s: any) => s.isCompleted).length} / {passportData.length} {t('unlocked')}
                             </p>
                         </div>
                     </div>

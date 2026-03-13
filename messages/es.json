@@ -1,81 +1,180 @@
 {
   "common": {
-    "appName": "Proyecto Xino Xano",
     "loading": "Cargando...",
     "error": "Se ha producido un error",
-    "retry": "Reintentar",
+    "back": "Volver",
     "save": "Guardar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
-    "edit": "Editar",
-    "create": "Crear",
-    "back": "Volver",
-    "next": "Siguiente",
-    "search": "Buscar"
+    "help": "Ayuda",
+    "unknown": "Desconocido",
+    "close": "Cerrar",
+    "viewDetail": "Ver detalle",
+    "video": "Vídeo",
+    "connected": "Conectado",
+    "slow": "Lenta",
+    "offline": "Offline"
+  },
+  "nav": {
+    "home": "Inicio",
+    "map": "Mapa",
+    "legends": "Explorar",
+    "profile": "Perfil",
+    "admin": "Administración"
   },
   "auth": {
-    "login": "Entrar",
-    "logout": "Salir",
-    "magicLinkSent": "¡Te hemos enviado un enlace mágico al correo!",
-    "emailPlaceholder": "Tu correo electrónico",
-    "displayNameLabel": "¿Cómo te llamas?",
-    "displayNamePlaceholder": "Ej: Jordi",
-    "createPassport": "Crear mi Pasaporte",
-    "welcome": "¡Bienvenido/a, {name}!"
+    "welcome": "Bienvenido/a",
+    "intro": "Introduce tus datos para empezar",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tu-email@email.com",
+    "loginButton": "Entrar / Registrarse",
+    "errorFill": "Por favor, rellena todos los campos",
+    "errorLogin": "Error al entrar",
+    "errorConnection": "Error de conexión"
+  },
+  "geofencing": {
+    "entry": "Has entrado en: {name}",
+    "exit": "Has salido de: {name}",
+    "toastTitle": "Punto desbloqueado: {name}",
+    "toastDesc": "¡Has entrado en la zona de interés!"
+  },
+  "detail": {
+    "notFound": "Punto no encontrado",
+    "unknown": "Desconocido",
+    "partOfRoute": "Parte de la ruta: {name}",
+    "audioGuide": "Audio Guía",
+    "playing": "Reproduciendo...",
+    "clickToListen": "Haz clic para escuchar",
+    "protectedContent": "Contenido Protegido",
+    "itinerary": "Itinerario de la ruta",
+    "points": "{count} {count, plural, one {punto} other {puntos}}",
+    "youAreHere": "Usted está aquí",
+    "viewOnMap": "Ver en el Mapa",
+    "distanceTo": "Estás a {distance} de este punto.",
+    "unlockInstruction": "Acércate a menos de {meters}m para desbloquear sus secretos.",
+    "noDescription": "Sin descripción disponible",
+    "gpsInstruction": "Activa el GPS y acércate para descubrir los secretos escondidos.",
+    "noAudio": "Chivato: Este punto no tiene ningún archivo de audio asignado en la BD",
+    "digitalLock": "Candado Digital",
+    "videoLocked": "El vídeo se revelará cuando llegues a la ubicación.",
+    "galleryLocked": "Galería Protegida",
+    "finalChallengeLocked": "Reto Final Bloqueado",
+    "finalChallengeInstruction": "Visita todos los puntos de la ruta para activar el cuestionario final",
+    "startFinalChallenge": "Empezar Reto Final",
+    "shareText": "Mira este punto de ruta: {name}",
+    "linkCopied": "¡Enlace copiado al portapapeles para compartir!"
+  },
+  "home": {
+    "nearbyPlaces": "Lugares cercanos",
+    "viewAll": "Ver todo",
+    "searchingGps": "Buscando señal GPS...",
+    "gpsActive": "Señal GPS activa",
+    "toUnlock": "a {distance} para desbloquear",
+    "defaultLocationName": "Lugar"
+  },
+  "legends": {
+    "all": "Todas",
+    "libraryTitle": "Biblioteca de Rutas",
+    "routesCount": "{count} {count, plural, one {ruta} other {rutas}}",
+    "noRoutes": "Ninguna ruta en esta categoría.",
+    "createAdmin": "Créalos desde el panel de administración.",
+    "alreadyOffline": "Ya la tienes offline",
+    "downloading": "Descargando...",
+    "offlineUsage": "PUNTO DE ORO - USO OFFLINE",
+    "downloadError": "Error en la descarga: {error}",
+    "difficulty": {
+      "easy": "Fácil",
+      "medium": "Medio",
+      "expert": "Experto"
+    }
   },
   "map": {
-    "title": "Mapa",
-    "myLocation": "Mi ubicación",
-    "downloadOffline": "Descargar para usar offline",
-    "downloading": "Descargando mapa...",
-    "offlineReady": "¡Mapa disponible offline!"
-  },
-  "routes": {
-    "title": "Rutas",
-    "explore": "Explorar",
-    "permanent": "Permanente",
-    "temporal": "Temporal",
-    "event": "Evento",
-    "expired": "Archivada",
-    "upcoming": "Programada",
-    "premium": "Premium",
-    "distance": "{km} km",
-    "duration": "{hours}h {minutes}m",
-    "pois": "{count} puntos de interés"
-  },
-  "passport": {
-    "title": "Pasaporte",
-    "stamps": "Sellos",
-    "locked": "Bloqueado",
-    "unlocked": "¡Desbloqueado!",
-    "xp": "{points} XP",
-    "level": "Nivel {level}",
-    "progress": "{current}/{total} descubiertos"
-  },
-  "quiz": {
-    "title": "Reto del Territorio",
-    "question": "Pregunta",
-    "correct": "¡Correcto! +{xp} XP",
-    "incorrect": "No es correcto. ¡Inténtalo de nuevo!",
-    "answerChallenge": "Responde al Reto ({xp} XP)"
+    "all": "Todas",
+    "filters": "Filtros",
+    "legendTitle": "Mapa interactivo"
   },
   "profile": {
-    "title": "Perfil del Explorador",
-    "totalXp": "XP Total",
-    "routesCompleted": "Rutas completadas",
-    "stampsCollected": "Sellos coleccionados",
-    "memberSince": "Miembro desde {date}",
-    "settings": "Configuración",
-    "language": "Idioma"
+    "title": "Mi Cuaderno",
+    "anonymous": "Explorador Anónimo",
+    "level": "Nivel {level}",
+    "xp": "{xp} XP",
+    "visitedPlaces": "Lugares Visitados",
+    "totalPoints": "Puntos Totales",
+    "solvedQuizzes": "Quizzes Resueltos",
+    "passportTitle": "Tu Pasaporte",
+    "stamps": "Sellos",
+    "unlocked": "desbloqueados",
+    "errorAvatar": "Error al subir el avatar",
+    "ranks": {
+      "level1": "Explorador Novel",
+      "level2": "Rastreador de Caminos",
+      "level3": "Viajero del Territorio",
+      "level4": "Naturalista Experto",
+      "level5": "Maestro del Pirineo"
+    }
   },
-  "admin": {
-    "dashboard": "Panel de Administración",
-    "manageRoutes": "Gestionar Rutas",
-    "managePois": "Gestionar Puntos de Interés",
-    "uploadPdf": "Subir PDF",
-    "themeSelector": "Tema Visual",
-    "temporalConfig": "Configuración Temporal",
-    "startDate": "Fecha de inicio",
-    "endDate": "Fecha de finalización"
+  "error": {
+    "no-connection": {
+      "title": "Sin conexión",
+      "message": "No puedes acceder a las leyendas sin conexión a internet. Comprueba tu red y vuelve a intentarlo.",
+      "action": "Volver a intentar"
+    },
+    "gps-denied": {
+      "title": "Ubicación requerida",
+      "message": "Para descubrir las leyendas más cercanas, necesitamos acceso a tu ubicación. Activa el GPS y da permisos a la app.",
+      "action": "Configurar ubicación",
+      "howTo": "Cómo activar la ubicación:",
+      "step1": "1. Ve a Configuración del dispositivo",
+      "step2": "2. Busca \"Ubicación\" o \"GPS\"",
+      "step3": "3. Activa los servicios de ubicación",
+      "step4": "4. Da permisos a la aplicación"
+    },
+    "general": {
+      "title": "Algo ha salido mal",
+      "message": "Ha ocurrido un error inesperado. Si el problema persiste, contacta con nosotros.",
+      "action": "Volver a intentar"
+    },
+    "backToHome": "Volver al inicio",
+    "footer": "Leyendas de los Pirineos · Patrimonio y Territorio"
+  },
+  "splash": {
+    "loading": "Cargando experiencia...",
+    "project": "Proyecto Xino Xano"
+  },
+  "onboarding": {
+    "title": "Cuaderno de Campo Digital",
+    "start": "Empezar a Caminar",
+    "items": {
+      "parking": {
+        "title": "APARCA Y CAMINA",
+        "desc": "Las calles son estrechas, hechas para las personas. Por favor, deja el coche en el parking y disfruta a pie."
+      },
+      "silence": {
+        "title": "EL SILENCIO ES PATRIMONIO",
+        "desc": "Disfruta de la calma. Sin altavoces ni gritos. Respeta a los animales, ellos están en su casa."
+      },
+      "offline": {
+        "title": "ANTICÍPATE A LA COBERTURA",
+        "desc": "Descarga los contenidos indicados antes de salir. Así tendrás los mapas y audios cuando falle el 5G."
+      },
+      "timeslider": {
+        "title": "TIME SLIDER",
+        "desc": "Mueve el dedo para ver el pasado (o el alma) del paisaje."
+      },
+      "legacy": {
+        "title": "TU LEGADO",
+        "desc": "Completa la ruta para sellar tu Pasaporte. No coleccionamos datos, coleccionamos momentos."
+      },
+      "gps": {
+        "title": "GPS DE PRECISIÓN",
+        "desc": "Activa la ubicación para encontrar los secretos. Tip: El Bluetooth ayuda a afinar la posición."
+      }
+    }
+  },
+  "meta": {
+    "title": "Geocontent - Descubre el Patrimonio",
+    "description": "Una experiencia inmersiva para descubrir las leyendas y el patrimonio del territorio."
   }
 }
