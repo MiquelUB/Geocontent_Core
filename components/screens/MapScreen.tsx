@@ -168,46 +168,9 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
   return (
     <div className="screen-full bg-background flex flex-col h-full">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 bg-primary/95 backdrop-blur-sm p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onNavigate('home')}
-              className="text-primary-foreground hover:bg-background/10 p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center overflow-hidden shadow-sm">
-              {brand?.logoUrl ? (
-                <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
-              ) : (
-                <span className="text-xl font-serif font-bold text-primary">
-                  {brand?.name?.[0] || PxxConfig.appName[0]}
-                </span>
-              )}
-            </div>
-            <h1 className="text-lg font-serif font-bold text-primary-foreground">
-              {brand?.name || PxxConfig.appName}
-            </h1>
-          </div>
 
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenHelp}
-              className="text-primary-foreground hover:bg-background/10"
-              title={tCommon('help')}
-            >
-              <HelpCircle className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Filtres de categoria */}
-        <div className="mt-3">
+        {/* Filtres de categoria (positioned over map or below global header) */}
+        <div className="bg-primary/80 backdrop-blur-sm p-3 z-20">
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             {filterChips.map((chip) => {
               const isSelected = selectedRoute === chip.id;
@@ -231,28 +194,27 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
               );
             })}
           </div>
-        </div>
 
-        {/* GPS Status Badge */}
-        <div className="flex mt-2 items-center space-x-2">
-          {geoError ? (
-            <>
-              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }} className="w-2 h-2 rounded-full bg-red-400" />
-              <span className="text-[10px] text-red-100 uppercase font-bold tracking-wider italic">{geoError}</span>
-            </>
-          ) : !userLocation ? (
-            <>
-              <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-2 h-2 rounded-full bg-yellow-400" />
-              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider italic">{tHome('searchingGps')}</span>
-            </>
-          ) : (
-            <>
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider">{tHome('gpsActive')}</span>
-            </>
-          )}
+          {/* GPS Status Badge */}
+          <div className="flex mt-1 items-center space-x-2">
+            {geoError ? (
+              <>
+                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }} className="w-2 h-2 rounded-full bg-red-400" />
+                <span className="text-[10px] text-red-100 uppercase font-bold tracking-wider italic">{geoError}</span>
+              </>
+            ) : !userLocation ? (
+              <>
+                <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-2 h-2 rounded-full bg-yellow-400" />
+                <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider italic">{tHome('searchingGps')}</span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-green-400" />
+                <span className="text-[10px] text-primary-foreground/70 uppercase font-bold tracking-wider">{tHome('gpsActive')}</span>
+              </>
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Mapa principal */}
       <div className="relative w-full h-full bg-gray-100">

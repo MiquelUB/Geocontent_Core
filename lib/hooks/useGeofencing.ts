@@ -27,7 +27,8 @@ export function useGeofencing(
         
         const { data, error: fetchError } = await supabase
           .from('pois')
-          .select('id, title, description, latitude, longitude, quiz_xp_reward')
+          .select('id, title, description, latitude, longitude, quiz_xp_reward, route_id')
+          .not('route_id', 'is', null)
 
         if (fetchError) throw fetchError
 

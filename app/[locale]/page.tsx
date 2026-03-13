@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Header from "@/components/layout/Header";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { LegendsScreen } from "@/components/screens/LegendsScreen";
 import { LegendDetailScreen } from "@/components/screens/LegendDetailScreen";
@@ -230,6 +231,13 @@ export default function Home() {
 
   return (
     <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
+      {showBottomNav && (
+        <Header 
+          onNavigate={handleNavigate} 
+          onOpenHelp={reopenOnboarding}
+          brand={brand}
+        />
+      )}
       <main className={`flex-1 relative ${currentScreen === 'legend-detail' ? 'overflow-y-auto' : 'overflow-auto'} scrollbar-hide`}>
         {renderScreen()}
       </main>

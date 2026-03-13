@@ -172,46 +172,6 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
   return (
     <div className="screen bg-background">
       {/* Header amb logo */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="bg-primary p-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center overflow-hidden shadow-lg">
-              {brand?.logoUrl ? (
-                <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
-              ) : (
-                <span className="text-2xl font-serif font-bold text-primary">
-                  {brand?.name?.[0] || PxxConfig.appName[0]}
-                </span>
-              )}
-            </div>
-            <h1 className="text-lg font-serif font-bold text-primary-foreground">
-              {brand?.name || PxxConfig.appName}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenHelp}
-              className="text-primary-foreground hover:bg-background/10"
-              title={tCommon('help')}
-            >
-              <HelpCircle className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary-foreground hover:bg-background/10"
-            >
-              <Navigation className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-      </motion.div>
 
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}

@@ -172,34 +172,6 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
             style={themeStyles}
         >
 
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-primary/95 backdrop-blur-sm px-6 py-4 flex justify-between items-center border-b border-primary/10">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('home')}>
-                    {/* Logo Mark */}
-                    {brand?.logoUrl ? (
-                        <div className="w-16 h-16 rounded-full overflow-hidden shadow-md border border-white/20">
-                            <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
-                        </div>
-                    ) : (
-                        <div className="w-16 h-16 bg-white/20 text-white flex items-center justify-center rounded-full font-serif font-bold text-2xl tracking-tighter shadow-sm border border-white/20">
-                            {brand?.name?.[0] || 'P'}
-                        </div>
-                    )}
-                    <h1 className="font-serif text-xl font-bold tracking-tight text-primary-foreground">
-                        {brand?.name || 'PXX Guide'}
-                    </h1>
-                </div>
-
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onOpenHelp}
-                    className="text-primary-foreground hover:bg-white/10 p-2"
-                    title={tCommon('help')}
-                >
-                    <HelpCircle className="w-6 h-6" />
-                </Button>
-            </header>
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto pb-32 no-scrollbar">
