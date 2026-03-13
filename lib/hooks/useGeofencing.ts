@@ -25,29 +25,20 @@ export function useGeofencing(
         setLoading(true)
         
         const { data, error: fetchError } = await supabase
-          .from('locations')
-          .select('*')
-          .eq('active', true)
+          .from('pois')
+          .select('id, title, description, zone, quizXpReward')
 
         if (fetchError) throw fetchError
 
         if (data) {
-          // Convertir zone de PostGIS a formato compatible
-          const locations: Location[] = data.map((loc: {
-            id: string
-            name: string
-            description: string | null
-            zone: string | { type: string; coordinates: number[][][] }
-            active: boolean
-            points_value: number
-          }) => ({
+          const locations: Location[] = data.map((loc: any) => ({
             id: loc.id,
-            name: loc.name,
+            name: loc.title || 'Punt d\'interès',
             description: loc.description,
-            zone: loc.zone, // PostGIS devuelve GeoJSON
-            active: loc.active,
-            points_value: loc.points_value,
-          }))
+            zone: loc.zone,
+            active: true,
+            points_value: loc.quizXpReward || 100,
+          })).filter((l: any) => l.zone);
 
           geofencingService.loadGeofences(locations)
         }
