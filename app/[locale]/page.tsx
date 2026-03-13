@@ -232,11 +232,6 @@ export default function Home() {
 
   return (
     <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
-      {/* ULTRA DEBUG BANNER */}
-      <div className="bg-fuchsia-600 text-white text-[16px] py-6 text-center font-black z-[9999] border-b-8 border-yellow-300 shadow-2xl animate-bounce">
-        🚀 VERSION 1.1.0 - DATABASE WIPED - HEADER UPDATED 🚀
-        <div className="text-[10px] mt-1 opacity-70">{new Date().toLocaleTimeString()}</div>
-      </div>
       {showBottomNav && (
         <Header 
           onNavigate={handleNavigate} 

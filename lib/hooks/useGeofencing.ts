@@ -23,7 +23,7 @@ export function useGeofencing(
   // Cargar geocercas sincronizadas con las rutas oficiales
   useEffect(() => {
     async function loadGeofences() {
-      console.log(`🔍 useGeofencing v1.0.3 [${new Date().toLocaleTimeString()}]: Syncing...`);
+      console.log(`🔍 useGeofencing v1.1.0 [${new Date().toLocaleTimeString()}]: Syncing...`);
       try {
         setLoading(true)
         
