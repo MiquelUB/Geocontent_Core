@@ -23,6 +23,13 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
     router.push('/login')
   }
 
+  const isInterior = brand?.themeId === 'interior';
+  const textColor = isInterior ? 'text-[#2F1B0C]' : 'text-white';
+  const iconColor = isInterior ? 'text-[#2F1B0C]' : 'text-white';
+  const subtextColor = isInterior ? 'text-[#2F1B0C]/60' : 'text-white/60';
+  const borderColor = isInterior ? 'border-[#2F1B0C]/20' : 'border-white/20';
+  const bgColor = isInterior ? 'bg-[#2F1B0C]/10' : 'bg-white/10';
+
   return (
     <header 
       className="relative w-full bg-primary bg-cover bg-center bg-no-repeat shrink-0 z-[60] shadow-md overflow-hidden"
@@ -35,21 +42,21 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
       <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between">
         {/* Left section: Municipality Logo & Name */}
         <div className="flex items-center gap-3 pointer-events-auto">
-          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 p-1 flex items-center justify-center shadow-inner">
+          <div className={`w-12 h-12 rounded-xl ${bgColor} backdrop-blur-md border ${borderColor} p-1 flex items-center justify-center shadow-inner`}>
             {brand?.logoUrl ? (
               <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain" />
             ) : (
-              <span className="text-xl font-serif font-bold text-white">
+              <span className={`text-xl font-serif font-bold ${textColor}`}>
                 {brand?.name?.[0] || 'X'}
               </span>
             )}
           </div>
           
           <div className="flex flex-col">
-            <span className="text-xs font-black text-white uppercase tracking-wider leading-tight drop-shadow-sm">
+            <span className={`text-xs font-black ${textColor} uppercase tracking-wider leading-tight drop-shadow-sm`}>
               {brand?.name || 'Explora'}
             </span>
-            <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest leading-none">
+            <span className={`text-[9px] font-bold ${subtextColor} uppercase tracking-widest leading-none`}>
               Territori Viu
             </span>
           </div>
@@ -57,11 +64,11 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
 
         {/* Right section: Language Selector & Help */}
         <div className="flex items-center gap-3 pointer-events-auto">
-          <LanguageSelector />
+          <LanguageSelector dark={isInterior} />
           
           <button
             onClick={onOpenHelp}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all active:scale-95 shadow-lg"
+            className={`w-10 h-10 flex items-center justify-center rounded-full ${bgColor} backdrop-blur-sm border ${borderColor} ${iconColor} hover:bg-white/20 transition-all active:scale-95 shadow-lg`}
             title="Ajuda"
           >
             <span className="text-xl font-bold">?</span>

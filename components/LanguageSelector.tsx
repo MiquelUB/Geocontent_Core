@@ -6,11 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Languages, Check } from 'lucide-react';
 
-export default function LanguageSelector() {
+interface LanguageSelectorProps {
+  dark?: boolean;
+}
+
+export default function LanguageSelector({ dark = false }: LanguageSelectorProps) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  const textColor = dark ? 'text-[#2F1B0C]' : 'text-white';
+  const bgColor = dark ? 'bg-[#2F1B0C]/10' : 'bg-white/10';
+  const borderColor = dark ? 'border-[#2F1B0C]/20' : 'border-white/20';
 
   const languages = [
     { code: 'ca', name: 'Català', flag: '🇦🇩' },
@@ -29,11 +37,11 @@ export default function LanguageSelector() {
     <div className="relative z-[100]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-full hover:bg-white/20 transition-all"
+        className={`flex items-center gap-2 ${bgColor} backdrop-blur-md border ${borderColor} p-2 rounded-full hover:bg-white/20 transition-all`}
         aria-label="Change language"
       >
-        <Languages size={20} className="text-white" />
-        <span className="text-[12px] font-bold text-white uppercase">{locale}</span>
+        <Languages size={20} className={textColor} />
+        <span className={`text-[12px] font-bold ${textColor} uppercase`}>{locale}</span>
       </button>
 
       <AnimatePresence>
