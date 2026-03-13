@@ -32,7 +32,7 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
 
   return (
     <header 
-      className="relative w-full bg-primary bg-cover bg-center bg-no-repeat shrink-0 z-[60] shadow-md overflow-hidden"
+      className="relative w-full bg-primary bg-cover bg-center bg-no-repeat shrink-0 z-[60] shadow-md"
       style={{
         backgroundImage: 'url(/header_sin_iconos.png)',
         height: '90px',
