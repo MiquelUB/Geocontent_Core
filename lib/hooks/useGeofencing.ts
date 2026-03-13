@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { geofencingService, Location, GeofenceEvent } from '@/lib/services/geofencing-service'
 import { createClient } from '@/lib/database/supabase/client'
 import { circle } from '@turf/turf'
+import { getLegends } from "@/lib/actions"
 
 interface UseGeofencingReturn {
   activeGeofences: Location[]
@@ -19,26 +20,23 @@ export function useGeofencing(
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
-  // Cargar geocercas desde Supabase
+  // Cargar geocercas sincronizadas con las rutas oficiales
   useEffect(() => {
     async function loadGeofences() {
+      console.log("🔍 useGeofencing v1.0.2: Syncing with official routes...");
       try {
         setLoading(true)
         
-        const { data, error: fetchError } = await supabase
-          .from('pois')
-          .select('id, title, description, latitude, longitude, quiz_xp_reward, route_id')
-          .not('route_id', 'is', null)
+        // Obtenim les rutes oficials igual que la HomeScreen
+        const routes = await getLegends();
+        const allPois = routes.flatMap(r => r.pois);
 
-        if (fetchError) throw fetchError
-
-        if (data) {
+        if (allPois.length > 0) {
           // Convertir punts amb radi a format de geofencing (cercle de 50m)
-          const locations: Location[] = data.map((loc: any) => {
+          const locations: Location[] = allPois.map((loc: any) => {
             let zoneData = null;
             
             if (loc.latitude && loc.longitude) {
-              // Generar un cercle de 50 metres (0.05 km) al voltant del punt
               const c = circle([loc.longitude, loc.latitude], 0.05, { units: 'kilometers' });
               zoneData = c.geometry;
             }
@@ -53,6 +51,7 @@ export function useGeofencing(
             }
           }).filter((l: any) => l.zone);
 
+          console.log(`✅ Loaded ${locations.length} valid geofences from official routes.`);
           geofencingService.loadGeofences(locations)
         }
 
@@ -66,7 +65,7 @@ export function useGeofencing(
     }
 
     loadGeofences()
-  }, [supabase])
+  }, [])
 
   // Verificar posición cuando cambia la ubicación
   const checkPosition = useCallback((lat: number, lon: number) => {

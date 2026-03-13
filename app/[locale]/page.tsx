@@ -24,6 +24,7 @@ import { useTranslations } from "next-intl";
 
 
 export default function Home() {
+  console.log("🚀 Geocontent App Version: v1.0.2 - Branch: i18n-implementacio");
   const t_geo = useTranslations('geofencing');
   const t_splash = useTranslations('splash');
   const [currentScreen, setCurrentScreen] = useState("splash");
@@ -231,6 +232,10 @@ export default function Home() {
 
   return (
     <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
+      {/* DEBUG BANNER - REMOVE AFTER VERIFICATION */}
+      <div className="bg-red-600 text-white text-[10px] py-1 text-center font-bold z-[9999]">
+        APP VERSION v1.0.2 - I18N & GEOFENCE FIXED
+      </div>
       {showBottomNav && (
         <Header 
           onNavigate={handleNavigate} 
