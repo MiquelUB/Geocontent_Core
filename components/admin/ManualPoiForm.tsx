@@ -326,6 +326,9 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Latitud</Label>
+              <Input type="number" step="0.000001" value={latitude} onChange={(e) => setHeading(e.target.value)} // Wait header loading?
+              // Actual code uses setLatitude directly
+              />
               <Input type="number" step="0.000001" value={latitude} onChange={(e) => setLatitude(e.target.value)} required />
             </div>
             <div className="grid gap-2">
@@ -395,6 +398,97 @@ export default function ManualPoiForm({ poi, onSave, onCancel, isLoading, routes
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="pt-6 border-t border-stone-100 space-y-4">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 font-bold text-stone-800">
+            <span>🤖</span> Repte de Quiz (IA)
+          </Label>
+          {manualQuiz && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setManualQuiz(null)}
+              className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              Eliminar Quiz
+            </Button>
+          )}
+        </div>
+
+        {manualQuiz ? (
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 space-y-3">
+            <div>
+              <Label className="text-xs text-stone-500">Pregunta:</Label>
+              <Input 
+                value={manualQuiz.pregunta || ''} 
+                onChange={e => setManualQuiz({...manualQuiz, pregunta: e.target.value})}
+                className="bg-white text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {manualQuiz.opcions?.map((opt: string, idx: number) => (
+                <div key={idx} className={`space-y-1 p-2 rounded-lg border ${idx === manualQuiz.correcta ? 'border-green-300 bg-green-50' : 'border-stone-200 bg-white'}`}>
+                  <Label className="text-[10px] text-stone-400">Opció {String.fromCharCode(65+idx)} {idx === manualQuiz.correcta && "✓"}</Label>
+                  <Input 
+                    value={opt} 
+                    onChange={e => {
+                      const newOpts = [...manualQuiz.opcions];
+                      newOpts[idx] = e.target.value;
+                      setManualQuiz({...manualQuiz, opcions: newOpts});
+                    }}
+                    className="h-8 text-xs bg-white"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`w-full h-6 text-[10px] mt-1 ${idx === manualQuiz.correcta ? 'text-green-600 font-bold' : 'text-stone-400'}`}
+                    onClick={() => setManualQuiz({...manualQuiz, correcta: idx})}
+                  >
+                    {idx === manualQuiz.correcta ? 'Correcta' : 'Marcar Correcta'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-stone-400 italic">Aquest punt no té cap quiz assignat.</p>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isGeneratingQuiz || !textContent || !title}
+          onClick={async () => {
+            setIsGeneratingQuiz(true);
+            try {
+              const res = await fetch('/api/ai/generate-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content: textContent, type: poiType })
+              });
+              const data = await res.json();
+              if (data.success && data.quiz) {
+                setManualQuiz(data.quiz);
+              } else {
+                alert(data.error || "No s'ha pogut generar el quiz");
+              }
+            } catch (e) {
+              console.error("Error generant quiz:", e);
+              alert("Error de connexió");
+            } finally {
+              setIsGeneratingQuiz(false);
+            }
+          }}
+          className="w-full text-xs"
+        >
+          {isGeneratingQuiz ? 'Generant...' : (manualQuiz ? 'Regenerar Quiz amb IA' : 'Generar Quiz amb IA')}
+        </Button>
+        {!textContent && <p className="text-[10px] text-amber-600">⚠️ Cal omplir el 'Text Històric' per generar el quiz.</p>}
       </div>
 
       <div className="space-y-4 pt-4 border-t border-stone-100">
