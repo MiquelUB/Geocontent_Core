@@ -33,7 +33,7 @@ const typeToIconName: Record<string, string> = {
 };
 
 function getPoiIconSrc(poi: any, globalBiome?: string) {
-  const category = globalBiome || (poi.parentRoute?.category || poi.category || 'mountain').toLowerCase();
+  const category = (poi.parentRoute?.category || poi.category || globalBiome || 'mountain').toLowerCase();
   const biome = BIOME_MAP[category] || BIOME_MAP['mountain'];
 
   if (poi.icon) {
@@ -101,15 +101,14 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
   const tCommon = useTranslations('common');
   const locale = useLocale();
   
-  // Use a sensible default if location is not yet available for first render (e.g. Sort center)
-  const defaultLoc = { latitude: 42.4140, longitude: 0.9870 };
-  const currentLoc = userLocation || defaultLoc;
-
   const [nearbyPois, setNearbyPois] = useState<any[]>([]);
   const [mapPois, setMapPois] = useState<any[]>([]);
   const [brand, setBrand] = useState<any>(propBrand);
 
   useEffect(() => {
+    const defaultLoc = { latitude: 42.4140, longitude: 0.9870 };
+    const currentLoc = userLocation || defaultLoc;
+
     async function fetchData() {
       const [legendsData, brandData] = await Promise.all([
         getLegends(),
@@ -148,7 +147,6 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
 
         const validPois = allPois.filter(p => typeof p.latitude === 'number' && typeof p.longitude === 'number');
 
-        // Deduplicate for the map
         const uniquePoisMap = new Map();
         validPois.forEach(p => {
           if (!uniquePoisMap.has(p.id)) {
@@ -157,7 +155,6 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
         });
         const uniqueMapPois = Array.from(uniquePoisMap.values());
 
-        // Sort by distance and take top 3 for the list
         const sortedPois = [...uniqueMapPois]
           .sort((a, b) => a.distanceRaw - b.distanceRaw)
           .slice(0, 3);
@@ -167,11 +164,13 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
       }
     }
     fetchData();
-  }, [currentLoc, propBrand, t]);
+  }, [userLocation, propBrand, t]);
+
+  const defaultLoc = { latitude: 42.4140, longitude: 0.9870 };
+  const currentLoc = userLocation || defaultLoc;
 
   return (
     <div className="screen bg-background">
-      {/* Header amb logo */}
 
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
@@ -183,7 +182,8 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
           <MapLibreMap center={[currentLoc.longitude, currentLoc.latitude]} zoom={12}>
             <MapBoundsFitter pois={mapPois.length > 0 ? mapPois : nearbyPois} userLoc={userLocation} />
             {mapPois.map((p, idx) => (
-              <Marker key={`p-${idx}-${p.id}`} longitude={p.longitude} latitude={p.latitude} anchor="bottom">
+              <Marker key={`p-${idx}-${p.id}`} longitude=
+              {p.longitude} latitude={p.latitude} anchor="bottom">
                 <div className="flex flex-col items-center pointer-events-none">
                   {(() => {
                     const iconSrc = getPoiIconSrc(p, brand?.themeId);
@@ -220,14 +220,12 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
           </MapLibreMap>
         </div>
 
-        {/* Overlay per fer-lo clicable cap al mapa full */}
         <div
           className="absolute inset-0 z-10 cursor-pointer pointer-events-auto"
           onClick={() => onNavigate('map')}
         ></div>
 
 
-        {/* Etiqueta zona */}
         <div className="absolute bottom-4 left-4 bg-primary/95 backdrop-blur-sm rounded-lg px-3 py-2 z-20 flex items-center space-x-2 border border-white/10 shadow-lg">
           {geoError ? (
             <>
@@ -258,8 +256,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
         </div>
       </motion.div>
 
-      {/* Llegendes properes */}
-      <div className="p-4 pb-20"> {/* pb-20 per deixar espai al bottom nav */}
+      <div className="p-4 pb-20"> 
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
