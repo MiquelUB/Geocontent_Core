@@ -139,7 +139,7 @@ export function HomeScreen({ onNavigate, onOpenHelp, brand: propBrand, userLocat
                 ),
                 image: poi.image_url || l.image_url,
                 rating: l.rating || 4.5,
-                location: l.location_name || t('defaultLocationName'),
+                location: getLocalizedContent(l, 'location_name', locale) || t('defaultLocationName'),
               });
             });
           }

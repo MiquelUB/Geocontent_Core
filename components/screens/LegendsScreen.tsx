@@ -88,7 +88,7 @@ export function LegendsScreen({ onNavigate, onOpenHelp, brand: propBrand }: Lege
             if (data) {
                 const mapped = data.map((l: any) => ({
                     ...l,
-                    location: l.location_name || '',
+                    location: getLocalizedContent(l, 'location_name', locale) || '',
                     coordinates: { lat: l.latitude, lng: l.longitude },
                     image: l.image_url,
                     hero: l.hero_image_url,

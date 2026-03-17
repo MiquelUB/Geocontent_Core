@@ -202,6 +202,7 @@ export async function getAdminLegends() {
 function mapRoute(route: any) {
   const firstPoi = route.routePois?.[0]?.poi;
   const pois = route.routePois?.map((rp: any) => ({
+    ...rp.poi,
     id: rp.poi.id,
     title: rp.poi.title,
     description: rp.poi.description || '',
@@ -225,6 +226,7 @@ function mapRoute(route: any) {
     userUnlocks: rp.poi.userUnlocks || [],
     routeId: route.id,
   })) ?? [];
+
 
   const muniName = (route.municipality?.name || route.municipality_name || '').replace(/^Ajuntament de /i, '');
   const title = route.title || route.name || route.slug || 'Sense Títol';
@@ -375,6 +377,12 @@ export async function updateRoute(id: string, formData: FormData) {
 
     revalidatePath('/admin');
     revalidatePath('/');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('route', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error("updateRoute Error:", err);
@@ -434,6 +442,12 @@ export async function createRoute(formData: FormData) {
 
     revalidatePath('/admin');
     revalidatePath('/');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('route', id).catch(console.error);
+    });
+
     return { success: true, id };
   } catch (err: any) {
     console.error("createRoute Error:", err);
@@ -562,6 +576,12 @@ export async function createPoi(formData: FormData) {
     });
 
     revalidatePath('/admin');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('poi', result.id).catch(console.error);
+    });
+
     return { success: true, id: result.id };
   } catch (err: any) {
     console.error('[createPoi error]', err);
@@ -658,6 +678,12 @@ export async function updatePoi(id: string, formData: FormData) {
     });
 
     revalidatePath('/admin');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('poi', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error('[updatePoi error]', err);
@@ -730,6 +756,12 @@ export async function updateLegend(id: string, formData: FormData) {
 
     revalidatePath('/admin');
     revalidatePath('/');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('route', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -744,6 +776,12 @@ export async function deleteLegend(id: string) {
     });
     revalidatePath('/admin');
     revalidatePath('/');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('route', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -761,6 +799,12 @@ export async function addPoiToRoute(routeId: string, poiId: string, orderIndex: 
       data: { routeId, poiId, orderIndex }
     });
     revalidatePath('/admin');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('poi', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -774,6 +818,12 @@ export async function removePoiFromRoute(routeId: string, poiId: string) {
       where: { routeId_poiId: { routeId, poiId } }
     });
     revalidatePath('/admin');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('poi', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -792,6 +842,12 @@ export async function reorderRoutePois(routeId: string, poiIds: string[]) {
       )
     );
     revalidatePath('/admin');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('poi', id).catch(console.error);
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -1483,6 +1539,11 @@ export async function updateMunicipality(id: string, name: string, logoUrl?: str
 
     revalidatePath('/admin');
     revalidatePath('/');
+
+    // Traducció automàtica silenciosa en segon pla
+    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
+      autoTranslateAction('route', id).catch(console.error);
+    });
 
     return response;
   } catch (err: any) {
