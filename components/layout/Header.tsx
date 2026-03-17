@@ -23,7 +23,7 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
     router.push('/login')
   }
 
-  const isInterior = brand?.themeId === 'interior';
+  const isInterior = brand?.themeId?.toLowerCase() === 'interior';
   const textColor = isInterior ? 'text-[#2F1B0C]' : 'text-white';
   const iconColor = isInterior ? 'text-[#2F1B0C]' : 'text-white';
   const subtextColor = isInterior ? 'text-[#2F1B0C]/60' : 'text-white/60';
@@ -32,11 +32,10 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
 
   return (
     <header 
-      className="relative w-full bg-primary bg-cover bg-center bg-no-repeat shrink-0 z-[60] shadow-md"
+      className="relative w-full shrink-0 z-[60] shadow-md"
       style={{
-        backgroundImage: 'url(/header_sin_iconos.png)',
+        backgroundImage: `linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent, var(--primary))))`,
         height: '90px',
-        backgroundColor: 'var(--primary)', // Fallback visible color
       }}
     >
       <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between">

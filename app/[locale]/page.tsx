@@ -75,7 +75,7 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [brand, setBrand] = useState<any>(null);
 
-  const themeId = brand?.themeId || 'mountain';
+  const themeId = brand?.themeId?.toLowerCase() || 'mountain';
   const theme = ChameleonThemesFallback[themeId] || ChameleonThemesFallback.mountain;
 
   const themeStyles = {

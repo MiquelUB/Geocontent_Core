@@ -1,0 +1,2 @@
+﻿lib\actions.ts:1482:export const getAppBranding = cache(async () => {
+lib\actions.ts:1483:  logToFile('getAppBranding called (raw SQL mode)');

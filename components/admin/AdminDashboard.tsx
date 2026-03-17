@@ -48,11 +48,18 @@ export default function AdminDashboard({
   brand?: any
 }) {
   const router = useRouter();
-  const adminTheme = getAdminTheme(municipalityTheme);
+  const [brand, setBrand] = useState<any>(initialBrand);
+  const adminTheme = getAdminTheme(brand?.themeId || municipalityTheme);
   const [activeTab, setActiveTab] = useState<'rutes' | 'usuaris' | 'executiu' | 'config'>('rutes');
   const [isLoading, setIsLoading] = useState(false);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [brand, setBrand] = useState<any>(initialBrand);
+
+  // 🔄 Sync state with initialBrand when server re-renders (router.refresh())
+  useEffect(() => {
+    if (initialBrand) {
+      setBrand(initialBrand);
+    }
+  }, [initialBrand]);
 
   // States per a la creació de Ruta (Carpeta/Legend)
   const [routeTitle, setRouteTitle] = useState('');
