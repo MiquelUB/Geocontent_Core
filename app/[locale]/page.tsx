@@ -20,6 +20,51 @@ import { geofencingService } from "@/lib/services/geofencing-service";
 import { toast } from "sonner"; // Assuming sonner is available or similar toast
 import { useTranslations } from "next-intl";
 
+function hexToHsl(hex: string) {
+  if (!hex || typeof hex !== 'string') return "0 0% 0%";
+
+  let r = 0, g = 0, b = 0;
+  const cleanHex = hex.startsWith('#') ? hex : `#${hex}`;
+
+  if (cleanHex.length === 4) {
+    r = parseInt(cleanHex[1] + cleanHex[1], 16);
+    g = parseInt(cleanHex[2] + cleanHex[2], 16);
+    r = parseInt(cleanHex[1], 16) * 17; // Properly expansion
+    g = parseInt(cleanHex[2], 16) * 17;
+    b = parseInt(cleanHex[3], 16) * 17;
+  } else if (cleanHex.length === 7) {
+    r = parseInt(cleanHex.substring(1, 3), 16);
+    g = parseInt(cleanHex.substring(3, 5), 16);
+    b = parseInt(cleanHex.substring(5, 7), 16);
+  } else {
+    return "0 0% 0%";
+  }
+
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+const ChameleonThemesFallback: any = {
+  mountain: { primary: "#4A5D23", accent: "#BC5D36", bg: "#F9F7F2" },
+  coast: { primary: "#1B6B93", accent: "#F4D160", bg: "#F5F5F0" },
+  city: { primary: "#2C3E50", accent: "#E74C3C", bg: "#ECEFF1" },
+  interior: { primary: "#8B6914", accent: "#A0522D", bg: "#FFF8DC" },
+  bloom: { primary: "#C2185B", accent: "#FF6F91", bg: "#FFF0F5" },
+};
+
 
 
 
@@ -31,6 +76,15 @@ export default function Home() {
   const [navigationData, setNavigationData] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [brand, setBrand] = useState<any>(null);
+
+  const themeId = brand?.themeId || 'mountain';
+  const theme = ChameleonThemesFallback[themeId] || ChameleonThemesFallback.mountain;
+
+  const themeStyles = {
+    '--primary': hexToHsl(theme.primary),
+    '--accent': hexToHsl(theme.accent),
+    '--background': hexToHsl(theme.bg),
+  } as React.CSSProperties;
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [errorType, setErrorType] = useState<"no-connection" | "gps-denied" | "general" | null>(null);
@@ -217,7 +271,7 @@ export default function Home() {
       case "legends":
         return <LegendsScreen onNavigate={handleNavigate} onOpenHelp={reopenOnboarding} brand={brand} />;
       case "legend-detail":
-        return <LegendDetailScreen legend={navigationData} onNavigate={handleNavigate} userLocation={location} currentUser={currentUser} onUserUpdate={handleUserUpdate} />;
+        return <LegendDetailScreen legend={navigationData} onNavigate={handleNavigate} brand={brand} userLocation={location} currentUser={currentUser} onUserUpdate={handleUserUpdate} />;
       case "map":
         return <MapScreen onNavigate={handleNavigate} focusLegend={navigationData} brand={brand} userLocation={location} onOpenHelp={reopenOnboarding} />;
 
@@ -243,7 +297,7 @@ export default function Home() {
 
 
   return (
-    <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col">
+    <div className="mobile-app bg-background text-foreground h-screen w-full flex flex-col" style={themeStyles}>
       {showBottomNav && (
         <Header 
           onNavigate={handleNavigate} 

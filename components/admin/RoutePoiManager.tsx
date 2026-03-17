@@ -165,14 +165,33 @@ export default function RoutePoiManager({ routeId, routeName, onClose, onEditPoi
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-2">
             <Trophy className="w-3 h-3" /> Repte Final (Generat per IA)
           </p>
-          <p className="text-xs font-bold text-stone-800">{finalQuiz.pregunta}</p>
-          <div className="grid grid-cols-2 gap-1 mt-1">
-            {finalQuiz.opcions.map((o: string, idx: number) => (
-              <div key={idx} className={`text-[10px] p-2 rounded border ${idx === finalQuiz.correcta ? 'border-green-200 bg-green-50 text-green-700' : 'border-stone-200 bg-white text-stone-500'}`}>
-                {o}
+          {finalQuiz.preguntes ? (
+            <div className="space-y-3">
+              {finalQuiz.preguntes.map((q: any, i: number) => (
+                <div key={i} className="border-b border-stone-200 pb-2 last:border-0 last:pb-0">
+                  <p className="text-xs font-bold text-stone-800">{i + 1}. {q.pregunta}</p>
+                  <div className="grid grid-cols-2 gap-1 mt-1">
+                    {q.opcions?.map((o: string, idx: number) => (
+                      <div key={idx} className={`text-[10px] p-1.5 rounded border ${idx === q.correcta ? 'border-green-200 bg-green-50 text-green-700 font-bold' : 'border-stone-200 bg-white text-stone-500'}`}>
+                        {o} {idx === q.correcta && "✓"}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <p className="text-xs font-bold text-stone-800">{finalQuiz.pregunta}</p>
+              <div className="grid grid-cols-2 gap-1 mt-1">
+                {finalQuiz.opcions?.map((o: string, idx: number) => (
+                  <div key={idx} className={`text-[10px] p-1.5 rounded border ${idx === finalQuiz.correcta ? 'border-green-200 bg-green-50 text-green-700 font-bold' : 'border-stone-200 bg-white text-stone-500'}`}>
+                    {o} {idx === finalQuiz.correcta && "✓"}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       )}
 
