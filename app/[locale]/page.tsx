@@ -27,8 +27,6 @@ function hexToHsl(hex: string) {
   const cleanHex = hex.startsWith('#') ? hex : `#${hex}`;
 
   if (cleanHex.length === 4) {
-    r = parseInt(cleanHex[1] + cleanHex[1], 16);
-    g = parseInt(cleanHex[2] + cleanHex[2], 16);
     r = parseInt(cleanHex[1], 16) * 17; // Properly expansion
     g = parseInt(cleanHex[2], 16) * 17;
     b = parseInt(cleanHex[3], 16) * 17;
@@ -162,6 +160,7 @@ export default function Home() {
           }
           // Clean URL params
           window.history.replaceState({}, '', '/');
+          window.location.reload(); // Force full reload to apply theme styles properly
         } else {
           // Check for persisted user session with VALIDATION
           const savedUserString = localStorage.getItem("core_user");

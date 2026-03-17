@@ -310,10 +310,10 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             <div className={`prose prose-lg prose-stone max-w-none leading-relaxed font-serif transition-all duration-1000 z-10 relative ${isUnlocked ? 'text-foreground/90' : 'text-stone-300 blur-[8px] select-none scale-[0.98]'}`}>
               {isUnlocked ? (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="z-10 relative"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="z-10 relative"
                 >
                   <p className="first-letter:text-5xl first-letter:font-serif first-letter:font-bold first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-[-8px]">
                     {safeLegend.textContent || safeLegend.description}
@@ -334,10 +334,10 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                       </div>
 
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handlePlayAudio}
-                        className="hover:bg-white/20 rounded-full h-12 w-12"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handlePlayAudio}
+                          className="hover:bg-white/20 rounded-full h-12 w-12"
                       >
                         {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
                       </Button>
@@ -363,9 +363,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
             {!isUnlocked && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-background/40 backdrop-blur-[2px] rounded-3xl z-20">
                 <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                  className="w-20 h-20 bg-white/80 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 flex items-center justify-center text-primary mb-6 ring-8 ring-primary/5"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                    className="w-20 h-20 bg-white/80 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 flex items-center justify-center text-primary mb-6 ring-8 ring-primary/5"
                 >
                   <Lock className="w-8 h-8" />
                 </motion.div>
@@ -397,16 +397,16 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {safeLegend.videoUrls.map((videoUrl: string, idx: number) => {
-                  const variant = videoVariants[idx];
+                  const variant = videoMetadata.variants?.[idx];
                   const lowResSrc = variant?.lowResUrl || undefined;
                   return (
                     <div key={idx} className={`relative ${!isUnlocked ? 'aspect-video' : ''} rounded-2xl overflow-hidden shadow-xl border border-white/20 bg-black`}>
                       {isUnlocked ? (
                         <HlsVideoPlayer
-                          src={videoUrl.endsWith('.m3u8') ? videoUrl : videoUrl}
-                          lowBitrateSrc={lowResSrc}
-                          muted={false}
-                          className="w-full"
+                            src={videoUrl.endsWith('.m3u8') ? videoUrl : videoUrl}
+                            lowBitrateSrc={lowResSrc}
+                            muted={false}
+                            className="w-full"
                         />
                       ) : (
                         <div className="w-full h-full min-h-[200px] bg-stone-900/5 backdrop-blur-md flex flex-col items-center justify-center gap-4 text-stone-400 relative">
@@ -433,8 +433,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               {isUnlocked ? (
                 <div className="aspect-[4/5] sm:aspect-[4/3] md:aspect-video w-full relative">
                   <ImageSlider
-                    images={(safeLegend.carouselImages?.length > 0 ? safeLegend.carouselImages : safeLegend.images).map(proxifyUrl)}
-                    isRecapture={safeLegend.is_recapture}
+                      images={(safeLegend.carouselImages?.length > 0 ? safeLegend.carouselImages : safeLegend.images).map(proxifyUrl)}
+                      isRecapture={safeLegend.is_recapture}
                   />
                 </div>
               ) : (
@@ -543,8 +543,8 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
                     </div>
                   ) : (
                     <Button
-                      className="w-full py-8 text-xl font-serif rounded-3xl shadow-xl hover:shadow-2xl transition-all"
-                      onClick={() => setShowFinalQuiz(true)}
+                        className="w-full py-8 text-xl font-serif rounded-3xl shadow-xl hover:shadow-2xl transition-all"
+                        onClick={() => setShowFinalQuiz(true)}
                     >
                       <Trophy className="w-6 h-6 mr-3 text-yellow-400" />
                       {t('startFinalChallenge')}
@@ -556,16 +556,16 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
               {showFinalQuiz && (
                 <div className="mt-6">
                   <FinalRouteQuiz
-                    routeId={safeLegend.id}
-                    userId={currentUser?.id}
-                    pois={safeLegend.pois}
-                    finalQuiz={safeLegend.finalQuiz}
-                    isAlreadyCompleted={finalQuizPassed}
-                    onComplete={(res?: any) => {
-                      if (res?.success && res.user && onUserUpdate) {
-                        onUserUpdate(res.user);
-                      }
-                    }}
+                      routeId={safeLegend.id}
+                      userId={currentUser?.id}
+                      pois={safeLegend.pois}
+                      finalQuiz={safeLegend.finalQuiz}
+                      isAlreadyCompleted={finalQuizPassed}
+                      onComplete={(res?: any) => {
+                        if (res?.success && res.user && onUserUpdate) {
+                          onUserUpdate(res.user);
+                        }
+                      }}
                   />
                 </div>
               )}
@@ -576,15 +576,15 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
           {isUnlocked && safeLegend.manualQuiz && (
             <div className="pt-2">
               <PoiQuiz
-                poiId={safeLegend.id}
-                userId={currentUser?.id}
-                quiz={safeLegend.manualQuiz}
-                onComplete={(res) => {
-                  if (res?.success && res.user && onUserUpdate) {
-                    onUserUpdate(res.user);
-                  }
-                }}
-                isAlreadyCompleted={!isMasterAdmin && safeLegend.userUnlocks.some((u: any) => u.userId === currentUser?.id && u.progress >= 1.0)}
+                  poiId={safeLegend.id}
+                  userId={currentUser?.id}
+                  quiz={safeLegend.manualQuiz}
+                  onComplete={(res) => {
+                    if (res?.success && res.user && onUserUpdate) {
+                      onUserUpdate(res.user);
+                    }
+                  }}
+                  isAlreadyCompleted={!isMasterAdmin && safeLegend.userUnlocks.some((u: any) => u.userId === currentUser?.id && u.progress >= 1.0)}
               />
             </div>
           )}
@@ -605,9 +605,9 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
 
         <div className="pb-8">
           <Button
-            variant="outline"
-            className="w-full py-6 border-primary text-primary hover:bg-primary/5 font-serif text-lg"
-            onClick={() => onNavigate('map', safeLegend)}
+              variant="outline"
+              className="w-full py-6 border-primary text-primary hover:bg-primary/5 font-serif text-lg"
+              onClick={() => onNavigate('map', safeLegend)}
           >
             <MapPin className="w-5 h-5 mr-2" />
             {t('viewOnMap')}

@@ -34,22 +34,17 @@ const typeToIconName: Record<string, string> = {
 };
 
 function getPoiIconSrc(poi: any, globalBiome?: string) {
-  // Ens assegurem que el bioma estigui normalitzat (lowercase)
-  const category = globalBiome || (poi.category || 'mountain').toLowerCase();
+  const category = (poi.category || globalBiome || 'mountain').toLowerCase();
   const biome = BIOME_MAP[category] || BIOME_MAP['mountain']; // Fallback a Montanya si no trobem el bioma
 
-  // Si el POI ja té una icona definida a la base de dades
   if (poi.icon) {
-    // Netegem el nom de l'icona (només el nom del fitxer sense extensió) i forcem .webp
     const baseName = poi.icon.split('.')[0];
     return `/icons/${biome}/${baseName}.webp`;
   }
 
-  // Si no té icona, provem de mapar segons el 'type'
   const type = (poi.type || '').toUpperCase();
   const mappedName = typeToIconName[type] || 'punt_interest';
 
-  // Verifiquem si el fitxer existeix al mapping
   const availableFiles = (iconsMapping as any)[biome] || [];
   const finalIcon = availableFiles.find((f: string) =>
     f.toLowerCase().startsWith(mappedName.toLowerCase())
@@ -66,7 +61,6 @@ interface MapScreenProps {
   userLocation: { latitude: number; longitude: number } | null;
   error?: string | null;
 }
-
 
 export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLocation, error: geoError }: MapScreenProps) {
   const t = useTranslations('map');
@@ -107,7 +101,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
         }));
         setLegends(mapped);
 
-        // Extract individual routes for filtering
         const chips = [
           { id: "all", label: t('all'), color: biomeColor },
           ...mapped.map(l => ({
@@ -122,9 +115,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     fetchData();
   }, [locale, t, brand]);
 
-  // Gestió intel·ligent del reposicionament del mapa
   useEffect(() => {
-    // Cas 1: Atenció a una llegenda específica (ex: venim del botó "Veure al Mapa" d'un POI)
     if (focusLegend) {
       setViewState({
         longitude: focusLegend.coordinates?.lng ?? focusLegend.longitude ?? 0.9870,
@@ -132,9 +123,8 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
         zoom: 14
       });
       setSelectedLegend(focusLegend);
-      setHasInitialPosition(true); // Evitem que el GPS sobrescrigui aquest focus
+      setHasInitialPosition(true);
     }
-    // Cas 2: Posicionament inicial per GPS
     else if (userLocation && !hasInitialPosition) {
       setViewState({
         longitude: userLocation.longitude,
@@ -149,14 +139,12 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
     ? legends
     : legends.filter(legend => legend.id === selectedRoute);
 
-  // Generem una llista plana de tots els POIs de les rutes filtrades per mostrar al mapa
   const allMapPoints = filteredLegends.flatMap(legend =>
     legend.pois.map((poi: any) => ({
       ...poi,
-      // Normalitzem pel popup i detall
       routeId: legend.id,
       routeName: getLocalizedContent(legend, 'title', locale),
-      category: legend.category, // El bioma de la ruta
+      category: legend.category, 
       location: legend.location,
       image: poi.image_url || legend.image,
       audioUrl: poi.audioUrl || poi.audio || poi.audio_url || legend.audio || legend.audio_url || '',
@@ -167,9 +155,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
 
   return (
     <div className="screen-full bg-background flex flex-col h-full">
-      {/* Header */}
 
-        {/* Filtres de categoria (positioned over map or below global header) */}
         <div className="bg-primary/80 backdrop-blur-sm p-3 z-20">
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             {filterChips.map((chip) => {
@@ -195,7 +181,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
             })}
           </div>
 
-          {/* GPS Status Badge */}
           <div className="flex mt-1 items-center space-x-2">
             {geoError ? (
               <>
@@ -216,7 +201,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
           </div>
         </div>
 
-      {/* Mapa principal */}
       <div className="relative w-full h-full bg-gray-100">
         <MapLibreMap
           center={
@@ -227,7 +211,7 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
               ]
               : (userLocation ? [userLocation.longitude, userLocation.latitude] : [0.9870, 42.4140])
           }
-          zoom={selectedLegend ? 14 : 10} // Closer zoom for specific legend
+          zoom={selectedLegend ? 14 : 10} 
           userLocation={userLocation}
         >
 
@@ -275,9 +259,6 @@ export function MapScreen({ onNavigate, onOpenHelp, focusLegend, brand, userLoca
           ))}
         </MapLibreMap>
 
-
-
-        {/* Popup de llegenda seleccionada */}
         {selectedLegend && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
