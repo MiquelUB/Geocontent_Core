@@ -136,14 +136,23 @@ export function LegendDetailScreen({ legend, onNavigate, brand, userLocation, cu
     }
     return url;
   }
+  const [isAdminSession, setIsAdminSession] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsAdminSession(sessionStorage.getItem('admin_master_unlocked') === 'true');
+    }
+  }, []);
+
+  // Is Route if safeLegend has pois inside
   const isRoute = !!(safeLegend.pois && safeLegend.pois.length > 0);
   const isAlreadyVisited = !!(currentUser?.id && safeLegend.userUnlocks?.some((u: any) => (u.userId || u.user_id) === currentUser.id));
 
   // Si té routeId, és un POI dins d'una ruta. Si no el té però té pois, és el contenidor (overview) de la ruta.
   const isRouteContainer = isRoute && !safeLegend.routeId && !safeLegend.poiId;
 
-  // Master Admin bypass: Can see everything if role is admin or superadmin master name
-  const isMasterAdmin = currentUser?.role === 'admin' || currentUser?.username === 'mistic_master' || currentUser?.email === 'mistic_master';
+  // Master Admin bypass: Can see everything if role is admin or superadmin master name OR admin_master_unlocked in session
+  const isMasterAdmin = currentUser?.role === 'admin' || currentUser?.username === 'mistic_master' || currentUser?.email === 'mistic_master' || isAdminSession;
 
   // Normalitzem l'URL de l'àudio (pot venir com 'audioUrl', 'audio' o 'audio_url' depenent de l'origen)
   const effectiveAudioUrl = safeLegend.audioUrl || safeLegend.audio || safeLegend.audio_url;

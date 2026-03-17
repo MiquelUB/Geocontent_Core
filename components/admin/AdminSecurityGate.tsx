@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Lock, Loader2 } from "lucide-react";
 
 interface AdminSecurityGateProps {
-    onSuccess: () => void;
+    onSuccess: (password: string) => void;
     title: string;
     description: string;
     verifyFn: (password: string) => Promise<{ success: boolean; error?: string }>;
@@ -27,7 +27,7 @@ export default function AdminSecurityGate({ onSuccess, title, description, verif
         try {
             const result = await verifyFn(password);
             if (result.success) {
-                onSuccess();
+                onSuccess(password);
             } else {
                 setError(result.error || 'Contrasenya incorrecta');
             }
