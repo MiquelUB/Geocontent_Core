@@ -34,7 +34,7 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
     <header 
       className="relative w-full shrink-0 z-[60] shadow-md"
       style={{
-        backgroundImage: `linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent, var(--primary))))`,
+        backgroundColor: `hsl(var(--primary))`,
         height: '90px',
       }}
     >
