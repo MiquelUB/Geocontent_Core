@@ -57,9 +57,7 @@ export function SplashScreen({ onComplete, brand }: SplashScreenProps) {
               {brand?.logoUrl ? (
                 <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain p-4" />
               ) : (
-                <span className="text-3xl font-serif font-bold text-primary">
-                  {brand?.name?.[0] || PxxConfig.appName[0]}
-                </span>
+                <img src="/logo_web.png" alt="Logo default" className="w-full h-full object-contain p-4" />
               )}
             </motion.div>
           </div>

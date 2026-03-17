@@ -91,7 +91,7 @@ export function ProfileScreen({ onNavigate, currentUser, onUserUpdate }: Profile
                                 <img
                                     alt="Profile picture"
                                     className="w-full h-full object-cover rounded-full"
-                                    src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=250&auto=format&fit=crop"}
+                                    src={currentUser?.avatarUrl || "/logo_web.png"}
                                 />
                             )}
                         </div>

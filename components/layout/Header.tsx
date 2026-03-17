@@ -45,9 +45,7 @@ export default function Header({ visitedCount = 0, unvisitedCount = 0, nearbyCou
             {brand?.logoUrl ? (
               <img src={brand.logoUrl} alt="Logo" className="w-full h-full object-contain" />
             ) : (
-              <span className={`text-xl font-serif font-bold ${textColor}`}>
-                {brand?.name?.[0] || 'X'}
-              </span>
+              <img src="/logo_web.png" alt="Logo de defecte" className="w-full h-full object-contain p-1" />
             )}
           </div>
           
