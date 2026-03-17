@@ -19,7 +19,6 @@ import { useGeofencing } from "@/lib/hooks/useGeofencing";
 import { geofencingService } from "@/lib/services/geofencing-service";
 import { toast } from "sonner"; // Assuming sonner is available or similar toast
 import { useTranslations } from "next-intl";
-import { PxxConfig } from "@/projects/active/config";
 
 function hexToHsl(hex: string) {
   if (!hex || typeof hex !== 'string') return "0 0% 0%";
@@ -28,9 +27,9 @@ function hexToHsl(hex: string) {
   const cleanHex = hex.startsWith('#') ? hex : `#${hex}`;
 
   if (cleanHex.length === 4) {
-    r = parseInt(cleanHex[1] + cleanHex[1], 16);
-    g = parseInt(cleanHex[2] + cleanHex[2], 16);
-    b = parseInt(cleanHex[3] + cleanHex[3], 16);
+    r = parseInt(cleanHex[1], 16) * 17; // Properly expansion
+    g = parseInt(cleanHex[2], 16) * 17;
+    b = parseInt(cleanHex[3], 16) * 17;
   } else if (cleanHex.length === 7) {
     r = parseInt(cleanHex.substring(1, 3), 16);
     g = parseInt(cleanHex.substring(3, 5), 16);
@@ -56,6 +55,14 @@ function hexToHsl(hex: string) {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+const ChameleonThemesFallback: any = {
+  mountain: { primary: "#4A5D23", accent: "#BC5D36", bg: "#F9F7F2" },
+  coast: { primary: "#1B6B93", accent: "#F4D160", bg: "#F5F5F0" },
+  city: { primary: "#2C3E50", accent: "#E74C3C", bg: "#ECEFF1" },
+  interior: { primary: "#8B6914", accent: "#A0522D", bg: "#FFF8DC" },
+  bloom: { primary: "#C2185B", accent: "#FF6F91", bg: "#FFF0F5" },
+};
+
 
 
 
@@ -69,7 +76,7 @@ export default function Home() {
   const [brand, setBrand] = useState<any>(null);
 
   const themeId = brand?.themeId || 'mountain';
-  const theme = (PxxConfig.chameleonThemes as any)[themeId] || PxxConfig.chameleonThemes.mountain;
+  const theme = ChameleonThemesFallback[themeId] || ChameleonThemesFallback.mountain;
 
   const themeStyles = {
     '--primary': hexToHsl(theme.primary),
@@ -153,6 +160,7 @@ export default function Home() {
           }
           // Clean URL params
           window.history.replaceState({}, '', '/');
+          window.location.reload(); // Force full reload to apply theme styles properly
         } else {
           // Check for persisted user session with VALIDATION
           const savedUserString = localStorage.getItem("core_user");
