@@ -1,17 +1,18 @@
-const fs = require('fs');
-const path = 'lib/ai-actions.ts';
-let content = fs.readFileSync(path, 'utf-8');
+import os
 
-const index = content.indexOf('export async function autoTranslateAction');
-if (index !== -1) {
-    content = content.substring(0, index);
-}
+path = 'lib/ai-actions.ts'
+with open(path, 'r', encoding='utf-8') as f:
+    content = f.read()
 
-content = content.trim() + `\n\nexport async function autoTranslateAction(type: 'route' | 'poi', id: string) {
+index = content.find('export async function autoTranslateAction')
+if index != -1:
+    content = content[:index]
+
+extra_code = """
+
+export async function autoTranslateAction(type: 'route' | 'poi', id: string) {
   try {
     const { prisma } = await import('./database/prisma');
-    const OpenAI = (await import('openai')).default;
-
     const OpenAI = (await import('openai')).default;
 
     const openai = new OpenAI({
@@ -31,21 +32,18 @@ content = content.trim() + `\n\nexport async function autoTranslateAction(type: 
       payload = { name: route.name, description: route.description };
     }
 
-    const systemPrompt = \`
+    const systemPrompt = `
       Ets un expert en traducció de continguts turístics. Tradueix les claus d'aquest contingut al Castellà (es), Anglès (en) i Francès (fr).
       ESTRICTES NORMES:
       1. Mantén el to narratiu del territori.
       2. Noms propis de municipis, rius i muntanyes NO es tradueixen jamai (ex: Gerri de la Sal).
       3. Mantén EXACTAMENT el mateix format JSON de claus que el d'entrada, i a dins un diccionari amb les ISO 'es', 'en', 'fr'.
       Exemple sortida: { "title": { "es": "...", "en": "...", "fr": "..." } }
-    \`;
+    `;
 
     const completion = await openai.chat.completions.create({
       model: "qwen/qwen-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(payload) }
-      ],
+      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: JSON.stringify(payload) }],
       response_format: { type: "json_object" },
       temperature: 0.1,
     });
@@ -55,26 +53,22 @@ content = content.trim() + `\n\nexport async function autoTranslateAction(type: 
     if (type === 'poi') {
       await prisma.poi.update({
         where: { id },
-        data: {
-          titleTranslations: res.title || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { titleTranslations: res.title || {}, descriptionTranslations: res.description || {} }
       });
     } else {
       await prisma.route.update({
         where: { id },
-        data: {
-          nameTranslations: res.name || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { nameTranslations: res.name || {}, descriptionTranslations: res.description || {} }
       });
     }
-    console.log(\`[autoTranslateAction] Success for \${type} (\${id})\`);
+    console.log(`[autoTranslateAction] Success for ${type} (${id})`);
   } catch (err) {
-    console.error(\`[autoTranslateAction] Error en \${type} \${id}:\`, err);
+    console.error(`[autoTranslateAction] Error en ${type} ${id}:`, err);
   }
 }
-\`;
+"""
 
-fs.writeFileSync(path, content, 'utf-8');
-console.log("Fixed!");
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(content.strip() + extra_code)
+
+print("Fixed!")

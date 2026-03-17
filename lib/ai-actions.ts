@@ -182,10 +182,7 @@ export async function autoTranslateAction(type: 'route' | 'poi', id: string) {
 
     const completion = await openai.chat.completions.create({
       model: "qwen/qwen-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(payload) }
-      ],
+      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: JSON.stringify(payload) }],
       response_format: { type: "json_object" },
       temperature: 0.1,
     });
@@ -195,18 +192,12 @@ export async function autoTranslateAction(type: 'route' | 'poi', id: string) {
     if (type === 'poi') {
       await prisma.poi.update({
         where: { id },
-        data: {
-          titleTranslations: res.title || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { titleTranslations: res.title || {}, descriptionTranslations: res.description || {} }
       });
     } else {
       await prisma.route.update({
         where: { id },
-        data: {
-          nameTranslations: res.name || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { nameTranslations: res.name || {}, descriptionTranslations: res.description || {} }
       });
     }
     console.log(`[autoTranslateAction] Success for ${type} (${id})`);
@@ -214,6 +205,3 @@ export async function autoTranslateAction(type: 'route' | 'poi', id: string) {
     console.error(`[autoTranslateAction] Error en ${type} ${id}:`, err);
   }
 }
-
-
-

@@ -1,17 +1,13 @@
 const fs = require('fs');
-const path = 'lib/ai-actions.ts';
-let content = fs.readFileSync(path, 'utf-8');
-
+const content = fs.readFileSync('lib/ai-actions.ts', 'utf-8');
 const index = content.indexOf('export async function autoTranslateAction');
-if (index !== -1) {
-    content = content.substring(0, index);
-}
+const cleanContent = index !== -1 ? content.substring(0, index).trim() : content.trim();
 
-content = content.trim() + `\n\nexport async function autoTranslateAction(type: 'route' | 'poi', id: string) {
+const extraCode = `
+
+export async function autoTranslateAction(type: 'route' | 'poi', id: string) {
   try {
     const { prisma } = await import('./database/prisma');
-    const OpenAI = (await import('openai')).default;
-
     const OpenAI = (await import('openai')).default;
 
     const openai = new OpenAI({
@@ -42,10 +38,7 @@ content = content.trim() + `\n\nexport async function autoTranslateAction(type: 
 
     const completion = await openai.chat.completions.create({
       model: "qwen/qwen-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(payload) }
-      ],
+      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: JSON.stringify(payload) }],
       response_format: { type: "json_object" },
       temperature: 0.1,
     });
@@ -55,18 +48,12 @@ content = content.trim() + `\n\nexport async function autoTranslateAction(type: 
     if (type === 'poi') {
       await prisma.poi.update({
         where: { id },
-        data: {
-          titleTranslations: res.title || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { titleTranslations: res.title || {}, descriptionTranslations: res.description || {} }
       });
     } else {
       await prisma.route.update({
         where: { id },
-        data: {
-          nameTranslations: res.name || {},
-          descriptionTranslations: res.description || {}
-        }
+        data: { nameTranslations: res.name || {}, descriptionTranslations: res.description || {} }
       });
     }
     console.log(\`[autoTranslateAction] Success for \${type} (\${id})\`);
@@ -76,5 +63,5 @@ content = content.trim() + `\n\nexport async function autoTranslateAction(type: 
 }
 \`;
 
-fs.writeFileSync(path, content, 'utf-8');
+fs.writeFileSync('lib/ai-actions.ts', cleanContent + extraCode);
 console.log("Fixed!");

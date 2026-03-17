@@ -13,8 +13,8 @@ export function getLocalizedContent(row: any, field: string, locale: string): st
   const columnLocalized = row[`${field}_${locale}`];
   if (columnLocalized !== undefined && columnLocalized !== null) return columnLocalized;
 
-  // 2. Intentar objecte JSONB de traduccions (estil flexible: title_translations)
-  const translations = row[`${field}_translations`];
+  // 2. Intentar objecte JSONB de traduccions (estil flexible: title_translations o titleTranslations)
+  const translations = row[`${field}_translations`] || row[`${field}Translations` || `${field}Translation` ];
   if (translations && typeof translations === 'object') {
     const jsonLocalized = translations[locale];
     if (jsonLocalized) return jsonLocalized;
