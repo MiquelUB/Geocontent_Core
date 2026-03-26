@@ -190,6 +190,25 @@ export default function AdminDashboard({
     }
   }
 
+  async function handleDeleteRoute(id: string) {
+    if (!confirm('Estàs segur que vols esborrar aquesta ruta? Aquesta acció no es pot desfer.')) return;
+    setIsLoading(true);
+    try {
+      const res = await deleteLegend(id);
+      if (res.success) {
+        alert('Ruta esborrada correctament.');
+        const updated = await getAdminLegends();
+        setLegends(updated as any);
+      } else {
+        alert("Error: " + res.error);
+      }
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function handleSavePoi(formData: FormData) {
     setIsLoading(true);
     try {
@@ -534,6 +553,14 @@ export default function AdminDashboard({
                               }}
                             >
                               Gestionar Punts
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDeleteRoute(legend.id)}
+                            >
+                              Borrar
                             </Button>
                           </td>
                         </tr>

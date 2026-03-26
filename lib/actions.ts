@@ -777,11 +777,6 @@ export async function deleteLegend(id: string) {
     revalidatePath('/admin');
     revalidatePath('/');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('route', id).catch(console.error);
-    });
-
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -798,13 +793,6 @@ export async function addPoiToRoute(routeId: string, poiId: string, orderIndex: 
     await prisma.routePoi.create({
       data: { routeId, poiId, orderIndex }
     });
-    revalidatePath('/admin');
-
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('poi', id).catch(console.error);
-    });
-
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -817,13 +805,6 @@ export async function removePoiFromRoute(routeId: string, poiId: string) {
     await prisma.routePoi.delete({
       where: { routeId_poiId: { routeId, poiId } }
     });
-    revalidatePath('/admin');
-
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('poi', id).catch(console.error);
-    });
-
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -841,13 +822,6 @@ export async function reorderRoutePois(routeId: string, poiIds: string[]) {
         })
       )
     );
-    revalidatePath('/admin');
-
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('poi', id).catch(console.error);
-    });
-
     return { success: true };
   } catch (err: any) {
     console.error(err);
