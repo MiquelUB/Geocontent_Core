@@ -192,7 +192,7 @@ export default function FinalRouteQuiz({ routeId, userId, pois, finalQuiz, onCom
                             variant="outline"
                             disabled={isCorrect !== null}
                             onClick={() => handleAnswer(idx)}
-                            className={`justify-start text-sm h-auto py-4 px-5 text-left font-sans transition-all border-stone-200 rounded-2xl ${selectedOption === idx
+                            className={`justify-start text-sm h-auto py-4 px-5 text-left font-sans transition-all border-stone-200 rounded-2xl whitespace-normal min-h-[64px] ${selectedOption === idx
                                 ? (isCorrect ? 'bg-green-50 border-green-500 text-green-700 font-bold ring-4 ring-green-100' : 'bg-red-50 border-red-500 text-red-700 ring-4 ring-red-100')
                                 : 'hover:border-primary/50 hover:bg-stone-50'
                                 }`}

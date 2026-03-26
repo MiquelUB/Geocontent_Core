@@ -78,7 +78,7 @@ export default function PoiQuiz({ poiId, userId, quiz, onComplete, isAlreadyComp
                         variant="outline"
                         disabled={isCorrect !== null}
                         onClick={() => handleAnswer(idx)}
-                        className={`justify-start text-xs h-auto py-3 px-4 text-left font-sans transition-all border-stone-200 ${selectedOption === idx
+                        className={`justify-start text-xs h-auto py-3 px-4 text-left font-sans transition-all border-stone-200 whitespace-normal min-h-[52px] ${selectedOption === idx
                             ? (isCorrect ? 'bg-green-50 border-green-500 text-green-700 font-bold ring-2 ring-green-100' : 'bg-red-50 border-red-500 text-red-700 ring-2 ring-red-100')
                             : 'hover:border-primary/50 hover:bg-stone-50'
                             }`}

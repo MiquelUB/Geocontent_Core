@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
-import { Play, Pause, Volume2, VolumeX, Zap, HardDrive, Signal, WifiOff } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Zap, HardDrive, Signal, WifiOff, Maximize, Minimize } from 'lucide-react';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useVideoCache } from '@/hooks/useVideoCache';
 
@@ -40,8 +40,10 @@ export default function HlsVideoPlayer({
   onSourceChange,
 }: HlsVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(muted);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeSource, setActiveSource] = useState<VideoSource>('offline');
@@ -212,6 +214,27 @@ export default function HlsVideoPlayer({
     }
   };
 
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   // Source indicator config
   const sourceIndicator = {
     hls: { icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/20', label: 'HQ Streaming' },
@@ -224,13 +247,13 @@ export default function HlsVideoPlayer({
   const IndicatorIcon = indicator.icon;
 
   return (
-    <div className={`relative group overflow-hidden rounded-xl bg-black ${className}`}>
+    <div ref={containerRef} className={`relative group overflow-hidden rounded-xl bg-black ${className}`}>
       <video
         ref={videoRef}
         poster={poster}
         muted={isMuted}
         playsInline
-        className="w-full h-auto max-h-[80vh] object-contain"
+        className={`w-full h-auto ${isFullscreen ? 'h-full max-h-screen' : 'max-h-[80vh]'} object-contain`}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
@@ -280,6 +303,9 @@ export default function HlsVideoPlayer({
           </button>
           <button onClick={() => setIsMuted(!isMuted)} className="text-white hover:text-terracotta-400 transition-colors">
             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+          <button onClick={toggleFullscreen} className="text-white hover:text-terracotta-400 transition-colors ml-4">
+            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
           </button>
         </div>
       </div>
