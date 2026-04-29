@@ -33,7 +33,7 @@ function createPrismaClient(): PrismaClient {
     max: process.env.NODE_ENV === 'development' ? 1 : 10,
     idleTimeoutMillis: 30000
   });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg(pool as any);
 
   const client = new PrismaClient({
     adapter,

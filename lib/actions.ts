@@ -915,7 +915,8 @@ export async function loginOrRegister(name: string, email: string) {
     }
 
     const existingAuthUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-    const isSuperAdmin = name === 'PXX' || email === 'PXX@projectexinoxano.cat' || name === 'mistic_master' || email === 'mistic_master';
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+    const isSuperAdmin = Boolean(superAdminEmail && email.toLowerCase() === superAdminEmail.toLowerCase());
 
     if (existingAuthUser) {
       // User exists, just ensure profile table is in sync
@@ -1004,7 +1005,8 @@ export async function loginAsVisitor(name: string, email: string) {
 
     // Obtenim/Creem el perfil a la taula pública
     let profile = await getUserProfile(finalUserId);
-    const isSuperAdmin = name === 'PXX' || email === 'PXX@projectexinoxano.cat' || name === 'mistic_master' || email === 'mistic_master';
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+    const isSuperAdmin = Boolean(superAdminEmail && email.toLowerCase() === superAdminEmail.toLowerCase());
 
     if (isSuperAdmin && profile && profile.role !== 'admin') {
       await supabaseAdmin.from('profiles').update({ role: 'admin' }).eq('id', finalUserId);
@@ -1021,14 +1023,9 @@ export async function loginAsVisitor(name: string, email: string) {
 
 export async function verifyAdminPassword(municipalityId: string, password: string) {
   try {
-    if (!password) {
-      return { success: false, error: "La clau és requerida" };
-    }
-    // Superadmin or Audit bypass
-    const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'antigravity_master_2026';
-    if (password === superPassword || password === 'mistic_master' || password === 'mistic_master_audit') {
-      return { success: true };
-    }
+    if (!password) return { success: false, error: "La clau és requerida" };
+    const superPassword = process.env.SUPER_ADMIN_PASSWORD;
+    if (superPassword && password === superPassword) return { success: true };
 
     const muni = await prisma.municipality.findUnique({
       where: { id: municipalityId },
@@ -1047,9 +1044,9 @@ export async function verifyAdminPassword(municipalityId: string, password: stri
 }
 
 export async function verifySuperAdminPassword(password: string) {
-  // Super Admin password for Miquel
-  const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'antigravity_master_2026';
-  return { success: password === superPassword || password === 'mistic_master' };
+  const superPassword = process.env.SUPER_ADMIN_PASSWORD;
+  if (!superPassword) { console.error("[CRÍTIC] SUPER_ADMIN_PASSWORD no configurada."); return { success: false, error: "Error de configuració" }; }
+  return { success: password === superPassword };
 }
 
 export async function getUserProfile(userId: string) {
@@ -1531,12 +1528,8 @@ export async function elevateToAdmin(userId: string, password?: string) {
   try {
     if (!userId || !password) return { success: false, error: "Dades incompletes" };
 
-    const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'antigravity_master_2026';
-    const isMaster = password === superPassword || password === 'mistic_master' || password === 'mistic_master_audit';
-
-    if (!isMaster) {
-      return { success: false, error: "Contrasenya mestra incorrecta" };
-    }
+    const superPassword = process.env.SUPER_ADMIN_PASSWORD;
+    if (!superPassword || password !== superPassword) return { success: false, error: "Contrasenya mestra incorrecta o sistema no configurat" };
 
     const supabaseAdmin = (await import('@/lib/database/supabase/server')).getSupabaseAdmin();
     
