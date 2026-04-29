@@ -3,7 +3,7 @@ const createNextIntlPlugin = require("next-intl/plugin");
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig = {
-  serverExternalPackages: ["pdf-parse", "puppeteer"],
+  serverExternalPackages: ["pdf-parse", "puppeteer", "bullmq"],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
