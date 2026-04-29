@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["partialIndexes", "postgresqlExtensions", "multiSchema"]
+  previewFeatures = ["partialIndexes", "postgresqlExtensions"]
   binaryTargets   = ["native"]
   engineType      = "library"
 }
