@@ -464,6 +464,8 @@ model Municipality {
   themeId           String?  @default("mountain") @map("theme_id")
   adminMasterPassword String?  @map("admin_master_password")
   extraRoutesCount   Int      @default(0) @map("extra_routes_count")
+  lastPublishedAt    DateTime? @map("last_published_at") @db.Timestamptz(6)
+  packagingStatus    String    @default("IDLE") @map("packaging_status")
   reports          Report[]
   routes           Route[]
   users            User[]

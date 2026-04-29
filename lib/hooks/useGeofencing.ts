@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { geofencingService, Location, GeofenceEvent } from '@/lib/services/geofencing-service'
 import { createClient } from '@/lib/database/supabase/client'
 import { circle } from '@turf/turf'
-import { getLegends } from "@/lib/actions"
+import { getLegends } from "@/lib/actions/content";
 
 interface UseGeofencingReturn {
   activeGeofences: Location[]

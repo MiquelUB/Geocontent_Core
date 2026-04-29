@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { Search, Filter, MapPin, Star, Calendar, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
-import { getLegends } from "@/lib/actions";
+import { getLegends } from "@/lib/actions/content";
 
 interface PallarsLegendsScreenProps {
   onNavigate: (screen: string, data?: any) => void;

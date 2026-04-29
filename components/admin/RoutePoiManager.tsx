@@ -3,22 +3,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getRouteWithPois, addPoiToRoute, removePoiFromRoute, closeRouteAndGenerateFinalQuiz } from '@/lib/actions';
+import { getRouteWithPois, addPoiToRoute, removePoiFromRoute, closeRouteAndGenerateFinalQuiz } from '@/lib/actions/content';
 import { CheckCircle2, Trophy, Loader2, MapPin, Trash2, RefreshCw, Pencil } from 'lucide-react';
 
 interface Poi {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   latitude: number;
   longitude: number;
-  appThumbnail?: string;
-  header16x9?: string;
-  audioUrl?: string;
-  videoUrls?: string[];
-  textContent?: string;
-  carouselImages?: string[];
+  appThumbnail?: string | null;
+  header16x9?: string | null;
+  audioUrl?: string | null;
+  videoUrls?: string[] | null | any;
+  textContent?: string | null;
+  carouselImages?: string[] | null | any;
   orderIndex?: number;
+  manualQuiz?: any;
 }
 
 interface RoutePoiManagerProps {

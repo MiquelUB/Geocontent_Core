@@ -5,7 +5,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
 import MapboxMap from "../map/MapboxMap";
 import { Marker } from "react-map-gl/mapbox";
-import { getLegends } from "@/lib/actions";
+import { getLegends } from "@/lib/actions/content";
 import { calculateDistance } from "@/lib/location";
 
 interface PallarsHomeScreenProps {

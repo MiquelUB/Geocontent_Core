@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { updateMunicipality, getUserProfile } from '@/lib/actions';
+import { updateMunicipality } from '@/lib/actions';
+import { getUserProfile } from '@/lib/actions/auth';
 import { createClient } from '@/lib/database/supabase/server';
 import { cookies } from 'next/headers';
 

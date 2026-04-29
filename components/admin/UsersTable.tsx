@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getUserVisits } from "@/lib/actions";
+import { getUserVisits } from "@/lib/actions/gamification";
 import { Download as DownloadIcon } from "lucide-react";
 
 interface UserProfile {

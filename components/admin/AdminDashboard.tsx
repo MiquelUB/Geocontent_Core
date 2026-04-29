@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from "lucide-react";
-import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, verifyAdminPassword, verifySuperAdminPassword, getAllProfiles } from "@/lib/actions";
+import { verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions/auth";
+import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, getAllProfiles } from "@/lib/actions/content";
 import { getReports } from "@/lib/actions/reports";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ import ManualPoiForm from "./ManualPoiForm";
 import RoutePoiManager from "./RoutePoiManager";
 import MunicipalityManager from "./MunicipalityManager";
 import AdminSecurityGate from "./AdminSecurityGate";
+import { PublishChangesButton } from "./PublishChangesButton";
 
 interface Legend {
   id: string;
