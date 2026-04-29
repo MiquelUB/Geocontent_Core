@@ -44,6 +44,9 @@ export async function generateTerritorialPackage(municipalityId: string) {
         ]
       : [0.15, 40.5, 3.3, 42.9];
 
+    const offlineRoutes: OfflineRoute[] = muni.routes.map(route => {
+      const pois: OfflinePoi[] = route.routePois.map(rp => {
+        const p = rp.poi;
         // Consolidació de totes les URLs d'actius per al CacheManager del mòbil
         const mediaUrls = [
           p.appThumbnail,
@@ -58,18 +61,18 @@ export async function generateTerritorialPackage(municipalityId: string) {
           latitude: p.latitude ?? 0,
           longitude: p.longitude ?? 0,
           // Fallback al català si les traduccions no estan poblades
-          title: (p.titleTranslations as any) || { ca: p.title },
+          title: (p.titleTranslations as Record<string, string>) || { ca: p.title },
           icon: p.icon || 'map-pin',
           mediaUrls,
-          quiz: p.manualQuiz
+          quiz: p.manualQuiz as OfflinePoi['quiz']
         };
       });
 
       return {
         id: route.id,
         slug: route.slug,
-        title: (route.nameTranslations as any) || { ca: route.name || '' },
-        description: (route.descriptionTranslations as any) || { ca: route.description || '' },
+        title: (route.nameTranslations as Record<string, string>) || { ca: route.name || '' },
+        description: (route.descriptionTranslations as Record<string, string>) || { ca: route.description || '' },
         estimatedTime: 0, // Placeholder: Futur càlcul basat en waypoints
         distance: 0,      // Placeholder: Futur càlcul basat en track
         pois
@@ -112,9 +115,12 @@ export async function generateTerritorialPackage(municipalityId: string) {
     if (error) throw error;
 
     // Actualitzar la data de publicació per al control de deltes
-    await prisma.municipality.update({
+    await (prisma.municipality as any).update({
       where: { id: municipalityId },
-      data: { lastPublishedAt: new Date() }
+      data: { 
+        lastPublishedAt: new Date(),
+        packagingStatus: 'IDLE'
+      }
     });
 
     revalidatePath('/admin');
@@ -153,7 +159,7 @@ export async function queueTerritorialPackageAction(municipalityId: string) {
  */
 export async function checkPendingChanges(municipalityId: string) {
   try {
-    const muni = await prisma.municipality.findUnique({
+    const muni = await (prisma.municipality as any).findUnique({
       where: { id: municipalityId },
       select: { lastPublishedAt: true }
     });
@@ -197,7 +203,7 @@ export async function checkPendingChanges(municipalityId: string) {
  */
 export async function getPackagingStatus(municipalityId: string) {
   try {
-    const muni = await prisma.municipality.findUnique({
+    const muni = await (prisma.municipality as any).findUnique({
       where: { id: municipalityId },
       select: { 
         packagingStatus: true,
@@ -205,9 +211,10 @@ export async function getPackagingStatus(municipalityId: string) {
       }
     });
 
-    return {
-      status: muni?.packagingStatus || 'IDLE',
-      lastPublishedAt: muni?.lastPublishedAt
+    if (!muni) return { status: 'IDLE' };
+    return { 
+      status: (muni.packagingStatus || 'IDLE') as 'IDLE' | 'PROCESSING' | 'ERROR',
+      lastSync: muni.lastPublishedAt 
     };
   } catch (err) {
     console.error("[getPackagingStatus]", err);

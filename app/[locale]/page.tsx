@@ -14,7 +14,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { SimpleLogin } from "@/components/auth/SimpleLogin";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { getAppBranding } from "@/lib/actions/content";
+import { getAppBranding } from "@/lib/actions/queries";
 import { recordVisit } from "@/lib/actions/gamification";
 import { useGeofencing } from "@/lib/hooks/useGeofencing";
 import { geofencingService } from "@/lib/services/geofencing-service";
@@ -283,6 +283,7 @@ export default function Home() {
             type={errorType || "general"}
             onRetry={handleRetry}
             onNavigate={handleNavigate}
+            brand={brand}
           />
         );
       default:

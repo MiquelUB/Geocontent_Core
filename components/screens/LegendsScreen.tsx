@@ -3,7 +3,7 @@ import { MapPin, Bookmark, Heart, SlidersHorizontal, BarChart, Mountain, HelpCir
 import { Button } from "../ui/button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { motion } from "motion/react";
-import { getLegends, getAppBranding } from "@/lib/actions/content";
+import { getLegends, getAppBranding } from "@/lib/actions/queries";
 import { PxxConfig } from "@/projects/active/config";
 import { downloadTerritorialPackage, isRouteCached, SyncProgress } from "@/lib/services/sync-service";
 import { CheckCircle2, Download, Loader2, AlertCircle } from "lucide-react";

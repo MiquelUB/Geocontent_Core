@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["partialIndexes", "postgresqlExtensions"]
+  previewFeatures = ["partialIndexes", "postgresqlExtensions", "multiSchema"]
   binaryTargets   = ["native"]
   engineType      = "library"
 }
@@ -380,15 +380,15 @@ model auth_users {
   id                          String                 @id @db.Uuid
   aud                         String?                @db.VarChar(255)
   role                        String?                @db.VarChar(255)
-  email                       String?                @unique @db.VarChar(255)
+  email                       String?                @unique(map: "users_email_partial_key") @db.VarChar(255)
   encrypted_password          String?                @db.VarChar(255)
   email_confirmed_at          DateTime?              @db.Timestamptz(6)
   invited_at                  DateTime?              @db.Timestamptz(6)
-  confirmation_token          String?                @unique @db.VarChar(255)
+  confirmation_token          String?                @unique(map: "confirmation_token_idx") @db.VarChar(255)
   confirmation_sent_at        DateTime?              @db.Timestamptz(6)
-  recovery_token              String?                @unique @db.VarChar(255)
+  recovery_token              String?                @unique(map: "recovery_token_idx") @db.VarChar(255)
   recovery_sent_at            DateTime?              @db.Timestamptz(6)
-  email_change_token_new      String?                @unique @db.VarChar(255)
+  email_change_token_new      String?                @unique(map: "email_change_token_new_idx") @db.VarChar(255)
   email_change                String?                @db.VarChar(255)
   email_change_sent_at        DateTime?              @db.Timestamptz(6)
   last_sign_in_at             DateTime?              @db.Timestamptz(6)
@@ -403,10 +403,10 @@ model auth_users {
   phone_change_token          String?                @default("") @db.VarChar(255)
   phone_change_sent_at        DateTime?              @db.Timestamptz(6)
   confirmed_at                DateTime?              @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
-  email_change_token_current  String?                @unique @default("") @db.VarChar(255)
+  email_change_token_current  String?                @unique(map: "email_change_token_current_idx") @default("") @db.VarChar(255)
   email_change_confirm_status Int?                   @default(0) @db.SmallInt
   banned_until                DateTime?              @db.Timestamptz(6)
-  reauthentication_token      String?                @unique @default("") @db.VarChar(255)
+  reauthentication_token      String?                @unique(map: "reauthentication_token_idx") @default("") @db.VarChar(255)
   reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
   is_sso_user                 Boolean                @default(false)
   deleted_at                  DateTime?              @db.Timestamptz(6)
@@ -417,6 +417,8 @@ model auth_users {
   oauth_consents              oauth_consents[]
   one_time_tokens             one_time_tokens[]
   sessions                    sessions[]
+  webauthn_challenges         webauthn_challenges[]
+  webauthn_credentials        webauthn_credentials[]
   profiles                    Profile?
 
   @@index([instance_id])
@@ -453,22 +455,22 @@ model ExecutiveReportSnapshot {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Municipality {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name             String
-  slug             String   @unique
-  nameTranslations Json     @default("{}") @map("name_translations")
-  logoUrl          String?  @map("logo_url")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  planTier           String   @default("basic") @map("plan_tier")
-  themeId           String?  @default("mountain") @map("theme_id")
-  adminMasterPassword String?  @map("admin_master_password")
-  extraRoutesCount   Int      @default(0) @map("extra_routes_count")
-  lastPublishedAt    DateTime? @map("last_published_at") @db.Timestamptz(6)
-  packagingStatus    String    @default("IDLE") @map("packaging_status")
-  reports          Report[]
-  routes           Route[]
-  users            User[]
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String
+  slug                String    @unique
+  nameTranslations    Json      @default("{}") @map("name_translations")
+  logoUrl             String?   @map("logo_url")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  planTier            String    @default("basic") @map("plan_tier")
+  themeId             String?   @default("mountain") @map("theme_id")
+  adminMasterPassword String?   @map("admin_master_password")
+  extraRoutesCount    Int?      @default(0) @map("extra_routes_count")
+  lastPublishedAt     DateTime? @map("last_published_at") @db.Timestamptz(6)
+  packagingStatus     String    @default("IDLE") @map("packaging_status")
+  reports             Report[]
+  routes              Route[]
+  users               User[]
 
   @@map("municipalities")
   @@schema("public")
@@ -500,7 +502,6 @@ model PoiVisits {
   durationSeconds Int?      @map("duration_seconds")
   rating          Int?      @default(0)
   poi             Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
-  user            User?     @relation(fields: [userId], references: [id])
 
   @@index([poiId])
   @@index([userId])
@@ -553,16 +554,15 @@ model Poi {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id                String              @id @db.Uuid
-  updatedAt         DateTime?           @map("updated_at") @db.Timestamptz(6)
-  username          String?             @unique
-  avatarUrl         String?             @map("avatar_url")
-  role              String?             @default("user")
-  xp                Int?                @default(0)
-  level             Int?                @default(1)
-  user              auth_users          @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  userUnlocks       UserUnlock[]
-  userRouteProgress UserRouteProgress[]
+  id          String       @id @db.Uuid
+  updatedAt   DateTime?    @map("updated_at") @db.Timestamptz(6)
+  username    String?      @unique
+  avatarUrl   String?      @map("avatar_url")
+  role        String?      @default("user")
+  xp          Int?         @default(0)
+  level       Int?         @default(1)
+  user        auth_users   @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userUnlocks UserUnlock[]
 
   @@map("profiles")
   @@schema("public")
@@ -676,7 +676,6 @@ model UserRouteProgress {
   completedAt     DateTime? @map("completed_at") @db.Timestamptz(6)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   route           Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  user            Profile   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "user_route_progress_profile_fk")
 
   @@unique([userId, routeId])
   @@map("user_route_progress")
@@ -694,7 +693,6 @@ model User {
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   municipalityId String?       @map("municipality_id") @db.Uuid
   organizationId String?       @map("organization_id") @db.Uuid
-  poiVisits      PoiVisits[]
   municipality   Municipality? @relation(fields: [municipalityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_municipality_fk")
   organizations  Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -733,6 +731,42 @@ model custom_oauth_providers {
   @@index([enabled])
   @@index([identifier])
   @@index([provider_type])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model webauthn_challenges {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String?     @db.Uuid
+  challenge_type String
+  session_data   Json
+  created_at     DateTime    @default(now()) @db.Timestamptz(6)
+  expires_at     DateTime    @db.Timestamptz(6)
+  users          auth_users? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+model webauthn_credentials {
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String     @db.Uuid
+  credential_id    Bytes      @unique
+  public_key       Bytes
+  attestation_type String     @default("")
+  aaguid           String?    @db.Uuid
+  sign_count       BigInt     @default(0)
+  transports       Json       @default("[]")
+  backup_eligible  Boolean    @default(false)
+  backed_up        Boolean    @default(false)
+  friendly_name    String     @default("")
+  created_at       DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime   @default(now()) @db.Timestamptz(6)
+  last_used_at     DateTime?  @db.Timestamptz(6)
+  users            auth_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
   @@schema("auth")
 }
 

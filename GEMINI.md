@@ -50,7 +50,8 @@ Llegeix AQUEST document abans d'iniciar o proposar qualsevol canvi arquitectòni
 
 ## 📅 Estat de la Missió (Auditoria de Seguretat)
 - **Fase P0 (Completada):** Eliminació de backdoors, protecció d'APIs d'admin, middleware guardrail.
-- **Fase P1 (En curs):** Remediació de Prompt Injection i fugues d'errors a la IA.
+- **Fase P1 (Completada):** Remediació de Prompt Injection i fugues d'errors a la IA.
+- **Fase P2 (Completada):** Desacoblament de lògica servidora (queries de base de dades i Prisma) dels Client Components usant Server Action Wrappers per garantir un build de producció net i evitar fuites en el bundle Webpack.
 
 **CONFIRMACIÓ:** Comença sempre confirmant: *"He revisat el GEMINI.md i validaré que el meu codi compleixi l'arquitectura PXX"*.
 

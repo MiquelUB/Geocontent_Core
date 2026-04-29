@@ -2,22 +2,21 @@
 
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
 import { prisma } from "../database/prisma";
-import { v4 as uuidv4 } from 'uuid';
+
 import { z } from 'zod';
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
 import { generatePoiQuiz, generateFinalRouteQuiz } from '../services/openrouter';
 import { checkPlanLimits, canAddPoiToRoute } from '../planLimits';
 import { GENERIC_ERROR_MESSAGE } from '@/lib/errors';
 import { uploadFile } from './storage';
+import { autoTranslateAction } from './ai';
+import { getDefaultMunicipalityId, getRouteWithPois as _getRouteWithPois } from '../services/queries';
 
-function logToFile(msg: string) {
-  try {
-    const logPath = path.join(os.tmpdir(), 'geocontent-server-debug.log');
-    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${msg}\n`);
-  } catch (e) { }
+// Server Action Wrapper per a Client Components
+export async function getRouteWithPois(routeId: string) {
+  return _getRouteWithPois(routeId);
 }
+
+
 
 // --- Validació de Dades (Zod) ---
 
@@ -69,194 +68,16 @@ export async function getOrCreateMunicipalityByName(name: string): Promise<strin
   return created.id;
 }
 
-export async function getDefaultMunicipalityId(): Promise<string | null> {
-  try {
-    const municipality = await prisma.municipality.findFirst({
-      orderBy: { createdAt: 'asc' },
-      select: { id: true }
-    });
-    return municipality?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
-export async function getDefaultMunicipalityTheme(): Promise<string> {
-  try {
-    const municipality = await prisma.municipality.findFirst({ select: { themeId: true } });
-    return (municipality as any)?.themeId || 'mountain';
-  } catch {
-    return 'mountain';
-  }
-}
 
-export async function getMunicipalities() {
-  noStore();
-  try {
-    return await prisma.municipality.findMany({
-      orderBy: { name: 'asc' }
-    });
-  } catch (err) {
-    console.error('Error fetching municipalities:', err);
-    return [];
-  }
-}
+import { updateMunicipalityInternal } from '../services/municipality-service';
 
 export async function updateMunicipality(id: string, name: string, logoUrl?: string, themeId?: string, adminMasterPassword?: string, planTier?: string, extraRoutesCount?: number) {
-  logToFile(`updateMunicipality called (v2): ${id}, ${name}, ${themeId}, ${planTier}, extra: ${extraRoutesCount}`);
-
-  if (!id) return { success: false, error: "ID missing" };
-
-  try {
-    await prisma.municipality.update({
-      where: { id },
-      data: {
-        name,
-        logoUrl: logoUrl || undefined,
-        themeId: themeId || undefined,
-        adminMasterPassword: adminMasterPassword || undefined,
-        planTier: planTier || undefined,
-        extraRoutesCount: extraRoutesCount !== undefined ? extraRoutesCount : undefined,
-        updatedAt: new Date()
-      }
-    });
-
-    revalidatePath('/admin');
-    revalidatePath('/');
-
-    return { success: true };
-  } catch (err: any) {
-    console.error('updateMunicipality FATAL ERROR:', err);
-    return { success: false, error: GENERIC_ERROR_MESSAGE };
-  }
+  return updateMunicipalityInternal(id, name, logoUrl, themeId, adminMasterPassword, planTier, extraRoutesCount);
 }
 
-export async function getAppBranding() {
-  noStore();
-  try {
-    const m = await prisma.municipality.findFirst({
-      orderBy: { createdAt: 'asc' }
-    });
-    return m;
-  } catch (e) {
-    return null;
-  }
-}
 
 // --- Funcions de Contingut (Rutes i POIs) ---
-
-function mapRoute(route: any) {
-  const firstPoi = route.routePois?.[0]?.poi;
-  const pois = route.routePois?.map((rp: any) => ({
-    ...rp.poi,
-    id: rp.poi.id,
-    title: rp.poi.title,
-    description: rp.poi.description || '',
-    latitude: rp.poi.latitude,
-    longitude: rp.poi.longitude,
-    image_url: rp.poi.appThumbnail || rp.poi.images?.[0] || '',
-    orderIndex: rp.orderIndex ?? 0,
-    icon: rp.poi.icon || null,
-    textContent: rp.poi.textContent || '',
-    audioUrl: rp.poi.audioUrl || '',
-    videoUrls: rp.poi.videoUrls || [],
-    carouselImages: rp.poi.carouselImages || [],
-    header16x9: rp.poi.header16x9 || '',
-    is_recapture: rp.poi.isRecapture || false,
-    appThumbnail: rp.poi.appThumbnail || '',
-    images: rp.poi.images || [],
-    videoMetadata: rp.poi.videoMetadata || {},
-    manualQuiz: rp.poi.manualQuiz,
-    type: rp.poi.type,
-    userUnlocks: rp.poi.userUnlocks || [],
-    routeId: route.id,
-  })) ?? [];
-
-  const muniName = (route.municipality?.name || route.municipality_name || '').replace(/^Ajuntament de /i, '');
-  const title = route.title || route.name || route.slug || 'Sense Títol';
-
-  return {
-    id: route.id,
-    title: title,
-    description: route.description || '',
-    category: route.themeId || '',
-    location_name: muniName || route.location_name || '',
-    latitude: firstPoi?.latitude ?? 0,
-    longitude: firstPoi?.longitude ?? 0,
-    image_url: route.thumbnail1x1 || firstPoi?.appThumbnail || firstPoi?.images?.[0] || '',
-    hero_image_url: route.thumbnail1x1 || firstPoi?.header16x9 || '',
-    audio_url: '',
-    video_url: '',
-    icon: firstPoi?.icon || null,
-    is_active: true,
-    poiCount: pois.length,
-    pois,
-    thumbnail1x1: route.thumbnail1x1 || '',
-    downloadRequired: route.downloadRequired || false,
-    textContent: '',
-    videoUrls: [],
-    carouselImages: [],
-    header16x9: '',
-    images: [],
-    manualQuiz: null,
-    userUnlocks: [],
-    finalQuiz: route.finalQuiz || null,
-  };
-}
-
-export async function getLegends() {
-  noStore();
-  try {
-    const routes = await prisma.route.findMany({
-      where: {
-        routePois: { some: {} }
-      },
-      include: {
-        municipality: { select: { name: true } },
-        routePois: {
-          include: {
-            poi: {
-              include: { userUnlocks: true }
-            }
-          },
-          orderBy: { orderIndex: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' }
-    });
-
-    const mapped = routes.map(r => mapRoute(r));
-    return mapped;
-  } catch (err: any) {
-    console.error(" [Error in getLegends]:", err);
-    return [];
-  }
-}
-
-export async function getAdminLegends() {
-  noStore();
-  try {
-    const routes = await prisma.route.findMany({
-      include: {
-        municipality: { select: { name: true } },
-        routePois: {
-          include: {
-            poi: {
-              include: { userUnlocks: true }
-            }
-          },
-          orderBy: { orderIndex: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' }
-    });
-
-    return routes.map(r => mapRoute(r));
-  } catch (err: any) {
-    console.error(" [Error in getAdminLegends]:", err);
-    return [];
-  }
-}
 
 export async function createLegend(formData: FormData) {
   try {
@@ -363,7 +184,7 @@ export async function createRoute(formData: FormData) {
       };
     }
 
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') + '-' + id.split('-')[0];
 
     await prisma.route.create({
@@ -385,10 +206,15 @@ export async function createRoute(formData: FormData) {
     revalidatePath('/admin');
     revalidatePath('/');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('route', id).catch(console.error);
-    });
+    // Traducció automàtica silenciosa en segon pla (múscul IA)
+    (async () => {
+      try {
+        const { autoTranslateAction } = await import('@/lib/actions/ai');
+        await autoTranslateAction('route', id);
+      } catch (err) {
+        console.error("AutoTranslate Background Error:", err);
+      }
+    })();
 
     return { success: true, id };
   } catch (err: any) {
@@ -441,10 +267,15 @@ export async function updateRoute(id: string, formData: FormData) {
     revalidatePath('/admin');
     revalidatePath('/');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('route', id).catch(console.error);
-    });
+    // Traducció automàtica silenciosa en segon pla (múscul IA)
+    (async () => {
+      try {
+        const { autoTranslateAction } = await import('@/lib/actions/ai');
+        await autoTranslateAction('route', id);
+      } catch (err) {
+        console.error("AutoTranslate Background Error:", err);
+      }
+    })();
 
     return { success: true };
   } catch (err: any) {
@@ -577,10 +408,15 @@ export async function createPoi(formData: FormData) {
 
     revalidatePath('/admin');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('poi', result.id).catch(console.error);
-    });
+    // Traducció automàtica silenciosa en segon pla (múscul IA)
+    (async () => {
+      try {
+        const { autoTranslateAction } = await import('@/lib/actions/ai');
+        await autoTranslateAction('poi', result.id);
+      } catch (err) {
+        console.error("AutoTranslate Background Error:", err);
+      }
+    })();
 
     return { success: true, id: result.id };
   } catch (err: any) {
@@ -671,10 +507,15 @@ export async function updatePoi(id: string, formData: FormData) {
 
     revalidatePath('/admin');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('poi', id).catch(console.error);
-    });
+    // Traducció automàtica silenciosa en segon pla (múscul IA)
+    (async () => {
+      try {
+        const { autoTranslateAction } = await import('@/lib/actions/ai');
+        await autoTranslateAction('poi', id);
+      } catch (err) {
+        console.error("AutoTranslate Background Error:", err);
+      }
+    })();
 
     return { success: true };
   } catch (err: any) {
@@ -751,10 +592,15 @@ export async function updateLegend(id: string, formData: FormData) {
     revalidatePath('/admin');
     revalidatePath('/');
 
-    // Traducció automàtica silenciosa en segon pla
-    import('@/lib/ai-actions').then(({ autoTranslateAction }) => {
-      autoTranslateAction('route', id).catch(console.error);
-    });
+    // Traducció automàtica silenciosa en segon pla (múscul IA)
+    (async () => {
+      try {
+        const { autoTranslateAction } = await import('@/lib/actions/ai');
+        await autoTranslateAction('route', id);
+      } catch (err) {
+        console.error("AutoTranslate Background Error:", err);
+      }
+    })();
 
     return { success: true };
   } catch (err: any) {
@@ -822,36 +668,6 @@ export async function reorderRoutePois(routeId: string, poiIds: string[], munici
   }
 }
 
-export async function getRouteWithPois(routeId: string) {
-  noStore();
-  try {
-    const route = await prisma.route.findUnique({
-      where: { id: routeId },
-      include: {
-        routePois: {
-          orderBy: { orderIndex: 'asc' },
-          include: { poi: true }
-        }
-      }
-    });
-    if (!route) return null;
-    return {
-      id: route.id,
-      name: route.name,
-      description: route.description,
-      finalQuiz: route.finalQuiz,
-      pois: route.routePois.map(rp => ({
-        ...rp.poi,
-        latitude: rp.poi.latitude ?? 0,
-        longitude: rp.poi.longitude ?? 0,
-        orderIndex: rp.orderIndex
-      }))
-    };
-  } catch (err: any) {
-    console.error(err);
-    return null;
-  }
-}
 
 export async function closeRouteAndGenerateFinalQuiz(routeId: string) {
   try {
@@ -887,22 +703,3 @@ export async function closeRouteAndGenerateFinalQuiz(routeId: string) {
   }
 }
 
-export async function getAllProfiles() {
-  noStore();
-  try {
-    const profiles = await prisma.profile.findMany({
-      include: {
-        user: { select: { email: true } }
-      },
-      orderBy: { updatedAt: 'desc' }
-    });
-
-    return profiles.map(p => ({
-      ...p,
-      email: p.user?.email || '-'
-    }));
-  } catch (error) {
-    console.error('Error fetching all profiles with email:', error);
-    return [];
-  }
-}

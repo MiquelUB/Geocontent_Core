@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, UploadCloud, AlertCircle, Plus, X, ImageIcon } from "lucide-react";
 import { verifyAdminPassword, verifySuperAdminPassword } from "@/lib/actions/auth";
-import { createRoute, updateRoute, deleteLegend, getAdminLegends, createPoi, updatePoi, getRouteWithPois, addPoiToRoute, getAllProfiles } from "@/lib/actions/content";
+import { createRoute, updateRoute, deleteLegend, createPoi, updatePoi, addPoiToRoute } from "@/lib/actions/content";
+import { getAdminLegends, getRouteWithPois, getAllProfiles } from "@/lib/actions/queries";
 import { getReports } from "@/lib/actions/reports";
 import { compressImage } from "@/lib/imageOptimization";
 import { useRouter } from "next/navigation";
@@ -26,10 +27,15 @@ import { PublishChangesButton } from "./PublishChangesButton";
 
 interface Legend {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  location_name: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  location_name?: string;
+  municipality_name?: string;
+  pois_count?: number;
+  total_visits?: number;
+  created_at?: string;
   pois?: any[];
   downloadRequired?: boolean;
 }
@@ -128,10 +134,10 @@ export default function AdminDashboard({
 
   useEffect(() => {
     if (editingRoute) {
-      setRouteTitle(editingRoute.title);
-      setRouteDescription(editingRoute.description);
-      setRouteLocation(editingRoute.location_name);
-      setRouteCategory(editingRoute.category);
+      setRouteTitle(editingRoute.title || '');
+      setRouteDescription(editingRoute.description || '');
+      setRouteLocation(editingRoute.location_name || '');
+      setRouteCategory(editingRoute.category || '');
       setRouteDownloadRequired(editingRoute.downloadRequired || false);
       // setRouteThumbnail(editingRoute.thumbnail_1x1 || ''); // Use server value if exists
     }

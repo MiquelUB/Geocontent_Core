@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Save, Upload } from "lucide-react";
-import { getMunicipalities, updateMunicipality } from "@/lib/actions/content";
+import { updateMunicipality } from "@/lib/actions/content";
+import { getMunicipalities } from "@/lib/actions/queries";
 import { uploadFile } from "@/lib/actions/storage";
 import { useRouter } from "next/navigation";
 

@@ -1,5 +1,5 @@
 
-const { updateMunicipality } = require('../lib/actions');
+const { updateMunicipality } = require('../lib/actions/content');
 
 async function testUpdate() {
   try {

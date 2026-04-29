@@ -15,9 +15,7 @@ const nextConfig = {
   },
   reactStrictMode: true,
   experimental: {
-    serverActions: {
-      bodySizeLimit: '100mb',
-    },
+    // serverActions are default in Next.js 15
   },
   eslint: {
     ignoreDuringBuilds: true,

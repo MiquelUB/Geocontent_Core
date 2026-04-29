@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { updateMunicipality } from '@/lib/actions';
-import { getUserProfile } from '@/lib/actions/auth';
+import { updateMunicipalityInternal } from '@/lib/services/municipality-service';
+import { getUserProfileInternal } from '@/lib/services/auth-service';
 import { createClient } from '@/lib/database/supabase/server';
 import { cookies } from 'next/headers';
 
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "No autoritzat. Sessió invàlida o inexistent." }, { status: 401 });
     }
 
-    const profile = await getUserProfile(user.id);
+    const profile = await getUserProfileInternal(user.id);
     if (!profile || profile.role !== 'admin') {
       return NextResponse.json({ success: false, error: "Permisos insuficients. Requereix rol d'administrador." }, { status: 403 });
     }
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Execució de la mutació
-    const res = await updateMunicipality(id, name, logoUrl, themeId, adminMasterPassword, planTier, extraRoutesCount);
+    const res = await updateMunicipalityInternal(id, name, logoUrl, themeId, adminMasterPassword, planTier, extraRoutesCount);
     return NextResponse.json(res);
     
   } catch (err: any) {

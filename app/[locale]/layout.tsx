@@ -85,7 +85,7 @@ export const viewport: Viewport = {
   themeColor: PxxConfig.theme.colors.terra,
 };
 
-import { getAppBranding } from "@/lib/actions/content";
+import { getAppBranding } from "@/lib/actions/queries";
 import { Toaster } from "sonner";
 
 function hexToHsl(hex: string) {
