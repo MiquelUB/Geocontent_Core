@@ -7,10 +7,12 @@ interface ErrorScreenProps {
   type: "no-connection" | "gps-denied" | "general";
   onRetry: () => void;
   onNavigate: (screen: string) => void;
+  brand?: any;
 }
 
-export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
+export function ErrorScreen({ type, onRetry, onNavigate, brand }: ErrorScreenProps) {
   const t = useTranslations('error');
+  const t_splash = useTranslations('splash');
   
   const errorConfig = {
     "no-connection": {
@@ -18,14 +20,14 @@ export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
       title: t('no-connection.title'),
       message: t('no-connection.message'),
       action: t('no-connection.action'),
-      color: "#6B7280"
+      color: "var(--accent)"
     },
     "gps-denied": {
       icon: MapPin,
       title: t('gps-denied.title'),
       message: t('gps-denied.message'),
       action: t('gps-denied.action'),
-      color: "#3E4E3F"
+      color: "var(--primary)"
     },
     "general": {
       icon: AlertTriangle,
@@ -41,14 +43,20 @@ export function ErrorScreen({ type, onRetry, onNavigate }: ErrorScreenProps) {
 
   return (
     <div className="screen bg-background flex flex-col items-center justify-center p-6 text-center">
-      {/* Header amb logo */}
+      {/* Header amb logo dinàmic */}
       <div className="absolute top-0 left-0 right-0 bg-primary p-4">
         <div className="flex items-center justify-center space-x-2">
           <div className="w-8 h-8 bg-background rounded-full flex items-center justify-center">
-            <span className="text-sm font-serif font-bold text-primary">M</span>
+            {brand?.logoUrl ? (
+                <img src={brand.logoUrl} alt="Logo" className="w-5 h-5 object-contain" />
+            ) : (
+                <span className="text-sm font-serif font-bold text-primary">
+                    {brand?.name?.charAt(0) || 'P'}
+                </span>
+            )}
           </div>
           <h1 className="text-lg font-serif font-bold text-primary-foreground">
-            Mistic Pallars
+            {brand?.name || t_splash('project')}
           </h1>
         </div>
       </div>

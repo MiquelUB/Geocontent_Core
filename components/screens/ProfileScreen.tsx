@@ -3,7 +3,8 @@ import { Button } from "../ui/button";
 import { ArrowLeft, Settings, Edit, Trophy, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { PassportGrid } from "@/components/passport/PassportGrid";
-import { getPassportData, handleAvatarUploadAction, getUserScore } from "@/lib/actions";
+import { handleAvatarUploadAction } from "@/lib/actions/storage";
+import { getPassportData, getUserScore } from "@/lib/actions/gamification";
 import { useTranslations } from "next-intl";
 
 interface ProfileScreenProps {

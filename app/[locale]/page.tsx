@@ -14,7 +14,8 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { SimpleLogin } from "@/components/auth/SimpleLogin";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { getAppBranding, recordVisit } from "@/lib/actions";
+import { getAppBranding } from "@/lib/actions/queries";
+import { recordVisit } from "@/lib/actions/gamification";
 import { useGeofencing } from "@/lib/hooks/useGeofencing";
 import { geofencingService } from "@/lib/services/geofencing-service";
 import { toast } from "sonner"; // Assuming sonner is available or similar toast
@@ -138,7 +139,7 @@ export default function Home() {
         if (authSuccess === '1' && uid) {
           console.log("Auth callback detected, loading profile for:", uid);
           try {
-            const { getUserProfile } = await import("@/lib/actions");
+            const { getUserProfile } = await import("@/lib/actions/auth");
             // Retry fins a 3 vegades: Supabase pot tardar un instant a crear el perfil
             let profile = null;
             for (let attempt = 0; attempt < 3 && !profile; attempt++) {
@@ -166,7 +167,7 @@ export default function Home() {
           const savedUserString = localStorage.getItem("core_user");
           if (savedUserString) {
             try {
-              const { getUserProfile } = await import("@/lib/actions");
+              const { getUserProfile } = await import("@/lib/actions/auth");
               const savedUser = JSON.parse(savedUserString);
               if (savedUser?.id) {
                 console.log("Validating session for:", savedUser.id);
@@ -282,6 +283,7 @@ export default function Home() {
             type={errorType || "general"}
             onRetry={handleRetry}
             onNavigate={handleNavigate}
+            brand={brand}
           />
         );
       default:

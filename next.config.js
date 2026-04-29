@@ -3,7 +3,7 @@ const createNextIntlPlugin = require("next-intl/plugin");
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig = {
-  serverExternalPackages: ["pdf-parse", "puppeteer"],
+  serverExternalPackages: ["pdf-parse", "puppeteer", "bullmq"],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
@@ -15,9 +15,7 @@ const nextConfig = {
   },
   reactStrictMode: true,
   experimental: {
-    serverActions: {
-      bodySizeLimit: '100mb',
-    },
+    // serverActions are default in Next.js 15
   },
   eslint: {
     ignoreDuringBuilds: true,

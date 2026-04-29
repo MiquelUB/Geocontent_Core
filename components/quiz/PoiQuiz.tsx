@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Trophy, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { completePoiQuizAction } from '@/lib/actions';
+import { completePoiQuizAction } from '@/lib/actions/gamification';
 
 interface PoiQuizProps {
     poiId: string;

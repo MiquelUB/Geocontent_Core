@@ -6,23 +6,27 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 const intlMiddleware = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
-  // 1. Executa la internacionalització per obtenir la resposta base
+  // 1. Executa la internacionalització primer
   const response = intlMiddleware(request);
 
-  // 2. Definició de l'escut per rutes sensibles
+  // Si next-intl necessita fer una redirecció de localització (ex: /admin -> /ca/admin)
+  // respectem aquesta acció i sortim immediatament per evitar trencar el routing.
+  if (response.status === 307 || response.status === 308) {
+    return response;
+  }
+
   const pathname = request.nextUrl.pathname;
-  const isAdminRoute = pathname.includes('/admin');
+  
+  // 2. Definició de l'escut. EXCLOEM les rutes de login per evitar el bucle infinit.
+  const isAdminRoute = pathname.includes('/admin') && !pathname.includes('/login');
 
   if (isAdminRoute) {
-    // Inicialitza Supabase específicament per al middleware (manipulació de cookies)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
+          get(name: string) { return request.cookies.get(name)?.value; },
           set(name: string, value: string, options: CookieOptions) {
             request.cookies.set({ name, value, ...options });
             response.cookies.set({ name, value, ...options });
@@ -35,7 +39,6 @@ export default async function middleware(request: NextRequest) {
       }
     );
 
-    // Verificació d'Autenticació (AuthN)
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -43,7 +46,7 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.json({ error: 'Accés denegat. Sessió requerida.' }, { status: 401 });
       }
       
-      // Redirecció neta al login mantenint l'idioma actual
+      // Com que hem respectat la redirecció prèvia, aquí sabem segur que hi ha locale (ex: /ca/admin)
       const locale = pathname.split('/')[1] || 'ca';
       const loginUrl = new URL(`/${locale}/login`, request.url);
       return NextResponse.redirect(loginUrl);
@@ -54,6 +57,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Matcher actualitzat: INCLOU /api però exclou fitxers estàtics i interns de Next
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)']
 };

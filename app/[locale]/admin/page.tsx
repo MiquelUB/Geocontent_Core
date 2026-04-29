@@ -1,4 +1,4 @@
-import { getAdminLegends, getAllProfiles, getDefaultMunicipalityId, getDefaultMunicipalityTheme, getAppBranding } from "@/lib/actions";
+import { getAdminLegends, getAllProfiles, getDefaultMunicipalityId, getDefaultMunicipalityTheme, getAppBranding } from "@/lib/actions/queries";
 import { getReports } from "@/lib/actions/reports";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 

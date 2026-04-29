@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import MapLibreMap from "../map/MapLibreMap";
 import { Marker, Popup } from "react-map-gl/maplibre";
 
-import { getLegends } from "@/lib/actions";
+import { getLegends } from "@/lib/actions/queries";
 import { PxxConfig } from "@/projects/active/config";
 import iconsMapping from '@/lib/icons-mapping.json';
 import { useTranslations, useLocale } from "next-intl";

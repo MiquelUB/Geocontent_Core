@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { loginOrRegister } from "@/lib/actions";
+import { loginOrRegister } from "@/lib/actions/auth";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
 

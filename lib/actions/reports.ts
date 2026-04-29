@@ -3,7 +3,7 @@
 import { reportQueue } from '@/lib/queue/client';
 import { prisma } from '@/lib/database/prisma';
 import { revalidatePath } from 'next/cache';
-import { processReport } from '../services/reportProcessor';
+// Note: processReport is imported dynamically in the fallback to avoid bundling issues
 
 export async function generateReport(municipalityId: string) {
   console.log(`[generateReport] Request for municipality: ${municipalityId}`);
@@ -37,8 +37,10 @@ export async function generateReport(municipalityId: string) {
     } catch (queueError: any) {
       console.warn("[generateReport] Queue error (Redis down). Falling back to direct process (Dev Mode).");
       // Fallback: Trigger immediately but don't await (background task)
-      processReport(report.id, municipalityId).catch(err => {
-        console.error("[generateReport] Fallback process failed:", err);
+      import('../services/reportProcessor').then(m => {
+        m.processReport(report.id, municipalityId).catch(err => {
+          console.error("[generateReport] Fallback process failed:", err);
+        });
       });
 
       revalidatePath('/admin');

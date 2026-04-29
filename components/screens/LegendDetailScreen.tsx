@@ -6,7 +6,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import ImageSlider from "../ui/ImageSlider";
 import HlsVideoPlayer from "../ui/HlsVideoPlayer";
 import { motion, useScroll, useTransform } from "motion/react";
-import { recordVisit } from "@/lib/actions";
+import { recordVisit } from "@/lib/actions/gamification";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { CheckCircle2 } from "lucide-react";
 import PoiQuiz from "../quiz/PoiQuiz";

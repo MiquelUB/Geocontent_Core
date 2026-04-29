@@ -8,7 +8,7 @@ import { calculateDistance, calculateDistanceRaw } from "@/lib/location";
 import { Marker, useMap } from "react-map-gl/maplibre";
 import iconsMapping from '@/lib/icons-mapping.json';
 import { PxxConfig } from "@/projects/active/config";
-import { getLegends, getAppBranding } from "@/lib/actions";
+import { getLegends, getAppBranding } from "@/lib/actions/queries";
 import { useTranslations, useLocale } from "next-intl";
 import { getLocalizedContent } from "@/lib/i18n-db";
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileText, UploadCloud, AlertCircle, Download } from "lucide-react";
-import { generateRouteFromDocumentAction } from '@/lib/ai-actions';
+import { generateRouteFromDocumentAction } from '@/lib/actions/ai';
 
 export default function AiRouteGenerator({ theme }: { theme?: any }) {
   const activeTheme = theme || {

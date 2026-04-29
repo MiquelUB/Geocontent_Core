@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Trophy, Loader2, Sparkles, ChevronRight, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { completeFinalRouteQuizAction } from '@/lib/actions';
+import { completeFinalRouteQuizAction } from '@/lib/actions/gamification';
 
 interface FinalRouteQuizProps {
     routeId: string;
