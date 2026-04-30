@@ -47,3 +47,4 @@ next-env.d.ts
 .antigravity/
 *.log
 /tmp/
+tmp_build*
